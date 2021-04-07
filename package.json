@@ -24,9 +24,9 @@
       "pre-commit": "npm run lint"
     }
   },
-  "author": "edX",
+  "author": "RacconGang",
   "license": "AGPL-3.0",
-  "homepage": "https://github.com/edx/frontend-lib-special-exams#readme",
+  "homepage": "https://github.com/edx/frontend-lib-special-exams",
   "publishConfig": {
     "access": "public"
   },
