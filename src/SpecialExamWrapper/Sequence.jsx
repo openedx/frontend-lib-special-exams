@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { getConfig } from '@edx/frontend-platform';
+import { getExamData, getUserAtemptsData } from './data/api'
 
 const ExamSequence = (props) => (
   <div>
@@ -15,18 +16,13 @@ const SequenceExamWrapper = ({ children, ...props }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { sequence, courseId, loader, userId } = props;
 
-  const getExamData = async () => {
-    const examUrl = new URL(
-      `${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/exam/course_id/${courseId}/content_id/${sequence.id}`
-    );
-    const { data } = await getAuthenticatedHttpClient().get(examUrl.href);
+  const getExam = async () => {
+    const data = await getExamData(courseId, sequence.id);
     setExamId(data.id);
   };
 
-  const getAtemptData = async() => {
-    // TODO: find where to get user_id
-    const url = new URL(`${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/active_exams_for_user?user_id=${userId}&course_id=${encodeURIComponent(courseId)}`);
-    const { data } = await getAuthenticatedHttpClient().get(url.href);
+  const getUserAtempt = async() => {
+    const data = await getUserAtemptsData(userId, courseId);
     if (Object.keys(data).length > 0) {
       const examData = data[0];
       setExamStarted(examData.attempt.status === 'started');
@@ -35,7 +31,7 @@ const SequenceExamWrapper = ({ children, ...props }) => {
   };
 
   useEffect(() => {
-    getExamData().then(() => getAtemptData());
+    getExam().then(() => getUserAtempt());
   }, []);
 
   const startExam = async () => {
