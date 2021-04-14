@@ -2,11 +2,38 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { getConfig } from '@edx/frontend-platform';
+import { Button, Container, Spinner } from '@edx/paragon';
 import { getExamData, getUserAtemptsData } from './data/api'
 
 const ExamSequence = (props) => (
   <div>
-    <button type="button" onClick={props.startExam}>Start exam</button>
+    <Container className="border py-5 mb-4">
+      <div className="h3">
+        Subsection is a Timed Exam (30 minutes)
+      </div>
+      <p>
+        This exam has a time limit associated with it.
+        <strong> To pass this exam, you must complete the problems in the time allowed.</strong>
+        After you select
+        <strong> I am ready to start this timed exam, </strong>
+        you will have 30 minutes to complete and submit the exam.
+      </p>
+      <Button
+        variant="outline-primary"
+        onClick={props.startExam}
+      >
+        I am ready to start this timed exam.
+      </Button>
+    </Container>
+
+    <div class="footer-sequence">
+      <div className="h4">Can I request additional time to complete my exam? </div>
+      <p>
+        If you have disabilities,
+        you might be eligible for an additional time allowance on timed exams.
+        Ask your course team for information about additional time allowances.
+      </p>
+    </div>
   </div>
 );
 
@@ -49,7 +76,7 @@ const SequenceExamWrapper = ({ children, ...props }) => {
   };
 
   if (isLoading) {
-    return loader || 'Loading';
+    return loader || <Spinner animation="border" variant="primary" />;
   }
 
   return sequence.isTimeLimited && !examStarted
