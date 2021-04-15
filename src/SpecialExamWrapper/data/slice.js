@@ -4,26 +4,29 @@ export const examSlice = createSlice({
   name: 'exam',
   initialState: {
     examId: null,
-    isLoading: true,
+    isLoading: false,
     examDuration: null,
     attempt: {},
+    examStarted: false,
   },
   reducers: {
+    setIsLoading: (state, { payload }) => {
+      state.isLoading = payload.isLoading;
+    },
+    setExamStarted: (state, { payload }) => {
+      state.examStarted = payload.examStarted;
+    },
+    fetchAttempt: (state, { payload }) => {
+      state.attempt = payload.attempt;
+    },
     fetchExam: (state, { payload }) => {
       state.examId = payload.examId;
       state.examDuration = payload.examDuration;
     },
-    setIsLoading: (state, { payload }) => {
-      console.log(payload);
-      state.isLoading = payload.isLoading;
-    },
-    fetchAttempt: (state, { payload }) => {
-      state.attempt = payload.attempt;
-    }
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { fetchExam, setIsLoading, fetchAttempt } = examSlice.actions
+export const { setIsLoading, setExamStarted, fetchAttempt, fetchExam } = examSlice.actions
 
 export default examSlice.reducer
