@@ -4,7 +4,7 @@ export const examSlice = createSlice({
   name: 'exam',
   initialState: {
     examId: null,
-    isLoading: false,
+    isLoading: true,
     examDuration: null,
     attempt: {},
     examStarted: false,

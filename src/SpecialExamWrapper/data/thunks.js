@@ -42,8 +42,8 @@ export function getAttemptData(userId, courseId) {
 }
 
 export function startExam() {
-  return async (dispatch) => {
-    const examId = dispatch(getExamId());
+  return async (dispatch, getState) => {
+    const { examId } = getState().exam;
     if (!examId) {
       logError('Failed to start exam. No exam id.');
       return;

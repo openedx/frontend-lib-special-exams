@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { AppContext } from '@edx/frontend-platform/react';
@@ -28,7 +28,7 @@ const _ExamStoreWrapper = ({ children, ...props }) => {
   }
 
   return sequence.isTimeLimited && !examStarted
-    ? <ExamSequence startExam={() => startExam()(store.dispatch)} examDuration={examDuration} />
+    ? <ExamSequence startExam={() => startExam()(store.dispatch, store.getState)} examDuration={examDuration} />
     : children;
 };
 
@@ -46,12 +46,21 @@ const ExamStoreWrapper = connect(
 
 
 const SequenceExamWrapper = ({ children, ...props }) => {
+  const [examState, setExamState] = useState(store.getState());
+  const storeListener = () => {
+    setExamState(store.getState());
+  };
+  useEffect(() => {
+    store.subscribe(storeListener);
+  }, []);
   return (
-    <ExamStoreWrapper {...props} {...store.getState()}>
+    <ExamStoreWrapper {...props} {...examState}>
       {children}
     </ExamStoreWrapper>
   );
 };
+
+
 
 SequenceExamWrapper.propTypes = {
   children: PropTypes.element.isRequired,
