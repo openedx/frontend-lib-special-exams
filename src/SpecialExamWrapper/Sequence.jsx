@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { AppContext } from '@edx/frontend-platform/react';
 import { Spinner } from '@edx/paragon';
-import { ExamInstructions } from '../ExamSequence';
+import { ExamInstructions } from '../ExamInstructions';
 import {
   getExamData,
   getAttemptData,
@@ -31,7 +31,7 @@ const mapCoursewareStateToProps = (state) => {
 const StoreWrapperComp = ({ sequence, courseId, children }) => {
   const [examState, setExamState] = useState(store.getState());
   const { authenticatedUser } = useContext(AppContext);
-  const { isLoading, examStarted, examDuration } = examState;
+  const { isLoading, examStarted, examDuration } = examState.exam;
   const { userId } = authenticatedUser;
 
   const storeListener = () => {
@@ -48,7 +48,7 @@ const StoreWrapperComp = ({ sequence, courseId, children }) => {
 
   if (isLoading) {
     return (
-      <div className="align-items-center">
+      <div className="d-flex justify-content-center align-items-center flex-column my-5 py-5">
         <Spinner animation="border" variant="primary" />
       </div>
     );
