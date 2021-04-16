@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Button, Container } from '@edx/paragon';
 
-const ExamSequence = ({ examDuration, startExam }) => (
+const ExamInstructions = ({ examDuration, startExam }) => (
   <div>
     <Container className="border py-5 mb-4">
       <div className="h3">
@@ -34,10 +34,10 @@ const ExamSequence = ({ examDuration, startExam }) => (
   </div>
 );
 
-ExamSequence.propTypes = {
-  startExam: PropTypes.func.isRequired,
+ExamInstructions.propTypes = {
   examDuration: PropTypes.number.isRequired,
+  startExam: PropTypes.func.isRequired,
 };
 
 // eslint-disable-next-line import/prefer-default-export
-export { ExamSequence };
+export { ExamInstructions };
