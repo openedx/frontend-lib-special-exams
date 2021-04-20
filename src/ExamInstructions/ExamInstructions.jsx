@@ -5,7 +5,7 @@ import { Button, Container } from '@edx/paragon';
 const ExamInstructions = ({ examDuration, startExam }) => (
   <div>
     <Container className="border py-5 mb-4">
-      <div className="h3">
+      <div className="h3" data-testid="exam-instructions-title">
         Subsection is a Timed Exam ({examDuration} minutes)
       </div>
       <p>
