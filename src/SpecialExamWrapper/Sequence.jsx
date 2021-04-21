@@ -23,10 +23,11 @@ const mapCoursewareStateToProps = (state) => {
  * @param children - Current course sequence item content (e.g. unit, navigation buttons etc.)
  * @returns {JSX.Element} - ExamInstructions | children
  * @description As generic approach using nested <Provider store={}> cannot be used with
- * learning app (parent) store provider ATM (https://react-redux.js.org/using-react-redux/accessing-store#multiple-stores)
- * because external Provider component does not have custom context prop specified
- * and uses auto created one, children elements will always be using nested store context
- * (will not be able to access learning app store anymore).
+ * learning app (parent) store provider ATM (by example https://react-redux.js.org/using-react-redux/accessing-store#multiple-stores).
+ * The reason is: external learning app Provider component does not have custom context prop specified
+ * and uses auto created one. That means children elements (passed in props) will always be using
+ * exam nested store context (will not be able to access learning app store anymore).
+ * Workaround is to avoid using nested Provider and use state update event on exam store.
  */
 const StoreWrapperComp = ({ sequence, courseId, children }) => {
   const [examState, setExamState] = useState(store.getState());
