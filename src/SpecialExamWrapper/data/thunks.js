@@ -9,7 +9,6 @@ import {
   setIsLoading,
   setAttempt,
   updateExam,
-  getExamId,
 } from './slice';
 
 export function getExamData(courseId, contentId) {

@@ -1,14 +1,13 @@
 import '@testing-library/jest-dom';
-import React from "react";
-import { render } from "@testing-library/react";
-import { ExamInstructions } from "./ExamInstructions";
+import React from 'react';
+import { render } from '@testing-library/react';
+import { ExamInstructions } from './ExamInstructions';
 
-
-test("Positive case for ExamInstructions", () => {
+test('Positive case for ExamInstructions', () => {
   const defaultProps = {
     examDuration: 30,
     startExam: () => {},
-  }
-  const { getByTestId } = render(<ExamInstructions {...defaultProps}/>);
-  expect(getByTestId("exam-instructions-title")).toHaveTextContent("Subsection is a Timed Exam (30 minutes)");
+  };
+  const { getByTestId } = render(<ExamInstructions {...defaultProps} />);
+  expect(getByTestId('exam-instructions-title')).toHaveTextContent('Subsection is a Timed Exam (30 minutes)');
 });

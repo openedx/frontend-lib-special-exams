@@ -1,5 +1,6 @@
-import { createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit';
 
+/* eslint-disable no-param-reassign */
 export const examSlice = createSlice({
   name: 'exam',
   initialState: {
@@ -23,9 +24,7 @@ export const examSlice = createSlice({
       state.examId = payload.examId;
       state.examDuration = payload.examDuration;
     },
-    getExamId: (state) => {
-      return state.examId;
-    },
+    getExamId: (state) => state.examId,
   },
 });
 
