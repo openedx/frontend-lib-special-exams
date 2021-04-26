@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Special exams lib",
   "main": "dist/index.js",
+  "type": "module",
+  "exports": {
+    "import": "./dist/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/edx/frontend-lib-special-exams.git"
@@ -12,7 +16,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "fedx-scripts webpack --config ./webpack.config.js",
+    "build": "make build",
     "i18n_extract": "BABEL_ENV=i18n fedx-scripts babel src --quiet > /dev/null",
     "is-es5": "es-check es5 ./dist/*.js",
     "lint": "fedx-scripts eslint --ext .js --ext .jsx .",
