@@ -8,7 +8,7 @@ Set up instructions
 
 1. Clone your new repo:
 
-  ``git clone https://github.com/raccoongang/frontend-lib-special-exams.git``
+  ``git clone https://github.com/edx/frontend-lib-special-exams.git``
 
 2. Use node v12.x.
 
