@@ -3,7 +3,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { ExamInstructions } from './ExamInstructions';
 
-test('Positive case for ExamInstructions', () => {
+test('ExamInstructions renders successfully', () => {
   const defaultProps = {
     examDuration: 30,
     startExam: () => {},

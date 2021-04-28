@@ -34,7 +34,7 @@ store.getState = () => ({
   },
 });
 
-test('Positive case for ExamInstructions', () => {
+test('SequenceExamWrapper renders successfully', () => {
   const sequence = {
     id: 'block-v1:test+test+test+type@sequential+block@5b1bb1aaf6d34e79b213aa37422b4743',
     isTimeLimited: true,
