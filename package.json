@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "Special exams lib",
   "main": "dist/index.js",
-  "type": "module",
   "exports": {
     "import": "./dist/index.js"
   },

@@ -10,7 +10,7 @@ with ability to take control over rendering process and show exam related conten
 Usage example is
 
 .. code-block:: javascript
-    <LearningApp>  // Learning app store provider
+    <LearningApp>  // Learning app
       ...
       <SequenceExamWrapper>
         ...
