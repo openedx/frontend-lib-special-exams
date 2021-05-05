@@ -13,18 +13,25 @@ const ExamInstructions = ({ examDuration, startExam }) => (
           values={{ examDuration }}
         />
       </div>
-      {/* eslint-disable-next-line react/no-danger */}
-      <p dangerouslySetInnerHTML={{
-        __html: <FormattedMessage
-          id="exam.startExamInstructions.text"
-          defaultMessage={'This exam has a time limit associated with it. '
-            + '<strong> To pass this exam, you must complete the problems in the time allowed. </strong>'
-            + 'After you select <strong> I am ready to start this timed exam, </strong>'
-            + 'you will have {examDuration} minutes to complete and submit the exam.'}
+      <p>
+        <FormattedMessage
+          id='exam.startExamInstructions.text1'
+          defaultMessage='This exam has a time limit associated with it. '
+        />
+        <strong>
+          <FormattedMessage
+            id='exam.startExamInstructions.text2'
+            defaultMessage='To pass this exam, you must complete the problems in the time allowed. '
+          />
+        </strong>
+        <FormattedMessage
+          id='exam.startExamInstructions.text3'
+          defaultMessage={'After you select "I am ready to start this timed exam", ' +
+            'you will have {examDuration} minutes to complete and submit the exam.'
+          }
           values={{ examDuration }}
-        />,
-      }}
-      />
+        />
+      </p>
       <Button
         variant="outline-primary"
         onClick={startExam}
