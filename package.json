@@ -1,18 +1,24 @@
 {
   "name": "@edx/frontend-lib-special-exams",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Special exams lib",
   "main": "dist/index.js",
+  "exports": {
+    "import": "./dist/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/edx/frontend-lib-special-exams.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
-    "/dist"
+    "dist/"
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "fedx-scripts webpack --config ./webpack.config.js",
+    "build": "make build",
     "i18n_extract": "BABEL_ENV=i18n fedx-scripts babel src --quiet > /dev/null",
     "is-es5": "es-check es5 ./dist/*.js",
     "lint": "fedx-scripts eslint --ext .js --ext .jsx .",
@@ -26,32 +32,34 @@
   },
   "license": "AGPL-3.0",
   "homepage": "https://github.com/edx/frontend-lib-special-exams",
-  "publishConfig": {
-    "access": "public"
-  },
   "bugs": {
     "url": "https://github.com/edx/frontend-lib-special-exams/issues"
   },
   "dependencies": {
-    "@edx/frontend-platform": "1.8.4",
-    "@edx/paragon": "13.17.0",
     "@fortawesome/fontawesome-svg-core": "1.2.34",
     "@fortawesome/free-brands-svg-icons": "5.11.2",
     "@fortawesome/free-regular-svg-icons": "5.11.2",
     "@fortawesome/free-solid-svg-icons": "5.11.2",
     "@fortawesome/react-fontawesome": "0.1.14",
-    "@reduxjs/toolkit": "^1.5.1",
     "babel-polyfill": "6.26.0",
+    "eventemitter3": "^4.0.7"
+  },
+  "peerDependencies": {
+    "@edx/frontend-platform": "1.8.4",
+    "@edx/paragon": "13.17.0",
     "prop-types": "15.7.2",
-    "react": "16.12.0",
-    "react-dom": "16.12.0",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
     "react-redux": "7.1.3",
     "react-router": "5.1.2",
     "react-router-dom": "5.1.2",
-    "redux": "4.0.5"
+    "redux": "4.0.5",
+    "@reduxjs/toolkit": "^1.5.1"
   },
   "devDependencies": {
     "@edx/frontend-build": "^5.6.11",
+    "@edx/frontend-platform": "1.8.4",
+    "@edx/paragon": "13.17.0",
     "@testing-library/jest-dom": "5.10.1",
     "@testing-library/react": "10.3.0",
     "axios-mock-adapter": "1.18.2",
@@ -60,6 +68,15 @@
     "glob": "7.1.6",
     "husky": "3.1.0",
     "jest": "24.9.0",
-    "reactifex": "1.1.1"
+    "prop-types": "15.7.2",
+    "react": "16.12.0",
+    "react-dom": "16.12.0",
+    "react-redux": "7.1.3",
+    "react-router": "5.1.2",
+    "react-router-dom": "5.1.2",
+    "redux": "4.0.5",
+    "@reduxjs/toolkit": "^1.5.1",
+    "reactifex": "1.1.1",
+    "react-intl": "2.9.0"
   }
 }

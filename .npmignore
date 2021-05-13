@@ -10,3 +10,4 @@ npm-debug.log
 coverage
 node_modules
 public
+webpack.dev.config.js
