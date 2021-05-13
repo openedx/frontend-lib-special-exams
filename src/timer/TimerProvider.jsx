@@ -48,6 +48,9 @@ const TimerServiceProvider = ({ children, attempt, pollHandler }) => {
   ).join(':');
 
   const pollExam = () => {
+    // Fixme: this condition has no effect because attempt status is always 'started'.
+    // This happens because pollExam becomes a closure
+    // and uses attempt_status value from when component was first rendered.
     if (attempt.attempt_status === ExamStatus.READY_TO_SUBMIT) {
       return;
     }
