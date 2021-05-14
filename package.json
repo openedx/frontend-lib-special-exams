@@ -1,8 +1,11 @@
 {
   "name": "@edx/frontend-lib-special-exams",
-  "version": "0.1.2",
+  "version": "1.0.0",
   "description": "Special exams lib",
   "main": "dist/index.js",
+  "release": {
+    "branches": ["main"]
+  },
   "exports": {
     "import": "./dist/index.js"
   },
