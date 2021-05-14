@@ -19,6 +19,8 @@
   "sideEffects": false,
   "scripts": {
     "build": "make build",
+    "prepublishOnly": "npm run build",
+    "semantic-release": "semantic-release",
     "i18n_extract": "BABEL_ENV=i18n fedx-scripts babel src --quiet > /dev/null",
     "is-es5": "es-check es5 ./dist/*.js",
     "lint": "fedx-scripts eslint --ext .js --ext .jsx .",
