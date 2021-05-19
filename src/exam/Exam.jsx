@@ -18,8 +18,8 @@ import ExamAPIError from './ExamAPIError';
 const Exam = ({ isTimeLimited, children }) => {
   const state = useContext(ExamStateContext);
   const {
-    isLoading, activeAttempt, showTimer,
-    stopExam, expireExam, pollAttempt, apiErrorMsg,
+    isLoading, activeAttempt, showTimer, stopExam,
+    expireExam, pollAttempt, apiErrorMsg, pingAttempt,
   } = state;
 
   if (isLoading) {
@@ -40,6 +40,7 @@ const Exam = ({ isTimeLimited, children }) => {
           stopExamAttempt={stopExam}
           expireExamAttempt={expireExam}
           pollExamAttempt={pollAttempt}
+          pingAttempt={pingAttempt}
         />
       )}
       {apiErrorMsg && <ExamAPIError details={apiErrorMsg} />}
