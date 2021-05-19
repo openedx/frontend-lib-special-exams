@@ -7,7 +7,6 @@ import {
   TIMER_IS_LOW,
   TIMER_LIMIT_REACHED,
 } from './events';
-import { ExamStatus } from '../constants';
 import { withExamStore } from '../hocs';
 
 /* give an extra 5 seconds where the timer holds at 00:00 before page refreshes */
@@ -47,18 +46,7 @@ const TimerServiceProvider = ({ children, attempt, pollHandler }) => {
     },
   ).join(':');
 
-  // AED 2020-02-21:
-  // If the learner is in a state where they've finished the exam
-  // and the attempt can be submitted (i.e. they are "ready_to_submit"),
-  // don't ping the proctoring app (which action could move
-  // the attempt into an error state).
   const pollExam = () => {
-    // Fixme: this condition has no effect because attempt status is always 'started'.
-    // This happens because pollExam becomes a closure
-    // and uses attempt_status value from when component was first rendered.
-    if (attempt.attempt_status === ExamStatus.READY_TO_SUBMIT) {
-      return;
-    }
     const url = attempt.exam_started_poll_url;
     const queryString = `?sourceid=in_exam&proctored=${attempt.taking_as_proctored}`;
     pollHandler(url + queryString);
