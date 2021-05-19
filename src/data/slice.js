@@ -8,6 +8,7 @@ export const examSlice = createSlice({
     timeIsOver: false,
     activeAttempt: null,
     exam: {},
+    apiErrorMsg: '',
   },
   reducers: {
     setIsLoading: (state, { payload }) => {
@@ -19,21 +20,21 @@ export const examSlice = createSlice({
     },
     setActiveAttempt: (state, { payload }) => {
       state.activeAttempt = payload.activeAttempt;
-      const examAttempt = state.exam.attempt;
-      if (examAttempt && examAttempt.attempt_id === payload.activeAttempt.attempt_id) {
-        state.exam.attempt = payload.activeAttempt;
-      }
+      state.apiErrorMsg = '';
     },
     expireExamAttempt: (state) => {
       state.timeIsOver = true;
     },
     getExamId: (state) => state.examId,
+    setApiError: (state, { payload }) => {
+      state.apiErrorMsg = payload.errorMsg;
+    },
   },
 });
 
 export const {
   setIsLoading, setExamState, getExamId, expireExamAttempt,
-  setActiveAttempt,
+  setActiveAttempt, setApiError,
 } = examSlice.actions;
 
 export default examSlice.reducer;
