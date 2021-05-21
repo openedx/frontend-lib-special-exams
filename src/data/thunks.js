@@ -6,6 +6,7 @@ import {
   continueAttempt,
   submitAttempt,
   pollExamAttempt,
+  fetchProctoringSettings,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -13,6 +14,7 @@ import {
   setExamState,
   expireExamAttempt,
   setActiveAttempt,
+  setProctoringSettings,
 } from './slice';
 import { ExamStatus } from '../constants';
 
@@ -41,6 +43,15 @@ export function getExamAttemptsData(courseId, sequenceId) {
   return updateAttemptAfter(courseId, sequenceId);
 }
 
+export function getProctoringSettings() {
+  return async (dispatch) => {
+    dispatch(setIsLoading({ isLoading: true }));
+    const proctoringSettings = await fetchProctoringSettings();
+    dispatch(setProctoringSettings({ proctoringSettings }));
+    dispatch(setIsLoading({ isLoading: false }));
+  };
+}
+
 export function startExam() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
@@ -50,6 +61,19 @@ export function startExam() {
     }
     await updateAttemptAfter(
       exam.course_id, exam.content_id, createExamAttempt(exam.id),
+    )(dispatch);
+  };
+}
+
+export function startProctoringExam() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to start exam. No exam id.');
+      return;
+    }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
     )(dispatch);
   };
 }
