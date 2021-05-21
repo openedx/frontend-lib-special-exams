@@ -27,10 +27,14 @@ const getFormattedRemainingTime = (timeLeft) => ({
   seconds: Math.floor(timeLeft % 60),
 });
 
-const TimerServiceProvider = ({ children, attempt, pollHandler }) => {
+const TimerServiceProvider = ({
+  children, attempt, pollHandler, pingHandler,
+}) => {
   const [timeState, setTimeState] = useState({});
   const [limitReached, setLimitReached] = useToggle(false);
   const {
+    desktop_application_js_url: workerUrl,
+    ping_interval: pingInterval,
     time_remaining_seconds: timeRemaining,
     critically_low_threshold_sec: criticalLowTime,
     low_threshold_sec: lowTime,
@@ -89,6 +93,11 @@ const TimerServiceProvider = ({ children, attempt, pollHandler }) => {
       if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
         pollExam();
       }
+
+      // if exam is proctored ping provider app also
+      if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
+        pingHandler(pingInterval, workerUrl);
+      }
     }, 1000);
 
     return () => { clearInterval(interval); };
@@ -111,15 +120,19 @@ TimerServiceProvider.propTypes = {
     critically_low_threshold_sec: PropTypes.number.isRequired,
     low_threshold_sec: PropTypes.number.isRequired,
     exam_started_poll_url: PropTypes.string,
+    desktop_application_js_url: PropTypes.string,
+    ping_interval: PropTypes.number,
     taking_as_proctored: PropTypes.bool,
     attempt_status: PropTypes.string.isRequired,
   }).isRequired,
   children: PropTypes.element.isRequired,
   pollHandler: PropTypes.func,
+  pingHandler: PropTypes.func,
 };
 
 TimerServiceProvider.defaultProps = {
   pollHandler: () => {},
+  pingHandler: () => {},
 };
 
 export default withExamStore(TimerServiceProvider, mapStateToProps);

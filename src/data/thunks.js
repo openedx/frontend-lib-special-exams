@@ -16,6 +16,8 @@ import {
   setApiError,
 } from './slice';
 import { ExamStatus } from '../constants';
+import { workerPromiseForEventNames, pingApplication } from './messages/handlers';
+import actionToMessageTypesMap from './messages/constants';
 
 function handleAPIError(error, dispatch) {
   const { message, detail } = error;
@@ -58,7 +60,7 @@ export function getExamAttemptsData(courseId, sequenceId) {
 
 export function startExam() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam, activeAttempt } = getState().examState;
     if (!exam.id) {
       logError('Failed to start exam. No exam id.');
       handleAPIError(
@@ -67,9 +69,21 @@ export function startExam() {
       );
       return;
     }
-    await updateAttemptAfter(
-      exam.course_id, exam.content_id, createExamAttempt(exam.id),
-    )(dispatch);
+
+    const useWorker = window.Worker && activeAttempt && activeAttempt.desktop_application_js_url;
+
+    if (useWorker) {
+      workerPromiseForEventNames(actionToMessageTypesMap.ping, activeAttempt.desktop_application_js_url)()
+        .then(() => updateAttemptAfter(exam.course_id, exam.content_id, createExamAttempt(exam.id))(dispatch))
+        .catch(() => handleAPIError(
+          { message: 'Something has gone wrong starting your exam. Please double-check that the application is running.' },
+          dispatch,
+        ));
+    } else {
+      await updateAttemptAfter(
+        exam.course_id, exam.content_id, createExamAttempt(exam.id),
+      )(dispatch);
+    }
   };
 }
 
@@ -136,8 +150,11 @@ export function continueExam() {
 
 export function submitExam() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam, activeAttempt } = getState().examState;
     const attemptId = exam.attempt.attempt_id;
+    const { desktop_application_js_url: workerUrl } = activeAttempt || {};
+    const useWorker = window.Worker && activeAttempt && workerUrl;
+
     if (!attemptId) {
       logError('Failed to submit exam. No attempt id.');
       handleAPIError(
@@ -146,16 +163,25 @@ export function submitExam() {
       );
       return;
     }
-    await updateAttemptAfter(
-      exam.course_id, exam.content_id, submitAttempt(attemptId),
-    )(dispatch);
+    await updateAttemptAfter(exam.course_id, exam.content_id, submitAttempt(attemptId))(dispatch);
+
+    if (useWorker) {
+      workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)()
+        .catch(() => handleAPIError(
+          { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
+          dispatch,
+        ));
+    }
   };
 }
 
 export function expireExam() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam, activeAttempt } = getState().examState;
     const attemptId = exam.attempt.attempt_id;
+    const { desktop_application_js_url: workerUrl } = activeAttempt || {};
+    const useWorker = window.Worker && activeAttempt && workerUrl;
+
     if (!attemptId) {
       logError('Failed to expire exam. No attempt id.');
       handleAPIError(
@@ -164,9 +190,33 @@ export function expireExam() {
       );
       return;
     }
+
     await updateAttemptAfter(
       exam.course_id, exam.content_id, submitAttempt(attemptId),
     )(dispatch);
     dispatch(expireExamAttempt());
+
+    if (useWorker) {
+      workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)()
+        .catch(() => handleAPIError(
+          { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
+          dispatch,
+        ));
+    }
+  };
+}
+
+/**
+ * Ping provider application (used for proctored exams).
+ * @param timeoutInSeconds - time to wait for worker response before raising an error
+ * @param workerUrl - location of the worker from the provider
+ */
+export function pingAttempt(timeoutInSeconds, workerUrl) {
+  return async (dispatch) => {
+    await pingApplication(timeoutInSeconds, workerUrl)
+      .catch((error) => handleAPIError(
+        { message: error ? error.message : 'Worker failed to respond.' },
+        dispatch,
+      ));
   };
 }
