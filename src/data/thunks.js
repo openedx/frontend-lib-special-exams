@@ -44,9 +44,14 @@ export function getExamAttemptsData(courseId, sequenceId) {
 }
 
 export function getProctoringSettings() {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to get exam settings. No exam id.');
+      return;
+    }
     dispatch(setIsLoading({ isLoading: true }));
-    const proctoringSettings = await fetchProctoringSettings();
+    const proctoringSettings = await fetchProctoringSettings(exam.id);
     dispatch(setProctoringSettings({ proctoringSettings }));
     dispatch(setIsLoading({ isLoading: false }));
   };
