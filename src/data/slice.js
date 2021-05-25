@@ -36,12 +36,15 @@ export const examSlice = createSlice({
     setVerificationData: (state, { payload }) => {
       state.verification = payload.verification;
     },
+    setReviewPolicy: (state, { payload }) => {
+      state.exam.reviewPolicy = payload.policy;
+    },
   },
 });
 
 export const {
   setIsLoading, setExamState, getExamId, expireExamAttempt,
-  setActiveAttempt, setProctoringSettings, setVerificationData,
+  setActiveAttempt, setProctoringSettings, setVerificationData, setReviewPolicy,
 } = examSlice.actions;
 
 export default examSlice.reducer;

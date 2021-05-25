@@ -9,6 +9,7 @@ import {
   fetchProctoringSettings,
   softwareDownloadAttempt,
   fetchVerificationStatus,
+  fetchExamReviewPolicy,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -18,6 +19,7 @@ import {
   setActiveAttempt,
   setProctoringSettings,
   setVerificationData,
+  setReviewPolicy,
 } from './slice';
 import { ExamStatus } from '../constants';
 
@@ -127,7 +129,7 @@ export function stopExam() {
   };
 }
 
-export function continueExam() {
+export function continueExam(noLoading = true) {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
     const attemptId = exam.attempt.attempt_id;
@@ -136,7 +138,7 @@ export function continueExam() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, continueAttempt(attemptId), true,
+      exam.course_id, exam.content_id, continueAttempt(attemptId), noLoading,
     )(dispatch);
   };
 }
@@ -188,5 +190,17 @@ export function getVerificationData() {
   return async (dispatch) => {
     const data = await fetchVerificationStatus();
     dispatch(setVerificationData({ verification: data }));
+  };
+}
+
+export function getExamReviewPolicy() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to fetch exam review policy. No exam id.');
+      return;
+    }
+    const data = await fetchExamReviewPolicy(exam.id);
+    dispatch(setReviewPolicy({ policy: data.review_policy }));
   };
 }

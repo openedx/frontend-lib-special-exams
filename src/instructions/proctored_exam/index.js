@@ -5,3 +5,4 @@ export { default as SubmittedProctoredExamInstructions } from './SubmittedProcto
 export { default as VerificationProctoredExamInstructions } from './VerificationProctoredExamInstructions';
 export { default as VerifiedProctoredExamInstructions } from './VerifiedProctoredExamInstructions';
 export { default as DownloadSoftwareProctoredExamInstructions } from './download-instructions';
+export { default as ReadyToStartProctoredExamInstructions } from './ReadyToStartProctoredExamInstructions';
