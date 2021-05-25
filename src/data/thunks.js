@@ -8,6 +8,7 @@ import {
   pollExamAttempt,
   fetchProctoringSettings,
   softwareDownloadAttempt,
+  fetchVerificationStatus,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -16,6 +17,7 @@ import {
   expireExamAttempt,
   setActiveAttempt,
   setProctoringSettings,
+  setVerificationData,
 } from './slice';
 import { ExamStatus } from '../constants';
 
@@ -179,5 +181,12 @@ export function startProctoringSoftwareDownload() {
     await updateAttemptAfter(
       exam.course_id, exam.content_id, softwareDownloadAttempt(attemptId),
     )(dispatch);
+  };
+}
+
+export function getVerificationData() {
+  return async (dispatch) => {
+    const data = await fetchVerificationStatus();
+    dispatch(setVerificationData({ verification: data }));
   };
 }

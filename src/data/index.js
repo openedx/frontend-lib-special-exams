@@ -8,6 +8,7 @@ export {
   submitExam,
   expireExam,
   pollAttempt,
+  getVerificationData,
 } from './thunks';
 
 export { default as store } from './store';

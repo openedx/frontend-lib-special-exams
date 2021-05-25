@@ -9,6 +9,7 @@ export const examSlice = createSlice({
     activeAttempt: null,
     proctoringSettings: {},
     exam: {},
+    verification: {},
   },
   reducers: {
     setIsLoading: (state, { payload }) => {
@@ -32,12 +33,15 @@ export const examSlice = createSlice({
       state.timeIsOver = true;
     },
     getExamId: (state) => state.examId,
+    setVerificationData: (state, { payload }) => {
+      state.verification = payload.verification;
+    },
   },
 });
 
 export const {
   setIsLoading, setExamState, getExamId, expireExamAttempt,
-  setActiveAttempt, setProctoringSettings,
+  setActiveAttempt, setProctoringSettings, setVerificationData,
 } = examSlice.actions;
 
 export default examSlice.reducer;

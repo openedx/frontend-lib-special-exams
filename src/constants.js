@@ -23,3 +23,10 @@ export const ExamAction = Object.freeze({
   ERROR: 'error',
   CLICK_DOWNLOAD_SOFTWARE: 'click_download_software',
 });
+
+export const VerificationStatus = Object.freeze({
+  PENDING: 'pending',
+  MUST_REVERIFY: 'must_reverify',
+  APPROVED: 'approved',
+  EXPIRED: 'expired',
+});
