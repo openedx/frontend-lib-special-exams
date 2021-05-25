@@ -17,11 +17,12 @@ export async function pollExamAttempt(url) {
   return data;
 }
 
-export async function createExamAttempt(examId) {
+export async function createExamAttempt(examId, startClock = true, attemptProctored = false) {
   const url = new URL(`${getConfig().LMS_BASE_URL}${BASE_API_URL}`);
   const payload = {
     exam_id: examId,
-    start_clock: 'true',
+    start_clock: startClock.toString(),
+    attempt_proctored: attemptProctored.toString(),
   };
   const { data } = await getAuthenticatedHttpClient().post(url.href, payload);
   return data;
@@ -51,4 +52,10 @@ export async function submitAttempt(attemptId) {
 
 export async function endExamWithFailure(attemptId, error) {
   return updateAttemptStatus(attemptId, ExamAction.ERROR, error);
+}
+
+export async function fetchProctoringSettings(examId) {
+  const url = new URL(`${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/settings/exam_id/${examId}/`);
+  const { data } = await getAuthenticatedHttpClient().get(url.href);
+  return data;
 }
