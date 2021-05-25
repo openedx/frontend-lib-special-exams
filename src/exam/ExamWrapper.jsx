@@ -10,8 +10,13 @@ const ExamWrapper = ({ children, ...props }) => {
   const state = useContext(ExamStateContext);
   const { sequence, courseId } = props;
 
+  const loadInitialData = async () => {
+    await state.getExamAttemptsData(courseId, sequence.id);
+    state.getProctoringSettings();
+  };
+
   useEffect(() => {
-    state.getExamAttemptsData(courseId, sequence.id);
+    loadInitialData();
   }, []);
 
   return (

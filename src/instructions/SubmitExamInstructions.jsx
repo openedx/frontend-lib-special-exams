@@ -9,7 +9,7 @@ const SubmitExamInstructions = () => {
 
   return (
     <Container className="border py-5 mb-4">
-      <h3 className="h3">
+      <h3 className="h3" data-testid="exam-instructions-title">
         <FormattedMessage
           id="exam.submitExamInstructions.title"
           defaultMessage="Are you sure that you want to submit your timed exam?"
