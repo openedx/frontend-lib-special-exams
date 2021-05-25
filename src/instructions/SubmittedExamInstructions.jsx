@@ -8,7 +8,7 @@ const SubmittedExamInstructions = () => {
 
   return (
     <Container className="border py-5 mb-4">
-      <h3 className="h3">
+      <h3 className="h3" data-testid="exam.submittedExamInstructions.title">
         {state.timeIsOver
           ? (
             <FormattedMessage

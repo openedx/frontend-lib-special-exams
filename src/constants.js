@@ -1,9 +1,12 @@
 /* eslint-disable import/prefer-default-export */
 export const ExamStatus = Object.freeze({
+  CREATED: 'created',
   STARTED: 'started',
   READY_TO_SUBMIT: 'ready_to_submit',
   SUBMITTED: 'submitted',
   TIMED_OUT: 'timed_out',
+  VERIFIED: 'verified',
+  REJECTED: 'rejected',
 });
 
 export const IS_STARTED_STATUS = (status) => [ExamStatus.STARTED, ExamStatus.READY_TO_SUBMIT].includes(status);

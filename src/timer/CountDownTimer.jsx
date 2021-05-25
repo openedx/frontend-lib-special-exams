@@ -33,8 +33,8 @@ const CountDownTimer = injectIntl((props) => {
           })}
       >
         {isShowTimer
-          ? <Icon src={Visibility} onClick={hideTimer} />
-          : <Icon src={VisibilityOff} onClick={showTimer} />}
+          ? <Icon data-testid="hide-timer" src={Visibility} onClick={hideTimer} />
+          : <Icon data-testid="show-timer" src={VisibilityOff} onClick={showTimer} />}
       </span>
     </div>
   );
