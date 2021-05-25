@@ -90,6 +90,15 @@ export function startProctoringExam() {
 export function pollAttempt(url) {
   return async (dispatch, getState) => {
     const currentAttempt = getState().examState.activeAttempt;
+
+    // If the learner is in a state where they've finished the exam
+    // and the attempt can be submitted (i.e. they are "ready_to_submit"),
+    // don't ping the proctoring app (which action could move
+    // the attempt into an error state).
+    if (currentAttempt && currentAttempt.attempt_status === ExamStatus.READY_TO_SUBMIT) {
+      return;
+    }
+
     const data = await pollExamAttempt(url).catch(
       err => logError(err),
     );
