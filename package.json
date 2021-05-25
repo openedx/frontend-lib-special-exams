@@ -4,7 +4,9 @@
   "description": "Special exams lib",
   "main": "dist/index.js",
   "release": {
-    "branches": ["main"]
+    "branches": [
+      "main"
+    ]
   },
   "exports": {
     "import": "./dist/index.js"
@@ -65,6 +67,7 @@
     "@edx/frontend-build": "^5.6.11",
     "@edx/frontend-platform": "1.8.4",
     "@edx/paragon": "13.17.0",
+    "@testing-library/dom": "7.16.3",
     "@testing-library/jest-dom": "5.10.1",
     "@testing-library/react": "10.3.0",
     "axios-mock-adapter": "1.18.2",

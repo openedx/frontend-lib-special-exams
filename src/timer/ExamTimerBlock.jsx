@@ -70,7 +70,7 @@ const ExamTimerBlock = injectIntl(({
                     <Alert.Link onClick={showLess}>
                       <FormattedMessage
                         id="exam.examTimer.showLessLink"
-                        defaultMessage="Show Less"
+                        defaultMessage="Show less"
                       />
                     </Alert.Link>
                   </span>
