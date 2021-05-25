@@ -4,6 +4,7 @@ import { Spinner } from '@edx/paragon';
 import { ExamTimerBlock } from '../timer';
 import Instructions from '../instructions';
 import ExamStateContext from '../context';
+import ExamAPIError from './ExamAPIError';
 
 /**
  * Exam component is intended to render exam instructions before and after exam.
@@ -17,8 +18,8 @@ import ExamStateContext from '../context';
 const Exam = ({ isTimeLimited, children }) => {
   const state = useContext(ExamStateContext);
   const {
-    isLoading, activeAttempt, showTimer,
-    stopExam, expireExam, pollAttempt,
+    isLoading, activeAttempt, showTimer, stopExam,
+    expireExam, pollAttempt, apiErrorMsg, pingAttempt,
   } = state;
 
   if (isLoading) {
@@ -39,8 +40,10 @@ const Exam = ({ isTimeLimited, children }) => {
           stopExamAttempt={stopExam}
           expireExamAttempt={expireExam}
           pollExamAttempt={pollAttempt}
+          pingAttempt={pingAttempt}
         />
       )}
+      {apiErrorMsg && <ExamAPIError details={apiErrorMsg} />}
       {isTimeLimited
         ? <Instructions>{sequenceContent}</Instructions>
         : sequenceContent}
