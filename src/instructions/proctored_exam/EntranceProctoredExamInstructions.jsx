@@ -1,21 +1,40 @@
 import React, { useContext } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button, Container } from '@edx/paragon';
+import { ExamStatus } from '../../constants';
 import ExamStateContext from '../../context';
+import Footer from './Footer';
 
 const EntranceProctoredExamInstructions = () => {
   const state = useContext(ExamStateContext);
-  const { startProctoringExam } = state;
+  const { exam, startProctoringExam } = state;
 
   return (
     <div>
       <Container className="border py-5 mb-4">
-        <div className="h3" data-testid="exam-instructions-title">
-          <FormattedMessage
-            id="exam.EntranceProctoredExamInstructions.title"
-            defaultMessage="This exam is proctored"
-          />
-        </div>
+        { exam.attempt.attempt_status === ExamStatus.READY_TO_RESUME ? (
+          <div>
+            <div className="h3" data-testid="proctored-exam-instructions-title">
+              <FormattedMessage
+                id="exam.ReadyToResumeProctoredExamInstructions.title"
+                defaultMessage="Your exam is ready to be resumed."
+              />
+            </div>
+            <p>
+              <FormattedMessage
+                id="exam.ReadyToResumeProctoredExamInstructions.text"
+                defaultMessage="You will have 25 minutes to complete your exam."
+              />
+            </p>
+          </div>
+        ) : (
+          <div className="h3" data-testid="proctored-exam-instructions-title">
+            <FormattedMessage
+              id="exam.EntranceProctoredExamInstructions.title"
+              defaultMessage="This exam is proctored"
+            />
+          </div>
+        )}
         <p>
           <FormattedMessage
             id="exam.EntranceProctoredExamInstructions.text1"
@@ -54,19 +73,7 @@ const EntranceProctoredExamInstructions = () => {
           </Button>
         </p>
       </Container>
-
-      <div className="footer-sequence">
-        <Button
-          data-testid="request-exam-time-button"
-          variant="link"
-          onClick={() => {}}
-        >
-          <FormattedMessage
-            id="exam.startExamInstructions.footerButton"
-            defaultMessage="About Proctored Exams"
-          />
-        </Button>
-      </div>
+      <Footer />
     </div>
   );
 };

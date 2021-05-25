@@ -5,7 +5,7 @@ import { Button, Container } from '@edx/paragon';
 const VerifiedProctoredExamInstructions = () => (
   <div>
     <Container className="border py-5 mb-4 bg-success-100">
-      <h3 className="h3" data-testid="exam-instructions-title">
+      <h3 className="h3" data-testid="proctored-exam-instructions-title">
         <FormattedMessage
           id="exam.VerifiedProctoredExamInstructions.title"
           defaultMessage={'Your proctoring session was reviewed successfully. '
