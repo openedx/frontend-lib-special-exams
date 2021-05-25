@@ -10,6 +10,7 @@ import {
   SubmittedProctoredExamInstructions,
   VerifiedProctoredExamInstructions,
   RejectedProctoredExamInstructions,
+  DownloadSoftwareProctoredExamInstructions,
 } from './proctored_exam';
 import { isEmpty } from '../helpers';
 import { ExamStatus } from '../constants';
@@ -25,7 +26,9 @@ const Instructions = ({ children }) => {
         ? <EntranceProctoredExamInstructions />
         : <StartExamInstructions />;
     case attempt.attempt_status === ExamStatus.CREATED:
-      return <VerificationProctoredExamInstructions />;
+      return <DownloadSoftwareProctoredExamInstructions />;
+    case attempt.attempt_status === ExamStatus.DOWNLOAD_SOFTWARE_CLICKED:
+      return <DownloadSoftwareProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.READY_TO_SUBMIT:
       return isProctored
         ? <SubmitProctoredExamInstructions />

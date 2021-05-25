@@ -7,6 +7,7 @@ import {
   submitAttempt,
   pollExamAttempt,
   fetchProctoringSettings,
+  softwareDownloadAttempt,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -80,6 +81,8 @@ export function startProctoringExam() {
     await updateAttemptAfter(
       exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
     )(dispatch);
+    const proctoringSettings = await fetchProctoringSettings(exam.id);
+    dispatch(setProctoringSettings({ proctoringSettings }));
   };
 }
 
@@ -162,5 +165,19 @@ export function expireExam() {
       exam.course_id, exam.content_id, submitAttempt(attemptId),
     )(dispatch);
     dispatch(expireExamAttempt());
+  };
+}
+
+export function startProctoringSoftwareDownload() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    const attemptId = exam.attempt.attempt_id;
+    if (!attemptId) {
+      logError('Failed to start downloading proctoring software. No attempt id.');
+      return;
+    }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, softwareDownloadAttempt(attemptId),
+    )(dispatch);
   };
 }
