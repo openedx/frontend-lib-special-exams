@@ -20,22 +20,21 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl }) => {
   } = state;
   const {
     attempt,
-    external_id: examExternalId,
     course_id: courseId,
     content_id: sequenceId,
   } = exam;
   const {
     exam_started_poll_url: pollUrl,
-    external_id: attemptExternalId,
     attempt_code: examCode,
     attempt_id: attemptId,
+    software_download_url: downloadUrl,
   } = attempt;
   const {
     platform_name: platformName,
     contact_us: contactInfo,
     exam_proctoring_backend: proctoringBackend,
   } = proctoringSettings;
-  const { download_url: downloadUrl, instructions } = proctoringBackend || {};
+  const { instructions } = proctoringBackend || {};
   const [systemCheckStatus, setSystemCheckStatus] = useState('');
   const [downloadClicked, setDownloadClicked] = useState(false);
   const withProviderInstructions = instructions && instructions.length > 0;
@@ -47,8 +46,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl }) => {
           setSystemCheckStatus('success');
         } else {
           softwareDownloadAttempt(attemptId);
-          const newUrl = `${downloadUrl.split('?')[0]}?attempt=${attemptExternalId}&exam=${examExternalId}`;
-          window.open(newUrl, '_blank');
+          window.open(downloadUrl, '_blank');
         }
       });
     setDownloadClicked(true);
