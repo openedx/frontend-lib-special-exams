@@ -21,6 +21,10 @@ describe('SequenceExamWrapper', () => {
       examState: {
         isLoading: false,
         activeAttempt: null,
+        verification: {
+          status: 'none',
+          can_verify: true,
+        },
         exam: {
           time_limit_mins: 30,
           attempt: {},
@@ -43,6 +47,10 @@ describe('SequenceExamWrapper', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,
+        verification: {
+          status: 'none',
+          can_verify: true,
+        },
         activeAttempt: {
           attempt_status: 'started',
         },
