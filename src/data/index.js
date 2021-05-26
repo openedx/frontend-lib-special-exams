@@ -10,6 +10,7 @@ export {
   pollAttempt,
   getVerificationData,
   getExamReviewPolicy,
+  pingAttempt,
 } from './thunks';
 
 export { default as store } from './store';

@@ -10,6 +10,7 @@ export const examSlice = createSlice({
     proctoringSettings: {},
     exam: {},
     verification: {},
+    apiErrorMsg: '',
   },
   reducers: {
     setIsLoading: (state, { payload }) => {
@@ -21,10 +22,10 @@ export const examSlice = createSlice({
     },
     setActiveAttempt: (state, { payload }) => {
       state.activeAttempt = payload.activeAttempt;
-      const examAttempt = state.exam.attempt;
-      if (examAttempt && examAttempt.attempt_id === payload.activeAttempt.attempt_id) {
-        state.exam.attempt = payload.activeAttempt;
-      }
+      state.apiErrorMsg = '';
+    },
+    setProctoringSettings: (state, { payload }) => {
+      state.proctoringSettings = payload.proctoringSettings;
     },
     setProctoringSettings: (state, { payload }) => {
       state.proctoringSettings = payload.proctoringSettings;
@@ -38,13 +39,16 @@ export const examSlice = createSlice({
     },
     setReviewPolicy: (state, { payload }) => {
       state.exam.reviewPolicy = payload.policy;
+    setApiError: (state, { payload }) => {
+      state.apiErrorMsg = payload.errorMsg;
     },
   },
 });
 
 export const {
   setIsLoading, setExamState, getExamId, expireExamAttempt,
-  setActiveAttempt, setProctoringSettings, setVerificationData, setReviewPolicy,
+  setActiveAttempt, setProctoringSettings, setVerificationData,
+  setReviewPolicy, setApiError,
 } = examSlice.actions;
 
 export default examSlice.reducer;

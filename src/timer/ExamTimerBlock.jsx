@@ -16,7 +16,7 @@ import {
  * Exam timer block component.
  */
 const ExamTimerBlock = injectIntl(({
-  attempt, stopExamAttempt, expireExamAttempt, pollExamAttempt, intl,
+  attempt, stopExamAttempt, expireExamAttempt, pollExamAttempt, intl, pingAttempt,
 }) => {
   const [isShowMore, showMore, showLess] = useToggle(false);
   const [alertVariant, setAlertVariant] = useState('info');
@@ -41,7 +41,7 @@ const ExamTimerBlock = injectIntl(({
   }, []);
 
   return (
-    <TimerProvider attempt={attempt} pollHandler={pollExamAttempt}>
+    <TimerProvider attempt={attempt} pollHandler={pollExamAttempt} pingHandler={pingAttempt}>
       <Alert variant={alertVariant}>
         <div className="d-flex justify-content-between flex-column flex-lg-row align-items-start">
           <div>
@@ -70,7 +70,7 @@ const ExamTimerBlock = injectIntl(({
                     <Alert.Link onClick={showLess}>
                       <FormattedMessage
                         id="exam.examTimer.showLessLink"
-                        defaultMessage="Show Less"
+                        defaultMessage="Show less"
                       />
                     </Alert.Link>
                   </span>

@@ -7,7 +7,6 @@ import {
   TIMER_IS_LOW,
   TIMER_LIMIT_REACHED,
 } from './events';
-import { ExamStatus } from '../constants';
 import { withExamStore } from '../hocs';
 
 /* give an extra 5 seconds where the timer holds at 00:00 before page refreshes */
@@ -27,10 +26,14 @@ const getFormattedRemainingTime = (timeLeft) => ({
   seconds: Math.floor(timeLeft % 60),
 });
 
-const TimerServiceProvider = ({ children, attempt, pollHandler }) => {
+const TimerServiceProvider = ({
+  children, attempt, pollHandler, pingHandler,
+}) => {
   const [timeState, setTimeState] = useState({});
   const [limitReached, setLimitReached] = useToggle(false);
   const {
+    desktop_application_js_url: workerUrl,
+    ping_interval: pingInterval,
     time_remaining_seconds: timeRemaining,
     critically_low_threshold_sec: criticalLowTime,
     low_threshold_sec: lowTime,
@@ -47,18 +50,7 @@ const TimerServiceProvider = ({ children, attempt, pollHandler }) => {
     },
   ).join(':');
 
-  // AED 2020-02-21:
-  // If the learner is in a state where they've finished the exam
-  // and the attempt can be submitted (i.e. they are "ready_to_submit"),
-  // don't ping the proctoring app (which action could move
-  // the attempt into an error state).
   const pollExam = () => {
-    // Fixme: this condition has no effect because attempt status is always 'started'.
-    // This happens because pollExam becomes a closure
-    // and uses attempt_status value from when component was first rendered.
-    if (attempt.attempt_status === ExamStatus.READY_TO_SUBMIT) {
-      return;
-    }
     const url = attempt.exam_started_poll_url;
     const queryString = `?sourceid=in_exam&proctored=${attempt.taking_as_proctored}`;
     pollHandler(url + queryString);
@@ -89,6 +81,11 @@ const TimerServiceProvider = ({ children, attempt, pollHandler }) => {
       if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
         pollExam();
       }
+
+      // if exam is proctored ping provider app also
+      if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
+        pingHandler(pingInterval, workerUrl);
+      }
     }, 1000);
 
     return () => { clearInterval(interval); };
@@ -111,15 +108,19 @@ TimerServiceProvider.propTypes = {
     critically_low_threshold_sec: PropTypes.number.isRequired,
     low_threshold_sec: PropTypes.number.isRequired,
     exam_started_poll_url: PropTypes.string,
+    desktop_application_js_url: PropTypes.string,
+    ping_interval: PropTypes.number,
     taking_as_proctored: PropTypes.bool,
     attempt_status: PropTypes.string.isRequired,
   }).isRequired,
   children: PropTypes.element.isRequired,
   pollHandler: PropTypes.func,
+  pingHandler: PropTypes.func,
 };
 
 TimerServiceProvider.defaultProps = {
   pollHandler: () => {},
+  pingHandler: () => {},
 };
 
 export default withExamStore(TimerServiceProvider, mapStateToProps);
