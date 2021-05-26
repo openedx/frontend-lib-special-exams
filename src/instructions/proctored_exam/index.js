@@ -1,3 +1,4 @@
+export { default as ErrorProctoredExamInstructions } from './ErrorProctoredExamInstructions';
 export { default as EntranceProctoredExamInstructions } from './EntranceProctoredExamInstructions';
 export { default as RejectedProctoredExamInstructions } from './RejectedProctoredExamInstructions';
 export { default as SubmitProctoredExamInstructions } from './SubmitProctoredExamInstructions';
