@@ -22,6 +22,7 @@ const Instructions = ({ children }) => {
   const { exam, verification } = state;
   const { attempt, is_proctored: isProctored } = exam || {};
   let verificationStatus = verification.status || '';
+  const { verification_url: verificationUrl } = attempt || {};
 
   // The API does not explicitly return 'expired' status, so we have to check manually.
   // expires attribute is returned only for approved status, so it is safe to do this
@@ -38,7 +39,7 @@ const Instructions = ({ children }) => {
     case attempt.attempt_status === ExamStatus.CREATED:
       return verificationStatus === VerificationStatus.APPROVED
         ? <DownloadSoftwareProctoredExamInstructions />
-        : <VerificationProctoredExamInstructions status={verificationStatus} />;
+        : <VerificationProctoredExamInstructions status={verificationStatus} verificationUrl={verificationUrl} />;
     case attempt.attempt_status === ExamStatus.DOWNLOAD_SOFTWARE_CLICKED:
       return <DownloadSoftwareProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.READY_TO_START:

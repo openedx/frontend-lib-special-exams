@@ -5,7 +5,7 @@ import { Button, Container } from '@edx/paragon';
 import { VerificationStatus } from '../../constants';
 import Footer from './Footer';
 
-const VerificationProctoredExamInstructions = ({ status }) => {
+const VerificationProctoredExamInstructions = ({ status, verificationUrl }) => {
   const renderVerificationMessage = () => {
     switch (status) {
       case VerificationStatus.PENDING:
@@ -31,8 +31,9 @@ const VerificationProctoredExamInstructions = ({ status }) => {
             </p>
             <Button
               data-testid="exam.VerificationProctoredExamInstructions-retry-button"
-              variant="primary"
-              onClick={() => {}}
+              variant="link"
+              href={verificationUrl}
+              target="_blank"
             >
               <FormattedMessage
                 id="exam.VerificationProctoredExamInstructions.retryButton"
@@ -53,8 +54,8 @@ const VerificationProctoredExamInstructions = ({ status }) => {
             </p>
             <Button
               data-testid="exam.VerificationProctoredExamInstructions-continue-button"
-              variant="primary"
-              onClick={() => {}}
+              href={verificationUrl}
+              target="_blank"
             >
               <FormattedMessage
                 id="exam.VerificationProctoredExamInstructions.continueButton"
@@ -76,8 +77,8 @@ const VerificationProctoredExamInstructions = ({ status }) => {
             </p>
             <Button
               data-testid="exam.VerificationProctoredExamInstructions-continue-button"
-              variant="primary"
-              onClick={() => {}}
+              href={verificationUrl}
+              target="_blank"
             >
               <FormattedMessage
                 id="exam.VerificationProctoredExamInstructions.continueButton"
@@ -113,6 +114,11 @@ const VerificationProctoredExamInstructions = ({ status }) => {
 
 VerificationProctoredExamInstructions.propTypes = {
   status: PropTypes.string.isRequired,
+  verificationUrl: PropTypes.string,
+};
+
+VerificationProctoredExamInstructions.defaultProps = {
+  verificationUrl: '',
 };
 
 export default VerificationProctoredExamInstructions;
