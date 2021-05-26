@@ -27,9 +27,6 @@ export const examSlice = createSlice({
     setProctoringSettings: (state, { payload }) => {
       state.proctoringSettings = payload.proctoringSettings;
     },
-    setProctoringSettings: (state, { payload }) => {
-      state.proctoringSettings = payload.proctoringSettings;
-    },
     expireExamAttempt: (state) => {
       state.timeIsOver = true;
     },
@@ -39,6 +36,7 @@ export const examSlice = createSlice({
     },
     setReviewPolicy: (state, { payload }) => {
       state.exam.reviewPolicy = payload.policy;
+    },
     setApiError: (state, { payload }) => {
       state.apiErrorMsg = payload.errorMsg;
     },

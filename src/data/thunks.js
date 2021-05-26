@@ -118,19 +118,6 @@ export function startProctoringExam() {
     await updateAttemptAfter(
       exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
     )(dispatch);
-  };
-}
-
-export function startProctoringExam() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().examState;
-    if (!exam.id) {
-      logError('Failed to start exam. No exam id.');
-      return;
-    }
-    await updateAttemptAfter(
-      exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
-    )(dispatch);
     const proctoringSettings = await fetchProctoringSettings(exam.id);
     dispatch(setProctoringSettings({ proctoringSettings }));
   };
