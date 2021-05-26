@@ -12,6 +12,7 @@ import {
   RejectedProctoredExamInstructions,
   DownloadSoftwareProctoredExamInstructions,
   ReadyToStartProctoredExamInstructions,
+  PrerequisitesProctoredExamInstructions,
 } from './proctored_exam';
 import { isEmpty } from '../helpers';
 import { ExamStatus, VerificationStatus } from '../constants';
@@ -20,7 +21,8 @@ import ExamStateContext from '../context';
 const Instructions = ({ children }) => {
   const state = useContext(ExamStateContext);
   const { exam, verification } = state;
-  const { attempt, is_proctored: isProctored } = exam || {};
+  const { attempt, is_proctored: isProctored, prerequisite_status: prerequisitesData } = exam || {};
+  const prerequisitesPassed = prerequisitesData ? prerequisitesData.are_prerequisites_satisifed : true;
   let verificationStatus = verification.status || '';
   const { verification_url: verificationUrl } = attempt || {};
 
@@ -33,8 +35,11 @@ const Instructions = ({ children }) => {
 
   switch (true) {
     case isEmpty(attempt):
+      // eslint-disable-next-line no-nested-ternary
       return isProctored
-        ? <EntranceProctoredExamInstructions />
+        ? prerequisitesPassed
+          ? <EntranceProctoredExamInstructions />
+          : <PrerequisitesProctoredExamInstructions />
         : <StartExamInstructions />;
     case attempt.attempt_status === ExamStatus.CREATED:
       return verificationStatus === VerificationStatus.APPROVED
