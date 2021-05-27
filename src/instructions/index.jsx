@@ -1,6 +1,5 @@
 import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
-import StartExamInstructions from './StartExamInstructions';
 import SubmitExamInstructions from './SubmitExamInstructions';
 import SubmittedExamInstructions from './SubmittedExamInstructions';
 import {
@@ -17,13 +16,14 @@ import {
   SkipProctoredExamInstruction,
 } from './proctored_exam';
 import { isEmpty } from '../helpers';
-import { ExamStatus, VerificationStatus } from '../constants';
+import { ExamStatus, VerificationStatus, ExamType } from '../constants';
 import ExamStateContext from '../context';
+import EntranceExamInstructions from './EntranceInstructions';
 
 const Instructions = ({ children }) => {
   const state = useContext(ExamStateContext);
   const { exam, verification } = state;
-  const { attempt, is_proctored: isProctored, prerequisite_status: prerequisitesData } = exam || {};
+  const { attempt, type: examType, prerequisite_status: prerequisitesData } = exam || {};
   const prerequisitesPassed = prerequisitesData ? prerequisitesData.are_prerequisites_satisifed : true;
   let verificationStatus = verification.status || '';
   const { verification_url: verificationUrl } = attempt || {};
@@ -40,14 +40,14 @@ const Instructions = ({ children }) => {
   switch (true) {
     case isEmpty(attempt):
       // eslint-disable-next-line no-nested-ternary
-      return isProctored
+      return examType === ExamType.PROCTORED
         // eslint-disable-next-line no-nested-ternary
         ? skipProctoring
           ? <SkipProctoredExamInstruction cancelSkipProctoredExam={toggleSkipProctoredExam} />
           : prerequisitesPassed
-            ? <EntranceProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />
+            ? <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />
             : <PrerequisitesProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />
-        : <StartExamInstructions />;
+        : <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
     case attempt.attempt_status === ExamStatus.CREATED:
       return verificationStatus === VerificationStatus.APPROVED
         ? <DownloadSoftwareProctoredExamInstructions />
@@ -57,11 +57,11 @@ const Instructions = ({ children }) => {
     case attempt.attempt_status === ExamStatus.READY_TO_START:
       return <ReadyToStartProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.READY_TO_SUBMIT:
-      return isProctored
+      return examType === ExamType.PROCTORED
         ? <SubmitProctoredExamInstructions />
         : <SubmitExamInstructions />;
     case attempt.attempt_status === ExamStatus.SUBMITTED:
-      return isProctored
+      return examType === ExamType.PROCTORED
         ? <SubmittedProctoredExamInstructions />
         : <SubmittedExamInstructions />;
     case attempt.attempt_status === ExamStatus.VERIFIED:

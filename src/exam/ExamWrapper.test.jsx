@@ -24,6 +24,7 @@ store.getState = () => ({
     },
     exam: {
       time_limit_mins: 30,
+      type: 'timed',
       attempt: {},
     },
   },

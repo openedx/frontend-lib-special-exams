@@ -5,6 +5,7 @@ import Instructions from './index';
 import { store, getExamAttemptsData, startExam } from '../data';
 import { render, screen } from '../setupTest';
 import { ExamStateProvider } from '../index';
+import { ExamType } from '../constants';
 
 jest.mock('../data', () => ({
   store: {},
@@ -22,6 +23,7 @@ describe('SequenceExamWrapper', () => {
       examState: {
         isLoading: false,
         activeAttempt: null,
+        proctoringSettings: {},
         verification: {
           status: 'none',
           can_verify: true,
@@ -29,6 +31,7 @@ describe('SequenceExamWrapper', () => {
         exam: {
           time_limit_mins: 30,
           attempt: {},
+          type: ExamType.TIMED,
         },
       },
     });
@@ -57,6 +60,7 @@ describe('SequenceExamWrapper', () => {
         },
         exam: {
           time_limit_mins: 30,
+          type: ExamType.PROCTORED,
           attempt: {
             attempt_status: 'started',
           },
@@ -75,6 +79,62 @@ describe('SequenceExamWrapper', () => {
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
   });
 
+  it('Shows onboarding exam entrance instructions when receives onboarding exam', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        verification: {
+          status: 'approved',
+        },
+        proctoringSettings: {},
+        activeAttempt: {},
+        exam: {
+          time_limit_mins: 30,
+          type: ExamType.ONBOARDING,
+          attempt: {},
+        },
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div data-testid="sequence-content">Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(getByTestId('exam-instructions-title')).toHaveTextContent('Proctoring onboarding exam');
+  });
+
+  it('Shows practice exam entrance instructions when receives practice exam', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        verification: {
+          status: 'approved',
+        },
+        activeAttempt: {},
+        proctoringSettings: {},
+        exam: {
+          time_limit_mins: 30,
+          type: ExamType.PRACTICE,
+          attempt: {},
+        },
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div data-testid="sequence-content">Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(getByTestId('exam-instructions-title')).toHaveTextContent('Try a proctored exam');
+  });
+
   it('Shows failed prerequisites page if user has failed prerequisites for the exam', () => {
     store.getState = () => ({
       examState: {
@@ -89,7 +149,9 @@ describe('SequenceExamWrapper', () => {
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {},
+          type: ExamType.PROCTORED,
           prerequisite_status: {
+            are_prerequisites_satisfied: false,
             failed_prerequisites: [
               {
                 test: 'failed',
@@ -131,9 +193,11 @@ describe('SequenceExamWrapper', () => {
         exam: {
           allow_proctoring_opt_out: false,
           is_proctored: true,
+          type: ExamType.PROCTORED,
           time_limit_mins: 30,
           attempt: {},
           prerequisite_status: {
+            are_prerequisites_satisfied: false,
             pending_prerequisites: [
               {
                 test: 'failed',
