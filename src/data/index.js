@@ -8,6 +8,8 @@ export {
   submitExam,
   expireExam,
   pollAttempt,
+  getVerificationData,
+  getExamReviewPolicy,
   pingAttempt,
 } from './thunks';
 

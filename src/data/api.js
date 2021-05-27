@@ -54,8 +54,28 @@ export async function endExamWithFailure(attemptId, error) {
   return updateAttemptStatus(attemptId, ExamAction.ERROR, error);
 }
 
+export async function softwareDownloadAttempt(attemptId) {
+  return updateAttemptStatus(attemptId, ExamAction.CLICK_DOWNLOAD_SOFTWARE);
+}
+
+export async function fetchExamReviewPolicy(examId) {
+  const url = new URL(
+    `${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/review_policy/exam_id/${examId}/`,
+  );
+  const { data } = await getAuthenticatedHttpClient().get(url.href);
+  return data;
+}
+
 export async function fetchProctoringSettings(examId) {
   const url = new URL(`${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/settings/exam_id/${examId}/`);
+  const { data } = await getAuthenticatedHttpClient().get(url.href);
+  return data;
+}
+
+export async function fetchVerificationStatus() {
+  const url = new URL(
+    `${getConfig().LMS_BASE_URL}/verify_student/status/`,
+  );
   const { data } = await getAuthenticatedHttpClient().get(url.href);
   return data;
 }
