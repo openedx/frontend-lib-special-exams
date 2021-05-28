@@ -1,15 +1,12 @@
 import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
-import SubmitExamInstructions from './SubmitExamInstructions';
 import SubmittedExamInstructions from './SubmittedExamInstructions';
 import {
   ErrorProctoredExamInstructions,
   EntranceProctoredExamInstructions,
   VerificationProctoredExamInstructions,
-  SubmitProctoredExamInstructions,
   SubmittedProctoredExamInstructions,
   VerifiedProctoredExamInstructions,
-  RejectedProctoredExamInstructions,
   DownloadSoftwareProctoredExamInstructions,
   ReadyToStartProctoredExamInstructions,
   PrerequisitesProctoredExamInstructions,
@@ -19,11 +16,13 @@ import { isEmpty } from '../helpers';
 import { ExamStatus, VerificationStatus, ExamType } from '../constants';
 import ExamStateContext from '../context';
 import EntranceExamInstructions from './EntranceInstructions';
+import SubmitExamInstructions from './SubmitInstructions';
+import RejectedInstructions from './RejectedInstructions';
 
 const Instructions = ({ children }) => {
   const state = useContext(ExamStateContext);
   const { exam, verification } = state;
-  const { attempt, exam_type: examType, prerequisite_status: prerequisitesData } = exam || {};
+  const { attempt, type: examType, prerequisite_status: prerequisitesData } = exam || {};
   const prerequisitesPassed = prerequisitesData ? prerequisitesData.are_prerequisites_satisifed : true;
   let verificationStatus = verification.status || '';
   const { verification_url: verificationUrl } = attempt || {};
@@ -57,9 +56,7 @@ const Instructions = ({ children }) => {
     case attempt.attempt_status === ExamStatus.READY_TO_START:
       return <ReadyToStartProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.READY_TO_SUBMIT:
-      return examType === ExamType.PROCTORED
-        ? <SubmitProctoredExamInstructions />
-        : <SubmitExamInstructions />;
+      return <SubmitExamInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.SUBMITTED:
       return examType === ExamType.PROCTORED
         ? <SubmittedProctoredExamInstructions />
@@ -67,11 +64,11 @@ const Instructions = ({ children }) => {
     case attempt.attempt_status === ExamStatus.VERIFIED:
       return <VerifiedProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.REJECTED:
-      return <RejectedProctoredExamInstructions />;
+      return <RejectedInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.ERROR:
       return <ErrorProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.READY_TO_RESUME:
-      return <EntranceProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
+      return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
     default:
       return children;
   }
