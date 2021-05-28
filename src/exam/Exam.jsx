@@ -18,9 +18,11 @@ import ExamAPIError from './ExamAPIError';
 const Exam = ({ isTimeLimited, children }) => {
   const state = useContext(ExamStateContext);
   const {
-    isLoading, activeAttempt, showTimer, stopExam,
+    isLoading, activeAttempt, showTimer, stopExam, exam,
     expireExam, pollAttempt, apiErrorMsg, pingAttempt,
   } = state;
+
+  const examType = exam.humanized_type || '';
 
   if (isLoading) {
     return (
@@ -36,6 +38,7 @@ const Exam = ({ isTimeLimited, children }) => {
     <div className="d-flex flex-column justify-content-center">
       {showTimer && (
         <ExamTimerBlock
+          examType={examType}
           attempt={activeAttempt}
           stopExamAttempt={stopExam}
           expireExamAttempt={expireExam}

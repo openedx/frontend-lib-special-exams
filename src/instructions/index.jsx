@@ -23,7 +23,7 @@ import EntranceExamInstructions from './EntranceInstructions';
 const Instructions = ({ children }) => {
   const state = useContext(ExamStateContext);
   const { exam, verification } = state;
-  const { attempt, type: examType, prerequisite_status: prerequisitesData } = exam || {};
+  const { attempt, exam_type: examType, prerequisite_status: prerequisitesData } = exam || {};
   const prerequisitesPassed = prerequisitesData ? prerequisitesData.are_prerequisites_satisifed : true;
   let verificationStatus = verification.status || '';
   const { verification_url: verificationUrl } = attempt || {};
