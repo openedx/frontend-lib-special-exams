@@ -9,6 +9,8 @@ export const ExamStatus = Object.freeze({
   TIMED_OUT: 'timed_out',
   VERIFIED: 'verified',
   REJECTED: 'rejected',
+  ERROR: 'error',
+  READY_TO_RESUME: 'ready_to_resume',
 });
 
 export const IS_STARTED_STATUS = (status) => [ExamStatus.STARTED, ExamStatus.READY_TO_SUBMIT].includes(status);
