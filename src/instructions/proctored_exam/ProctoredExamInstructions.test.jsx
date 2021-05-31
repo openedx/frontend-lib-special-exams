@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import React from 'react';
+import { fireEvent } from '@testing-library/dom';
 import Instructions from '../index';
 import { store, getExamAttemptsData, startExam } from '../../data';
 import { render } from '../../setupTest';
@@ -29,6 +30,7 @@ describe('SequenceExamWrapper', () => {
           can_verify: true,
         },
         exam: {
+          allow_proctoring_opt_out: true,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {},
@@ -45,6 +47,12 @@ describe('SequenceExamWrapper', () => {
       { store },
     );
     expect(getByTestId('start-exam-button')).toHaveTextContent('Continue to my proctored exam.');
+    fireEvent.click(getByTestId('start-exam-without-proctoring-button'));
+    expect(getByTestId('proctored-exam-instructions-title'))
+      .toHaveTextContent('Are you sure you want to take this exam without proctoring?');
+    fireEvent.click(getByTestId('skip-cancel-exam-button'));
+    expect(getByTestId('start-exam-without-proctoring-button'))
+      .toHaveTextContent('Take this exam without proctoring.');
   });
 
   it('Instructions are not shown when exam is started', () => {

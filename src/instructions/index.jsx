@@ -71,7 +71,7 @@ const Instructions = ({ children }) => {
     case attempt.attempt_status === ExamStatus.ERROR:
       return <ErrorProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.READY_TO_RESUME:
-      return <EntranceProctoredExamInstructions />;
+      return <EntranceProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
     default:
       return children;
   }

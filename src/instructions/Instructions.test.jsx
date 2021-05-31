@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import React from 'react';
+import { fireEvent } from '@testing-library/dom';
 import Instructions from './index';
 import { store, getExamAttemptsData, startExam } from '../data';
 import { render, screen } from '../setupTest';
@@ -84,6 +85,7 @@ describe('SequenceExamWrapper', () => {
         },
         activeAttempt: {},
         exam: {
+          allow_proctoring_opt_out: true,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {},
@@ -109,6 +111,12 @@ describe('SequenceExamWrapper', () => {
     );
 
     expect(getByTestId('failed-prerequisites')).toBeInTheDocument();
+    fireEvent.click(getByTestId('start-exam-without-proctoring-button'));
+    expect(getByTestId('proctored-exam-instructions-title'))
+      .toHaveTextContent('Are you sure you want to take this exam without proctoring?');
+    fireEvent.click(getByTestId('skip-cancel-exam-button'));
+    expect(getByTestId('start-exam-without-proctoring-button'))
+      .toHaveTextContent('Take this exam without proctoring.');
   });
 
   it('Shows pending prerequisites page if user has failed prerequisites for the exam', () => {
@@ -121,6 +129,7 @@ describe('SequenceExamWrapper', () => {
         },
         activeAttempt: {},
         exam: {
+          allow_proctoring_opt_out: false,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {},
@@ -145,7 +154,9 @@ describe('SequenceExamWrapper', () => {
       { store },
     );
 
+    const skipProctoredExamButton = screen.queryByText('Take this exam without proctoring.');
     expect(getByTestId('pending-prerequisites')).toBeInTheDocument();
+    expect(skipProctoredExamButton).toBeNull();
   });
 
   it('Instructions for error status', () => {
@@ -218,7 +229,7 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByTestId('start-exam-button')).toHaveTextContent('Continue to my proctored exam.');
   });
 
-  it('Instructions are shown when attempt status is ready_to_submit', () => {
+  it('Instructions for ready to submit status', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,
@@ -250,7 +261,7 @@ describe('SequenceExamWrapper', () => {
     expect(getByTestId('exam-instructions-title')).toHaveTextContent('Are you sure that you want to submit your timed exam?');
   });
 
-  it('Instructions are shown when attempt status is submitted', () => {
+  it('Instructions for submitted status', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,
@@ -282,7 +293,7 @@ describe('SequenceExamWrapper', () => {
     expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('You have submitted your timed exam.');
   });
 
-  it('Instructions are shown when exam time is over', () => {
+  it('Instructions when exam time is over', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,

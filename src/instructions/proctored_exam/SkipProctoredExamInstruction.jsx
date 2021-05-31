@@ -12,7 +12,7 @@ const SkipProctoredExamInstruction = ({ cancelSkipProctoredExam }) => {
   return (
     <>
       <Container className="border py-5 mb-4">
-        <p>
+        <p data-testid="proctored-exam-instructions-title">
           <FormattedMessage
             id="exam.skipProctoredExamInstructions.text1"
             defaultMessage="Are you sure you want to take this exam without proctoring?"
