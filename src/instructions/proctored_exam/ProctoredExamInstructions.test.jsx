@@ -1,11 +1,11 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import Instructions from './index';
-import { store, getExamAttemptsData, startExam } from '../data';
-import { render, screen } from '../setupTest';
-import { ExamStateProvider } from '../index';
+import Instructions from '../index';
+import { store, getExamAttemptsData, startExam } from '../../data';
+import { render } from '../../setupTest';
+import { ExamStateProvider } from '../../index';
 
-jest.mock('../data', () => ({
+jest.mock('../../data', () => ({
   store: {},
   getExamAttemptsData: jest.fn(),
   startExam: jest.fn(),
@@ -21,11 +21,15 @@ describe('SequenceExamWrapper', () => {
       examState: {
         isLoading: false,
         activeAttempt: null,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
         verification: {
           status: 'none',
           can_verify: true,
         },
         exam: {
+          is_proctored: true,
           time_limit_mins: 30,
           attempt: {},
         },
@@ -35,12 +39,12 @@ describe('SequenceExamWrapper', () => {
     const { getByTestId } = render(
       <ExamStateProvider>
         <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
+          <div>Sequence</div>
         </Instructions>
       </ExamStateProvider>,
       { store },
     );
-    expect(getByTestId('start-exam-button')).toHaveTextContent('I am ready to start this timed exam.');
+    expect(getByTestId('start-exam-button')).toHaveTextContent('Continue to my proctored exam.');
   });
 
   it('Instructions are not shown when exam is started', () => {
@@ -55,6 +59,7 @@ describe('SequenceExamWrapper', () => {
           attempt_status: 'started',
         },
         exam: {
+          is_proctored: true,
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'started',
@@ -74,28 +79,27 @@ describe('SequenceExamWrapper', () => {
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
   });
 
-  it('Shows failed prerequisites page if user has failed prerequisites for the exam', () => {
+  it('Instructions are shown when attempt status is created', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,
-        timeIsOver: true,
         proctoringSettings: {
           platform_name: 'Your Platform',
         },
-        activeAttempt: {},
+        verification: {
+          status: 'none',
+          can_verify: true,
+        },
+        activeAttempt: {
+          attempt_status: 'created',
+        },
         exam: {
           is_proctored: true,
           time_limit_mins: 30,
-          attempt: {},
-          prerequisite_status: {
-            failed_prerequisites: [
-              {
-                test: 'failed',
-              },
-            ],
+          attempt: {
+            attempt_status: 'created',
           },
         },
-        verification: {},
       },
     });
 
@@ -107,32 +111,31 @@ describe('SequenceExamWrapper', () => {
       </ExamStateProvider>,
       { store },
     );
-
-    expect(getByTestId('failed-prerequisites')).toBeInTheDocument();
+    expect(getByTestId('exam.VerificationProctoredExamInstructions-continue-button'))
+      .toHaveTextContent('Continue to Verification');
   });
 
-  it('Shows pending prerequisites page if user has failed prerequisites for the exam', () => {
+  it('Instructions are shown when attempt status is ready_to_start', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,
-        timeIsOver: true,
         proctoringSettings: {
           platform_name: 'Your Platform',
         },
-        activeAttempt: {},
+        verification: {
+          status: 'none',
+          can_verify: true,
+        },
+        activeAttempt: {
+          attempt_status: 'ready_to_start',
+        },
         exam: {
           is_proctored: true,
           time_limit_mins: 30,
-          attempt: {},
-          prerequisite_status: {
-            pending_prerequisites: [
-              {
-                test: 'failed',
-              },
-            ],
+          attempt: {
+            attempt_status: 'ready_to_start',
           },
         },
-        verification: {},
       },
     });
 
@@ -144,85 +147,49 @@ describe('SequenceExamWrapper', () => {
       </ExamStateProvider>,
       { store },
     );
-
-    expect(getByTestId('pending-prerequisites')).toBeInTheDocument();
+    expect(getByTestId('proctored-exam-instructions-rulesLink'))
+      .toHaveTextContent('Rules for Online Proctored Exams');
   });
 
-  it('Instructions for error status', () => {
+  it('Instructions are shown when attempt status is submitted', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,
         proctoringSettings: {
-          link_urls: '',
+          platform_name: 'Your Platform',
         },
         verification: {
           status: 'none',
           can_verify: true,
         },
         activeAttempt: {
-          attempt_status: 'error',
+          attempt_status: 'submitted',
         },
         exam: {
+          is_proctored: true,
           time_limit_mins: 30,
           attempt: {
-            attempt_status: 'error',
+            attempt_status: 'submitted',
           },
         },
       },
     });
 
-    render(
+    const { getByTestId } = render(
       <ExamStateProvider>
         <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
+          <div>Sequence</div>
         </Instructions>
       </ExamStateProvider>,
       { store },
     );
-    expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
-  });
-
-  it('Instructions for ready to resume status', () => {
-    store.getState = () => ({
-      examState: {
-        isLoading: false,
-        proctoringSettings: {
-          link_urls: '',
-          platform_name: 'Platform Name',
-        },
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        activeAttempt: {
-          attempt_status: 'ready_to_resume',
-        },
-        exam: {
-          time_limit_mins: 30,
-          attempt: {
-            attempt_status: 'ready_to_resume',
-          },
-        },
-      },
-    });
-
-    render(
-      <ExamStateProvider>
-        <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
-      { store },
-    );
-    expect(screen.getByText('Your exam is ready to be resumed.')).toBeInTheDocument();
-    expect(screen.getByTestId('start-exam-button')).toHaveTextContent('Continue to my proctored exam.');
+    expect(getByTestId('proctored-exam-instructions-title')).toHaveTextContent('You have submitted this proctored exam for review');
   });
 
   it('Instructions are shown when attempt status is ready_to_submit', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,
-        timeIsOver: false,
         verification: {
           status: 'none',
           can_verify: true,
@@ -231,6 +198,7 @@ describe('SequenceExamWrapper', () => {
           attempt_status: 'ready_to_submit',
         },
         exam: {
+          is_proctored: true,
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'ready_to_submit',
@@ -247,25 +215,28 @@ describe('SequenceExamWrapper', () => {
       </ExamStateProvider>,
       { store },
     );
-    expect(getByTestId('exam-instructions-title')).toHaveTextContent('Are you sure that you want to submit your timed exam?');
+    expect(getByTestId('proctored-exam-instructions-title')).toHaveTextContent('Are you sure you want to end your proctored exam?');
   });
 
-  it('Instructions are shown when attempt status is submitted', () => {
+  it('Instructions are shown when attempt status is verified', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,
-        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
         verification: {
           status: 'none',
           can_verify: true,
         },
         activeAttempt: {
-          attempt_status: 'submitted',
+          attempt_status: 'verified',
         },
         exam: {
+          is_proctored: true,
           time_limit_mins: 30,
           attempt: {
-            attempt_status: 'submitted',
+            attempt_status: 'verified',
           },
         },
       },
@@ -279,25 +250,25 @@ describe('SequenceExamWrapper', () => {
       </ExamStateProvider>,
       { store },
     );
-    expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('You have submitted your timed exam.');
+    expect(getByTestId('proctored-exam-instructions-title')).toHaveTextContent('Your proctoring session was reviewed successfully.');
   });
 
-  it('Instructions are shown when exam time is over', () => {
+  it('Instructions are shown when attempt status is rejected', () => {
     store.getState = () => ({
       examState: {
         isLoading: false,
-        timeIsOver: true,
         verification: {
           status: 'none',
           can_verify: true,
         },
         activeAttempt: {
-          attempt_status: 'submitted',
+          attempt_status: 'rejected',
         },
         exam: {
+          is_proctored: true,
           time_limit_mins: 30,
           attempt: {
-            attempt_status: 'submitted',
+            attempt_status: 'rejected',
           },
         },
       },
@@ -311,6 +282,7 @@ describe('SequenceExamWrapper', () => {
       </ExamStateProvider>,
       { store },
     );
-    expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('The time allotted for this exam has expired.');
+    expect(getByTestId('proctored-exam-instructions-title'))
+      .toHaveTextContent('Your proctoring session was reviewed, but did not pass all requirements');
   });
 });
