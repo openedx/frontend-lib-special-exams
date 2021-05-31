@@ -1,14 +1,15 @@
 import React, { useContext } from 'react';
+import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button, Container } from '@edx/paragon';
 import { ExamStatus } from '../../constants';
 import ExamStateContext from '../../context';
 import Footer from './Footer';
 
-const EntranceProctoredExamInstructions = () => {
+const EntranceProctoredExamInstructions = ({ skipProctoredExam }) => {
   const state = useContext(ExamStateContext);
   const { exam, startProctoringExam } = state;
-  const { attempt } = exam || {};
+  const { attempt, allow_proctoring_opt_out: allowProctoringOptOut } = exam || {};
   const { total_time: totalTime = 0 } = attempt;
 
   return (
@@ -63,22 +64,28 @@ const EntranceProctoredExamInstructions = () => {
             />
           </Button>
         </p>
-        <p className="mt-4 pl-md-4 mb-0">
-          <Button
-            data-testid="start-exam-without-proctoring-button"
-            variant="outline-secondary"
-            onClick={() => {}}
-          >
-            <FormattedMessage
-              id="exam.startExamInstructions.startExamButtonText"
-              defaultMessage="Take this exam without proctoring."
-            />
-          </Button>
-        </p>
+        {allowProctoringOptOut && (
+          <p className="mt-4 pl-md-4 mb-0">
+            <Button
+              data-testid="start-exam-without-proctoring-button"
+              variant="outline-secondary"
+              onClick={skipProctoredExam}
+            >
+              <FormattedMessage
+                id="exam.startExamInstructions.startExamButtonText"
+                defaultMessage="Take this exam without proctoring."
+              />
+            </Button>
+          </p>
+        )}
       </Container>
       <Footer />
     </div>
   );
+};
+
+EntranceProctoredExamInstructions.propTypes = {
+  skipProctoredExam: PropTypes.func.isRequired,
 };
 
 export default EntranceProctoredExamInstructions;

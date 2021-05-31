@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import StartExamInstructions from './StartExamInstructions';
 import SubmitExamInstructions from './SubmitExamInstructions';
@@ -14,6 +14,7 @@ import {
   DownloadSoftwareProctoredExamInstructions,
   ReadyToStartProctoredExamInstructions,
   PrerequisitesProctoredExamInstructions,
+  SkipProctoredExamInstruction,
 } from './proctored_exam';
 import { isEmpty } from '../helpers';
 import { ExamStatus, VerificationStatus } from '../constants';
@@ -26,6 +27,8 @@ const Instructions = ({ children }) => {
   const prerequisitesPassed = prerequisitesData ? prerequisitesData.are_prerequisites_satisifed : true;
   let verificationStatus = verification.status || '';
   const { verification_url: verificationUrl } = attempt || {};
+  const [skipProctoring, toggleSkipProctoring] = useState(false);
+  const toggleSkipProctoredExam = () => toggleSkipProctoring(!skipProctoring);
 
   // The API does not explicitly return 'expired' status, so we have to check manually.
   // expires attribute is returned only for approved status, so it is safe to do this
@@ -38,9 +41,12 @@ const Instructions = ({ children }) => {
     case isEmpty(attempt):
       // eslint-disable-next-line no-nested-ternary
       return isProctored
-        ? prerequisitesPassed
-          ? <EntranceProctoredExamInstructions />
-          : <PrerequisitesProctoredExamInstructions />
+        // eslint-disable-next-line no-nested-ternary
+        ? skipProctoring
+          ? <SkipProctoredExamInstruction cancelSkipProctoredExam={toggleSkipProctoredExam} />
+          : prerequisitesPassed
+            ? <EntranceProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />
+            : <PrerequisitesProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />
         : <StartExamInstructions />;
     case attempt.attempt_status === ExamStatus.CREATED:
       return verificationStatus === VerificationStatus.APPROVED

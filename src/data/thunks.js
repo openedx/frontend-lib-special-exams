@@ -123,6 +123,19 @@ export function startProctoringExam() {
   };
 }
 
+export function skipProctoringExam() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to skip proctored exam. No exam id.');
+      return;
+    }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, createExamAttempt(exam.id, true, false),
+    )(dispatch);
+  };
+}
+
 /**
  * Poll exam active attempt status.
  * @param url - poll attempt url
