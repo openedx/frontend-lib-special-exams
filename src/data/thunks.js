@@ -111,15 +111,39 @@ export function startExam() {
 export function startProctoringExam() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
+    const { attempt } = exam || {};
     if (!exam.id) {
       logError('Failed to start exam. No exam id.');
       return;
     }
-    await updateAttemptAfter(
-      exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
-    )(dispatch);
-    const proctoringSettings = await fetchProctoringSettings(exam.id);
-    dispatch(setProctoringSettings({ proctoringSettings }));
+    const { desktop_application_js_url: workerUrl } = attempt || {};
+    const readyToStart = attempt && attempt.attempt_status === ExamStatus.READY_TO_START;
+    const useWorker = window.Worker && workerUrl;
+
+    // This check if we are currently on the ready_to_start instructions page, if we are
+    // then we need to emit onStartAttempt message using JS worker to proctoring backend provider,
+    // if we are not then that means we are on entrance instructions page and exam attempt
+    // hasn't been created yet so we need to creat it first to proceed to other pages
+    if (readyToStart) {
+      if (useWorker) {
+        workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)()
+          .then(() => updateAttemptAfter(
+            exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
+          )(dispatch))
+          .catch(() => handleAPIError(
+            { message: 'Something has gone wrong starting your exam. Please double-check that the application is running.' },
+            dispatch,
+          ));
+      } else {
+        await updateAttemptAfter(
+          exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
+        )(dispatch);
+      }
+    } else {
+      await updateAttemptAfter(
+        exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
+      )(dispatch);
+    }
   };
 }
 
