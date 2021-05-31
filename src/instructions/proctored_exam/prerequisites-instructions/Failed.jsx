@@ -15,16 +15,16 @@ const FailedPrerequisitesProctoredExamInstructions = ({ prerequisites, platformN
         id="exam.FailedPrerequisitesProctoredExamInstructions.text2"
         defaultMessage="You did not satisfy the following prerequisites:"
       />
-      <ol style={{ listStyleType: 'disc' }}>
-        {prerequisites.map((item, index) => (
-          <li key={index.toString()}>
-            {item.jumpto_url
-              ? <a href={item.jumpto_url}>{item.display_name}</a>
-              : item.display_name}
-          </li>
-        ))}
-      </ol>
     </p>
+    <ol style={{ listStyleType: 'disc' }}>
+      {prerequisites.map((item, index) => (
+        <li key={index.toString()}>
+          {item.jumpto_url
+            ? <a href={item.jumpto_url}>{item.display_name}</a>
+            : item.display_name}
+        </li>
+      ))}
+    </ol>
     <p>
       <FormattedMessage
         id="exam.FailedPrerequisitesProctoredExamInstructions.text3"

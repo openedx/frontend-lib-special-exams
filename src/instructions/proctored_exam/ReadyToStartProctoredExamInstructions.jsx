@@ -80,6 +80,7 @@ const ReadyToStartProctoredExamInstructions = () => {
             variant="link"
             target="_blank"
             href={rulesUrl}
+            data-testid="proctored-exam-instructions-rulesLink"
           >
             <FormattedMessage
               id="exam.ReadyToStartProctoredExamInstructions.rulesLink"

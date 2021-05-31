@@ -29,16 +29,16 @@ const PendingPrerequisitesProctoredExamInstructions = ({ prerequisites }) => (
         id="exam.PendingPrerequisitesProctoredExamInstructions.text4"
         defaultMessage="state and must be successfully completed before you can proceed:"
       />
-      <ol style={{ listStyleType: 'disc' }}>
-        {prerequisites.map((item, index) => (
-          <li key={index.toString()}>
-            {item.jumpto_url
-              ? <a href={item.jumpto_url}>{item.display_name}</a>
-              : item.display_name}
-          </li>
-        ))}
-      </ol>
     </p>
+    <ol style={{ listStyleType: 'disc' }}>
+      {prerequisites.map((item, index) => (
+        <li key={index.toString()}>
+          {item.jumpto_url
+            ? <a href={item.jumpto_url}>{item.display_name}</a>
+            : item.display_name}
+        </li>
+      ))}
+    </ol>
     <p>
       <FormattedMessage
         id="exam.PendingPrerequisitesProctoredExamInstructions.text5"

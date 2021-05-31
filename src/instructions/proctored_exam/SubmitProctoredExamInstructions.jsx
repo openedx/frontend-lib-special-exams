@@ -9,7 +9,7 @@ const SubmitProctoredExamInstructions = () => {
 
   return (
     <Container className="border py-5 mb-4">
-      <h3 className="h3" data-testid="exam-instructions-title">
+      <h3 className="h3" data-testid="proctored-exam-instructions-title">
         <FormattedMessage
           id="exam.SubmitProctoredExamInstructions.title"
           defaultMessage="Are you sure you want to end your proctored exam?"
