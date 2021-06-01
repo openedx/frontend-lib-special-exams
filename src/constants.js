@@ -23,6 +23,7 @@ export const ExamAction = Object.freeze({
   PING: 'ping',
   SUBMIT: 'submit',
   ERROR: 'error',
+  RESET: 'reset_attempt',
   CLICK_DOWNLOAD_SOFTWARE: 'click_download_software',
 });
 

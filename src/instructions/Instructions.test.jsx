@@ -5,7 +5,7 @@ import Instructions from './index';
 import { store, getExamAttemptsData, startExam } from '../data';
 import { render, screen } from '../setupTest';
 import { ExamStateProvider } from '../index';
-import { ExamType } from '../constants';
+import { ExamStatus, ExamType } from '../constants';
 
 jest.mock('../data', () => ({
   store: {},
@@ -387,5 +387,73 @@ describe('SequenceExamWrapper', () => {
       { store },
     );
     expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('The time allotted for this exam has expired.');
+  });
+
+  it('Shows rejected onboarding exam instructions if exam is onboarding and attempt status is rejected', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.ONBOARDING,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: ExamStatus.REJECTED,
+          },
+          prerequisite_status: {},
+        },
+        verification: {},
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(getByTestId('rejected-onboarding-title')).toBeInTheDocument();
+  });
+
+  it('Shows submit onboarding exam instructions if exam is onboarding and attempt status is ready_to_submit', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.ONBOARDING,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: ExamStatus.READY_TO_SUBMIT,
+          },
+          prerequisite_status: {},
+        },
+        verification: {},
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(getByTestId('submit-onboarding-exam')).toBeInTheDocument();
   });
 });

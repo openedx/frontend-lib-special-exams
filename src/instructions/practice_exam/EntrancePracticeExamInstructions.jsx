@@ -22,7 +22,7 @@ const EntrancePracticeExamInstructions = () => {
           + 'the course. This practice exam has no impact on your grade in the course.'}
         />
       </p>
-      <p className="pl-md-4">
+      <p className="pl-4 m-md-0">
         <Button
           data-testid="start-exam-button"
           variant="primary"
@@ -34,7 +34,7 @@ const EntrancePracticeExamInstructions = () => {
           />
         </Button>
       </p>
-      <p className="mt-4 pl-md-4">
+      <p className="pl-md-4">
         <FormattedMessage
           id="exam.EntrancePracticeExamInstructions.text2"
           defaultMessage="You will be guided through steps to set up online proctoring software and verify your identity."

@@ -3,37 +3,35 @@ import PropTypes from 'prop-types';
 import { Container } from '@edx/paragon';
 import { ExamType } from '../constants';
 import { EntranceProctoredExamInstructions } from './proctored_exam';
-import EntranceOnboardingExamInstructions from './onboarding_exam';
+import { EntranceOnboardingExamInstructions } from './onboarding_exam';
 import EntrancePracticeExamInstructions from './practice_exam';
-import StartTimedExamInstructions from './StartTimedExamInstructions';
+import { StartTimedExamInstructions, TimedExamFooter } from './timed_exam';
 import Footer from './proctored_exam/Footer';
 
 const EntranceExamInstructions = ({ examType, skipProctoredExam }) => {
-  let instructions;
-
-  switch (examType) {
-    case ExamType.PROCTORED:
-      instructions = <EntranceProctoredExamInstructions skipProctoredExam={skipProctoredExam} />;
-      break;
-    case ExamType.ONBOARDING:
-      instructions = <EntranceOnboardingExamInstructions />;
-      break;
-    case ExamType.PRACTICE:
-      instructions = <EntrancePracticeExamInstructions />;
-      break;
-    case ExamType.TIMED:
-      instructions = <StartTimedExamInstructions />;
-      break;
-    default:
-      instructions = null;
-  }
+  const renderInstructions = () => {
+    switch (examType) {
+      case ExamType.PROCTORED:
+        return <EntranceProctoredExamInstructions skipProctoredExam={skipProctoredExam} />;
+      case ExamType.ONBOARDING:
+        return <EntranceOnboardingExamInstructions />;
+      case ExamType.PRACTICE:
+        return <EntrancePracticeExamInstructions />;
+      case ExamType.TIMED:
+        return <StartTimedExamInstructions />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div>
       <Container className="border py-5 mb-4">
-        {instructions}
+        {renderInstructions()}
       </Container>
-      {examType !== ExamType.TIMED && <Footer />}
+      {examType === ExamType.TIMED
+        ? <TimedExamFooter />
+        : <Footer />}
     </div>
   );
 };

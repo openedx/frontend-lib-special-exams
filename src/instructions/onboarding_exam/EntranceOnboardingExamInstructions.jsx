@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button } from '@edx/paragon';
+import { Button, MailtoLink } from '@edx/paragon';
 import ExamStateContext from '../../context';
 
 const EntranceOnboardingExamInstructions = () => {
@@ -46,9 +46,9 @@ const EntranceOnboardingExamInstructions = () => {
           />
         </li>
       </ul>
-      <p className="mt-4 pl-md-4">
+      <p>
         <FormattedMessage
-          id="exam.EntrancePracticeExamInstructions.text2"
+          id="exam.EntranceOnboardingExamInstructions.text2"
           defaultMessage={'Proctoring for this course is provided via {providerName}. '
           + 'Onboarding review, including identity verification, can take 2+ business days.'}
           values={{ providerName }}
@@ -57,59 +57,49 @@ const EntranceOnboardingExamInstructions = () => {
       {learnerNotificationFromEmail && (
         <p>
           <FormattedMessage
-            id="exam.EntrancePracticeExamInstructions.text3"
+            id="exam.EntranceOnboardingExamInstructions.text3"
             defaultMessage={'Once your profile has been reviewed, you will receive an email '
-            + 'with review results. The email will come from'}
+            + 'with review results. The email will come from '}
           />
-          &nbsp
-          <Button
-            variant="link"
-            href={`mailto:${learnerNotificationFromEmail}`}
-          >
+          <MailtoLink to={learnerNotificationFromEmail}>
             {learnerNotificationFromEmail}
-          </Button>
-          &nbsp
+          </MailtoLink>
           <FormattedMessage
-            id="exam.EntrancePracticeExamInstructions.text4"
-            defaultMessage="Make sure this email has been added to your inbox filter."
+            id="exam.EntranceOnboardingExamInstructions.text4"
+            defaultMessage=" Make sure this email has been added to your inbox filter."
           />
         </p>
       )}
       {integrationSpecificEmail && (
         <p>
           <FormattedMessage
-            id="exam.EntrancePracticeExamInstructions.text5"
-            defaultMessage="Please contact"
+            id="exam.EntranceOnboardingExamInstructions.text5"
+            defaultMessage="Please contact "
           />
-          &nbsp;
-          <Button
-            variant="link"
-            href={`mailto:${integrationSpecificEmail}`}
-          >
+          <MailtoLink to={integrationSpecificEmail}>
             {integrationSpecificEmail}
-          </Button>
-          &nbsp;
+          </MailtoLink>
           <FormattedMessage
-            id="exam.EntrancePracticeExamInstructions.text6"
-            defaultMessage="if you have questions."
+            id="exam.EntranceOnboardingExamInstructions.text6"
+            defaultMessage=" if you have questions."
           />
         </p>
       )}
-      <p className="pl-md-4">
+      <p className="pl-4 m-md-0">
         <Button
           data-testid="start-exam-button"
           variant="primary"
           onClick={startProctoringExam}
         >
           <FormattedMessage
-            id="exam.EntrancePracticeExamInstructions.startExamButtonText"
+            id="exam.EntranceOnboardingExamInstructions.startExamButtonText"
             defaultMessage="Continue to onboarding"
           />
         </Button>
       </p>
-      <p className="mt-4 pl-md-4">
+      <p className="pl-md-4">
         <FormattedMessage
-          id="exam.EntrancePracticeExamInstructions.text2"
+          id="exam.EntranceOnboardingExamInstructions.text7"
           defaultMessage="You will be guided through online proctoring software set up and identity verification."
         />
       </p>
