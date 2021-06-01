@@ -5,7 +5,7 @@ import Instructions from '../index';
 import { store, getExamAttemptsData, startExam } from '../../data';
 import { render } from '../../setupTest';
 import { ExamStateProvider } from '../../index';
-import { ExamStatus, VerificationStatus } from '../../constants';
+import { ExamType, ExamStatus, VerificationStatus } from '../../constants';
 
 jest.mock('../../data', () => ({
   store: {},
@@ -31,6 +31,7 @@ describe('SequenceExamWrapper', () => {
           can_verify: true,
         },
         exam: {
+          type: ExamType.PROCTORED,
           allow_proctoring_opt_out: true,
           is_proctored: true,
           time_limit_mins: 30,
@@ -67,7 +68,9 @@ describe('SequenceExamWrapper', () => {
         activeAttempt: {
           attempt_status: 'started',
         },
+        proctoringSettings: {},
         exam: {
+          type: ExamType.PROCTORED,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {
@@ -103,6 +106,7 @@ describe('SequenceExamWrapper', () => {
           attempt_status: 'ready_to_start',
         },
         exam: {
+          type: ExamType.PROCTORED,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {
@@ -139,6 +143,7 @@ describe('SequenceExamWrapper', () => {
           attempt_status: 'submitted',
         },
         exam: {
+          type: ExamType.PROCTORED,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {
@@ -170,7 +175,9 @@ describe('SequenceExamWrapper', () => {
         activeAttempt: {
           attempt_status: 'ready_to_submit',
         },
+        proctoringSettings: {},
         exam: {
+          type: ExamType.PROCTORED,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {
@@ -206,6 +213,7 @@ describe('SequenceExamWrapper', () => {
           attempt_status: 'verified',
         },
         exam: {
+          type: ExamType.PROCTORED,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {
@@ -237,7 +245,9 @@ describe('SequenceExamWrapper', () => {
         activeAttempt: {
           attempt_status: 'rejected',
         },
+        proctoringSettings: {},
         exam: {
+          type: ExamType.PROCTORED,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {
@@ -269,6 +279,7 @@ describe('SequenceExamWrapper', () => {
         },
         activeAttempt: {},
         exam: {
+          type: ExamType.PROCTORED,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {

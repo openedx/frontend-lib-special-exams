@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import SubmittedExamInstructions from './SubmittedExamInstructions';
 import {
   ErrorProctoredExamInstructions,
-  EntranceProctoredExamInstructions,
   VerificationProctoredExamInstructions,
   SubmittedProctoredExamInstructions,
   VerifiedProctoredExamInstructions,

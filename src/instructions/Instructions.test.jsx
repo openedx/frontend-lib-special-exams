@@ -228,7 +228,11 @@ describe('SequenceExamWrapper', () => {
       examState: {
         isLoading: false,
         proctoringSettings: {
-          link_urls: '',
+          link_urls: [
+            {
+              contact_us: 'http://localhost:2000',
+            },
+          ],
         },
         verification: {
           status: 'none',
@@ -273,6 +277,7 @@ describe('SequenceExamWrapper', () => {
           attempt_status: 'ready_to_resume',
         },
         exam: {
+          type: 'proctored',
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'ready_to_resume',
@@ -302,10 +307,12 @@ describe('SequenceExamWrapper', () => {
           status: 'none',
           can_verify: true,
         },
+        proctoringSettings: {},
         activeAttempt: {
           attempt_status: 'ready_to_submit',
         },
         exam: {
+          type: 'timed',
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'ready_to_submit',
@@ -334,6 +341,7 @@ describe('SequenceExamWrapper', () => {
           status: 'none',
           can_verify: true,
         },
+        proctoringSettings: {},
         activeAttempt: {
           attempt_status: 'submitted',
         },
@@ -366,6 +374,7 @@ describe('SequenceExamWrapper', () => {
           status: 'none',
           can_verify: true,
         },
+        proctoringSettings: {},
         activeAttempt: {
           attempt_status: 'submitted',
         },
