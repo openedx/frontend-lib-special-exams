@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { Button } from '@edx/paragon';
 
-const PendingPrerequisitesProctoredExamInstructions = ({ prerequisites }) => (
+const PendingPrerequisitesProctoredExamInstructions = ({ allowProctoringOptOut, prerequisites, skipProctoredExam }) => (
   <>
     <p className="pb-2" data-testid="pending-prerequisites">
       <FormattedMessage
@@ -46,11 +47,27 @@ const PendingPrerequisitesProctoredExamInstructions = ({ prerequisites }) => (
         + 'when all prerequisites-instructions have been successfully completed.'}
       />
     </p>
+    {allowProctoringOptOut && (
+      <p className="mb-0">
+        <Button
+          data-testid="start-exam-without-proctoring-button"
+          variant="link"
+          onClick={skipProctoredExam}
+        >
+          <FormattedMessage
+            id="exam.startExamInstructions.startExamButtonText"
+            defaultMessage="Take this exam without proctoring."
+          />
+        </Button>
+      </p>
+    )}
   </>
 );
 
 PendingPrerequisitesProctoredExamInstructions.propTypes = {
+  allowProctoringOptOut: PropTypes.bool.isRequired,
   prerequisites: PropTypes.arrayOf(PropTypes.object).isRequired,
+  skipProctoredExam: PropTypes.func.isRequired,
 };
 
 export default PendingPrerequisitesProctoredExamInstructions;
