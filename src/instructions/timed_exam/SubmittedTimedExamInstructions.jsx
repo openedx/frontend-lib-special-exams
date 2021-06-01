@@ -1,13 +1,12 @@
 import React, { useContext } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Container } from '@edx/paragon';
-import ExamStateContext from '../context';
+import ExamStateContext from '../../context';
 
-const SubmittedExamInstructions = () => {
+const SubmittedTimedExamInstructions = () => {
   const state = useContext(ExamStateContext);
 
   return (
-    <Container className="border py-5 mb-4">
+    <>
       <h3 className="h3" data-testid="exam.submittedExamInstructions.title">
         {state.timeIsOver
           ? (
@@ -30,8 +29,8 @@ const SubmittedExamInstructions = () => {
                 + ' but you cannot change your answers.'}
         />
       </p>
-    </Container>
+    </>
   );
 };
 
-export default SubmittedExamInstructions;
+export default SubmittedTimedExamInstructions;

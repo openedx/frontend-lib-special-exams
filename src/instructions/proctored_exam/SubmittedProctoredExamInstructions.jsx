@@ -1,51 +1,46 @@
 import React from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Container } from '@edx/paragon';
-import Footer from './Footer';
 
 const SubmittedProctoredExamInstructions = () => (
   <div>
-    <Container className="border py-5 mb-4">
-      <h3 className="h3" data-testid="proctored-exam-instructions-title">
+    <h3 className="h3" data-testid="proctored-exam-instructions-title">
+      <FormattedMessage
+        id="exam.SubmittedProctoredExamInstructions.title"
+        defaultMessage="You have submitted this proctored exam for review"
+      />
+    </h3>
+    <ul>
+      <li>
         <FormattedMessage
-          id="exam.SubmittedProctoredExamInstructions.title"
-          defaultMessage="You have submitted this proctored exam for review"
+          id="exam.SubmittedProctoredExamInstructions.list1"
+          defaultMessage="Your recorded data should now be uploaded for review."
         />
-      </h3>
-      <ul>
-        <li>
-          <FormattedMessage
-            id="exam.SubmittedProctoredExamInstructions.list1"
-            defaultMessage="Your recorded data should now be uploaded for review."
-          />
-          <ul>
-            <li>
-              <FormattedMessage
-                id="exam.SubmittedProctoredExamInstructions.list2"
-                defaultMessage={'If the proctoring software window is still open, close it now and '
-                + 'confirm that you want to quit the application.'}
-              />
-            </li>
-          </ul>
-        </li>
-        <li>
-          <FormattedMessage
-            id="exam.SubmittedProctoredExamInstructions.list3"
-            defaultMessage={'Proctoring results are usually available within 5 business days '
-            + 'after you submit your exam.'}
-          />
+        <ul>
+          <li>
+            <FormattedMessage
+              id="exam.SubmittedProctoredExamInstructions.list2"
+              defaultMessage={'If the proctoring software window is still open, close it now and '
+              + 'confirm that you want to quit the application.'}
+            />
+          </li>
+        </ul>
+      </li>
+      <li>
+        <FormattedMessage
+          id="exam.SubmittedProctoredExamInstructions.list3"
+          defaultMessage={'Proctoring results are usually available within 5 business days '
+          + 'after you submit your exam.'}
+        />
 
-        </li>
-      </ul>
-      <p className="mb-0">
-        <FormattedMessage
-          id="exam.SubmittedProctoredExamInstructions.text"
-          defaultMessage={'If you have questions about the status of your proctored exam results, '
-          + 'contact platform Support.'}
-        />
-      </p>
-    </Container>
-    <Footer />
+      </li>
+    </ul>
+    <p className="mb-0">
+      <FormattedMessage
+        id="exam.SubmittedProctoredExamInstructions.text"
+        defaultMessage={'If you have questions about the status of your proctored exam results, '
+        + 'contact platform Support.'}
+      />
+    </p>
   </div>
 );
 
