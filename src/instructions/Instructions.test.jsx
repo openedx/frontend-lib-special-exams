@@ -99,7 +99,7 @@ describe('SequenceExamWrapper', () => {
     const { getByTestId } = render(
       <ExamStateProvider>
         <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
+          <div>Sequence</div>
         </Instructions>
       </ExamStateProvider>,
       { store },
@@ -127,7 +127,7 @@ describe('SequenceExamWrapper', () => {
     const { getByTestId } = render(
       <ExamStateProvider>
         <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
+          <div>Sequence</div>
         </Instructions>
       </ExamStateProvider>,
       { store },
