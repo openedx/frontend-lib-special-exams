@@ -13,7 +13,6 @@ const ExamWrapper = ({ children, ...props }) => {
   const loadInitialData = async () => {
     await state.getExamAttemptsData(courseId, sequence.id);
     state.getProctoringSettings();
-    state.getVerificationData();
   };
 
   useEffect(() => {
