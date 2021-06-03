@@ -12,6 +12,7 @@ export {
   getVerificationData,
   getExamReviewPolicy,
   pingAttempt,
+  resetExam,
 } from './thunks';
 
 export { default as store } from './store';

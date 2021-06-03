@@ -30,8 +30,9 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl }) => {
     software_download_url: downloadUrl,
   } = attempt;
   const {
-    platform_name: platformName,
-    contact_us: contactInfo,
+    provider_name: providerName,
+    provider_tech_support_email: supportEmail,
+    provider_tech_support_phone: supportPhone,
     exam_proctoring_backend: proctoringBackend,
   } = proctoringSettings;
   const { instructions } = proctoringBackend || {};
@@ -85,7 +86,14 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl }) => {
           />
         </div>
         {withProviderInstructions
-          ? <ProviderInstructions platformName={platformName} contactInfo={contactInfo} instructions={instructions} />
+          ? (
+            <ProviderInstructions
+              providerName={providerName}
+              supportEmail={supportEmail}
+              supportPhone={supportPhone}
+              instructions={instructions}
+            />
+          )
           : <DefaultInstructions code={examCode} />}
         <DownloadButtons
           downloadUrl={downloadUrl}

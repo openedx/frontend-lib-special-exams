@@ -1,14 +1,14 @@
 import React, { useContext } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button, Container } from '@edx/paragon';
-import ExamStateContext from '../context';
+import { Button } from '@edx/paragon';
+import ExamStateContext from '../../context';
 
-const SubmitExamInstructions = () => {
+const SubmitTimedExamInstructions = () => {
   const state = useContext(ExamStateContext);
   const { submitExam, continueExam } = state;
 
   return (
-    <Container className="border py-5 mb-4">
+    <>
       <h3 className="h3" data-testid="exam-instructions-title">
         <FormattedMessage
           id="exam.submitExamInstructions.title"
@@ -40,8 +40,8 @@ const SubmitExamInstructions = () => {
           defaultMessage="No, I want to continue working."
         />
       </Button>
-    </Container>
+    </>
   );
 };
 
-export default SubmitExamInstructions;
+export default SubmitTimedExamInstructions;

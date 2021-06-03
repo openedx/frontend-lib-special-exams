@@ -10,6 +10,7 @@ import {
   softwareDownloadAttempt,
   fetchVerificationStatus,
   fetchExamReviewPolicy,
+  resetAttempt,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -226,6 +227,24 @@ export function continueExam(noLoading = true) {
     }
     await updateAttemptAfter(
       exam.course_id, exam.content_id, continueAttempt(attemptId), noLoading,
+    )(dispatch);
+  };
+}
+
+export function resetExam() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    const attemptId = exam.attempt.attempt_id;
+    if (!attemptId) {
+      logError('Failed to reset exam attempt. No attempt id.');
+      handleAPIError(
+        { message: 'Failed to reset exam attempt. No attempt id was found.' },
+        dispatch,
+      );
+      return;
+    }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, resetAttempt(attemptId),
     )(dispatch);
   };
 }

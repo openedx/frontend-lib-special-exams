@@ -2,7 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 
-const ProviderProctoredExamInstructions = ({ platformName, contactInfo, instructions }) => (
+const ProviderProctoredExamInstructions = ({
+  providerName, supportEmail, supportPhone, instructions,
+}) => (
   <>
     <p>
       <FormattedMessage
@@ -20,15 +22,16 @@ const ProviderProctoredExamInstructions = ({ platformName, contactInfo, instruct
         </li>
       ))}
     </ol>
-    {platformName && contactInfo && (
+    {supportEmail && supportPhone && (
       <p>
         <FormattedMessage
           id="exam.DownloadSoftwareProctoredExamInstructions.supportText"
-          defaultMessage={'If you have issues relating to proctoring, you can '
-          + 'contact {platformName} technical support by emailing {contactInfo}.'}
+          defaultMessage={'If you have issues relating to proctoring, you can contact '
+          + '{providerName} technical support by emailing {supportEmail} or by calling {supportPhone}.'}
           values={{
-            platformName,
-            contactInfo,
+            providerName,
+            supportEmail,
+            supportPhone,
           }}
         />
       </p>
@@ -37,9 +40,16 @@ const ProviderProctoredExamInstructions = ({ platformName, contactInfo, instruct
 );
 
 ProviderProctoredExamInstructions.propTypes = {
-  platformName: PropTypes.string.isRequired,
-  contactInfo: PropTypes.string.isRequired,
+  providerName: PropTypes.string,
+  supportEmail: PropTypes.string,
+  supportPhone: PropTypes.string,
   instructions: PropTypes.arrayOf(PropTypes.string).isRequired,
+};
+
+ProviderProctoredExamInstructions.defaultProps = {
+  providerName: '',
+  supportEmail: '',
+  supportPhone: '',
 };
 
 export default ProviderProctoredExamInstructions;
