@@ -9,8 +9,8 @@ import Footer from '../Footer';
 
 const PrerequisitesProctoredExamInstructions = ({ skipProctoredExam }) => {
   const state = useContext(ExamStateContext);
-  const { exam, proctoringSettings } = state;
-  const { prerequisite_status: prerequisitesData, allow_proctoring_opt_out: allowProctoringOptOut } = exam;
+  const { exam, proctoringSettings, allowProctoringOptOut } = state;
+  const { prerequisite_status: prerequisitesData } = exam;
   const { pending_prerequisites: pending, failed_prerequisites: failed } = prerequisitesData;
   const { platform_name: platformName } = proctoringSettings;
 

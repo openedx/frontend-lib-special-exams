@@ -13,6 +13,7 @@ export {
   getExamReviewPolicy,
   pingAttempt,
   resetExam,
+  getAllowProctoringOptOut,
 } from './thunks';
 
 export { default as store } from './store';
