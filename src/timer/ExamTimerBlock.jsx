@@ -16,7 +16,7 @@ import {
  * Exam timer block component.
  */
 const ExamTimerBlock = injectIntl(({
-  examType, attempt, stopExamAttempt, expireExamAttempt, pollExamAttempt, intl, pingAttempt,
+  attempt, stopExamAttempt, expireExamAttempt, pollExamAttempt, intl, pingAttempt,
 }) => {
   const [isShowMore, showMore, showLess] = useToggle(false);
   const [alertVariant, setAlertVariant] = useState('info');
@@ -55,7 +55,7 @@ const ExamTimerBlock = injectIntl(({
             <FormattedMessage
               id="exam.examTimer.text"
               defaultMessage='" as {examType}. '
-              values={{ examType }}
+              values={{ examType: attempt.exam_type }}
             />
             {
               isShowMore
@@ -121,7 +121,6 @@ ExamTimerBlock.propTypes = {
     low_threshold_sec: PropTypes.number.isRequired,
     critically_low_threshold_sec: PropTypes.number.isRequired,
   }),
-  examType: PropTypes.string.isRequired,
   stopExamAttempt: PropTypes.func.isRequired,
   expireExamAttempt: PropTypes.func.isRequired,
 };

@@ -31,6 +31,7 @@ describe('ExamTimerBlock', () => {
           critically_low_threshold_sec: 5,
           exam_started_poll_url: '',
           taking_as_proctored: false,
+          exam_type: 'a timed exam',
         },
         proctoringSettings: {},
         exam: {},
@@ -44,7 +45,6 @@ describe('ExamTimerBlock', () => {
   it('renders items correctly', async () => {
     render(
       <ExamTimerBlock
-        examType="a timed exam"
         attempt={attempt}
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
@@ -73,7 +73,6 @@ describe('ExamTimerBlock', () => {
     attempt = testStore.getState().examState.activeAttempt;
     const { container } = render(
       <ExamTimerBlock
-        examType="a timed exam"
         attempt={attempt}
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
@@ -86,7 +85,6 @@ describe('ExamTimerBlock', () => {
   it('changes behavior when clock time decreases low threshold', async () => {
     render(
       <ExamTimerBlock
-        examType="a timed exam"
         attempt={attempt}
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
@@ -111,6 +109,7 @@ describe('ExamTimerBlock', () => {
           critically_low_threshold_sec: 5,
           exam_started_poll_url: '',
           taking_as_proctored: false,
+          exam_type: 'a timed exam',
         },
         proctoringSettings: {},
         exam: {},
@@ -121,7 +120,6 @@ describe('ExamTimerBlock', () => {
     attempt = testStore.getState().examState.activeAttempt;
     render(
       <ExamTimerBlock
-        examType="a timed exam"
         attempt={attempt}
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
@@ -135,7 +133,6 @@ describe('ExamTimerBlock', () => {
   it('toggles timer visibility correctly', async () => {
     render(
       <ExamTimerBlock
-        examType="a timed exam"
         attempt={attempt}
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
@@ -158,7 +155,6 @@ describe('ExamTimerBlock', () => {
   it('toggles long text visibility on show more/less', async () => {
     render(
       <ExamTimerBlock
-        examType="a timed exam"
         attempt={attempt}
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
