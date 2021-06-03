@@ -9,6 +9,7 @@ export const examSlice = createSlice({
     activeAttempt: null,
     proctoringSettings: {},
     exam: {},
+    verification: {},
     apiErrorMsg: '',
   },
   reducers: {
@@ -30,6 +31,12 @@ export const examSlice = createSlice({
       state.timeIsOver = true;
     },
     getExamId: (state) => state.examId,
+    setVerificationData: (state, { payload }) => {
+      state.verification = payload.verification;
+    },
+    setReviewPolicy: (state, { payload }) => {
+      state.exam.reviewPolicy = payload.policy;
+    },
     setApiError: (state, { payload }) => {
       state.apiErrorMsg = payload.errorMsg;
     },
@@ -38,7 +45,8 @@ export const examSlice = createSlice({
 
 export const {
   setIsLoading, setExamState, getExamId, expireExamAttempt,
-  setActiveAttempt, setProctoringSettings, setApiError,
+  setActiveAttempt, setProctoringSettings, setVerificationData,
+  setReviewPolicy, setApiError,
 } = examSlice.actions;
 
 export default examSlice.reducer;

@@ -1,6 +1,8 @@
 /* eslint-disable import/prefer-default-export */
 export const ExamStatus = Object.freeze({
   CREATED: 'created',
+  DOWNLOAD_SOFTWARE_CLICKED: 'download_software_clicked',
+  READY_TO_START: 'ready_to_start',
   STARTED: 'started',
   READY_TO_SUBMIT: 'ready_to_submit',
   SUBMITTED: 'submitted',
@@ -19,4 +21,12 @@ export const ExamAction = Object.freeze({
   PING: 'ping',
   SUBMIT: 'submit',
   ERROR: 'error',
+  CLICK_DOWNLOAD_SOFTWARE: 'click_download_software',
+});
+
+export const VerificationStatus = Object.freeze({
+  PENDING: 'pending',
+  MUST_REVERIFY: 'must_reverify',
+  APPROVED: 'approved',
+  EXPIRED: 'expired',
 });
