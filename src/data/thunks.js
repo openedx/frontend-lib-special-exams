@@ -11,6 +11,7 @@ import {
   fetchVerificationStatus,
   fetchExamReviewPolicy,
   resetAttempt,
+  getSequenceMetadata,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -22,6 +23,7 @@ import {
   setVerificationData,
   setReviewPolicy,
   setApiError,
+  setAllowProctoringOptOut,
 } from './slice';
 import { ExamStatus } from '../constants';
 import { workerPromiseForEventNames, pingApplication } from './messages/handlers';
@@ -357,5 +359,14 @@ export function getExamReviewPolicy() {
     }
     const data = await fetchExamReviewPolicy(exam.id);
     dispatch(setReviewPolicy({ policy: data.review_policy }));
+  };
+}
+
+export function getAllowProctoringOptOut(sequenceId) {
+  return async (dispatch) => {
+    dispatch(setIsLoading({ isLoading: true }));
+    const data = await getSequenceMetadata(sequenceId);
+    dispatch(setAllowProctoringOptOut({ allowProctoringOptOut: data.allow_proctoring_opt_out }));
+    dispatch(setIsLoading({ isLoading: false }));
   };
 }

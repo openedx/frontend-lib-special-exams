@@ -161,12 +161,12 @@ describe('SequenceExamWrapper', () => {
       examState: {
         isLoading: false,
         timeIsOver: true,
+        allowProctoringOptOut: true,
         proctoringSettings: {
           platform_name: 'Your Platform',
         },
         activeAttempt: {},
         exam: {
-          allow_proctoring_opt_out: true,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {},
