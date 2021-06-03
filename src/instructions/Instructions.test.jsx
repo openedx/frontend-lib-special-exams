@@ -73,4 +73,78 @@ describe('SequenceExamWrapper', () => {
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
   });
+
+  it('Shows failed prerequisites page if user has failed prerequisites for the exam', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: true,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          time_limit_mins: 30,
+          attempt: {},
+          prerequisite_status: {
+            failed_prerequisites: [
+              {
+                test: 'failed',
+              },
+            ],
+          },
+        },
+        verification: {},
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(getByTestId('failed-prerequisites')).toBeInTheDocument();
+  });
+
+  it('Shows pending prerequisites page if user has failed prerequisites for the exam', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: true,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          time_limit_mins: 30,
+          attempt: {},
+          prerequisite_status: {
+            pending_prerequisites: [
+              {
+                test: 'failed',
+              },
+            ],
+          },
+        },
+        verification: {},
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(getByTestId('pending-prerequisites')).toBeInTheDocument();
+  });
 });

@@ -6,3 +6,4 @@ export { default as VerificationProctoredExamInstructions } from './Verification
 export { default as VerifiedProctoredExamInstructions } from './VerifiedProctoredExamInstructions';
 export { default as DownloadSoftwareProctoredExamInstructions } from './download-instructions';
 export { default as ReadyToStartProctoredExamInstructions } from './ReadyToStartProctoredExamInstructions';
+export { default as PrerequisitesProctoredExamInstructions } from './prerequisites-instructions';
