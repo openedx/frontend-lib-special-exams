@@ -5,7 +5,7 @@ import Instructions from '../index';
 import { store, getExamAttemptsData, startExam } from '../../data';
 import { render } from '../../setupTest';
 import { ExamStateProvider } from '../../index';
-import { ExamType } from '../../constants';
+import { ExamStatus, ExamType, ONBOARDING_ERRORS } from '../../constants';
 
 jest.mock('../../data', () => ({
   store: {},
@@ -304,5 +304,42 @@ describe('SequenceExamWrapper', () => {
     );
     expect(getByTestId('proctored-exam-instructions-title'))
       .toHaveTextContent('Your proctoring session was reviewed, but did not pass all requirements');
+  });
+
+  it.each(ONBOARDING_ERRORS)('Renders correct onboarding error instructions when status is %s ', (status) => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        verification: {
+          status: 'none',
+          can_verify: true,
+        },
+        activeAttempt: {
+          attempt_status: 'rejected',
+        },
+        proctoringSettings: {},
+        exam: {
+          type: ExamType.PROCTORED,
+          is_proctored: true,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: status,
+          },
+        },
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    const testId = status === ExamStatus.ONBOARDING_EXPIRED ? ExamStatus.ONBOARDING_MISSING : status;
+
+    expect(getByTestId(testId)).toBeInTheDocument();
   });
 });

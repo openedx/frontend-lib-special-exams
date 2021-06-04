@@ -6,9 +6,15 @@ import {
   ReadyToStartProctoredExamInstructions,
   PrerequisitesProctoredExamInstructions,
   SkipProctoredExamInstruction,
+  OnboardingErrorProctoredExamInstructions,
 } from './proctored_exam';
 import { isEmpty, shouldRenderExpiredPage } from '../helpers';
-import { ExamStatus, VerificationStatus, ExamType } from '../constants';
+import {
+  ExamStatus,
+  VerificationStatus,
+  ExamType,
+  IS_ONBOARDING_ERROR,
+} from '../constants';
 import ExamStateContext from '../context';
 import EntranceExamInstructions from './EntranceInstructions';
 import SubmitExamInstructions from './SubmitInstructions';
@@ -81,6 +87,8 @@ const Instructions = ({ children }) => {
       return <ErrorExamInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.READY_TO_RESUME:
       return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
+    case examType === ExamType.PROCTORED && IS_ONBOARDING_ERROR(attempt.attempt_status):
+      return <OnboardingErrorProctoredExamInstructions />;
     default:
       return children;
   }
