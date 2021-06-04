@@ -1,5 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 export const ExamStatus = Object.freeze({
+  ELIGIBLE: 'eligible',
   CREATED: 'created',
   DOWNLOAD_SOFTWARE_CLICKED: 'download_software_clicked',
   READY_TO_START: 'ready_to_start',
@@ -13,7 +14,13 @@ export const ExamStatus = Object.freeze({
   READY_TO_RESUME: 'ready_to_resume',
 });
 
+export const INCOMPLETE_STATUSES = [
+  ExamStatus.ELIGIBLE, ExamStatus.CREATED, ExamStatus.DOWNLOAD_SOFTWARE_CLICKED,
+  ExamStatus.READY_TO_START, ExamStatus.STARTED, ExamStatus.READY_TO_SUBMIT,
+];
+
 export const IS_STARTED_STATUS = (status) => [ExamStatus.STARTED, ExamStatus.READY_TO_SUBMIT].includes(status);
+export const IS_INCOMPLETE_STATUS = (status) => INCOMPLETE_STATUSES.includes(status);
 
 // Available actions are taken from
 // https://github.com/edx/edx-proctoring/blob/1444ca40a43869fb4e2731cea4862888c5b5f286/edx_proctoring/views.py#L765
@@ -40,3 +47,5 @@ export const ExamType = Object.freeze({
   PROCTORED: 'proctored',
   TIMED: 'timed',
 });
+
+export const NON_PRACTICE_EXAMS = [ExamType.ONBOARDING, ExamType.PROCTORED, ExamType.TIMED];
