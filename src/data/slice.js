@@ -92,7 +92,6 @@ export const examSlice = createSlice({
     expireExamAttempt: (state) => {
       state.timeIsOver = true;
     },
-    getExamId: (state) => state.examId,
     setVerificationData: (state, { payload }) => {
       state.verification = payload.verification;
     },
@@ -106,7 +105,7 @@ export const examSlice = createSlice({
 });
 
 export const {
-  setIsLoading, setExamState, getExamId, expireExamAttempt,
+  setIsLoading, setExamState, expireExamAttempt,
   setActiveAttempt, setProctoringSettings, setVerificationData,
   setReviewPolicy, setApiError, setAllowProctoringOptOut,
 } = examSlice.actions;

@@ -16,6 +16,7 @@ export const ExamStatus = Object.freeze({
   ONBOARDING_PENDING: 'onboarding_pending',
   ONBOARDING_FAILED: 'onboarding_failed',
   ONBOARDING_EXPIRED: 'onboarding_expired',
+  DECLINED: 'declined',
 });
 
 export const INCOMPLETE_STATUSES = [
