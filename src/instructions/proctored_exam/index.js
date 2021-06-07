@@ -9,3 +9,4 @@ export { default as DownloadSoftwareProctoredExamInstructions } from './download
 export { default as ReadyToStartProctoredExamInstructions } from './ReadyToStartProctoredExamInstructions';
 export { default as PrerequisitesProctoredExamInstructions } from './prerequisites-instructions';
 export { default as SkipProctoredExamInstruction } from './SkipProctoredExamInstruction';
+export { default as OnboardingErrorProctoredExamInstructions } from './OnboardingErrorExamInstructions';

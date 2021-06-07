@@ -6,9 +6,15 @@ import {
   ReadyToStartProctoredExamInstructions,
   PrerequisitesProctoredExamInstructions,
   SkipProctoredExamInstruction,
+  OnboardingErrorProctoredExamInstructions,
 } from './proctored_exam';
-import { isEmpty } from '../helpers';
-import { ExamStatus, VerificationStatus, ExamType } from '../constants';
+import { isEmpty, shouldRenderExpiredPage } from '../helpers';
+import {
+  ExamStatus,
+  VerificationStatus,
+  ExamType,
+  IS_ONBOARDING_ERROR,
+} from '../constants';
 import ExamStateContext from '../context';
 import EntranceExamInstructions from './EntranceInstructions';
 import SubmitExamInstructions from './SubmitInstructions';
@@ -16,6 +22,7 @@ import RejectedInstructions from './RejectedInstructions';
 import ErrorExamInstructions from './ErrorInstructions';
 import SubmittedExamInstructions from './SubmittedInstructions';
 import VerifiedExamInstructions from './VerifiedInstructions';
+import ExpiredInstructions from './ExpiredInstructions';
 
 const Instructions = ({ children }) => {
   const state = useContext(ExamStateContext);
@@ -26,6 +33,23 @@ const Instructions = ({ children }) => {
   const { verification_url: verificationUrl } = attempt || {};
   const [skipProctoring, toggleSkipProctoring] = useState(false);
   const toggleSkipProctoredExam = () => toggleSkipProctoring(!skipProctoring);
+  const expired = shouldRenderExpiredPage(exam);
+
+  if (expired) {
+    return <ExpiredInstructions />;
+  }
+
+  const renderEmptyAttemptInstructions = () => {
+    let component = <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
+    if (examType === ExamType.PROCTORED) {
+      if (skipProctoring) {
+        component = <SkipProctoredExamInstruction cancelSkipProctoredExam={toggleSkipProctoredExam} />;
+      } else if (!prerequisitesPassed) {
+        component = <PrerequisitesProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
+      }
+    }
+    return component;
+  };
 
   useEffect(() => {
     if (examType === ExamType.PROCTORED) {
@@ -42,15 +66,7 @@ const Instructions = ({ children }) => {
 
   switch (true) {
     case isEmpty(attempt):
-      // eslint-disable-next-line no-nested-ternary
-      return examType === ExamType.PROCTORED
-        // eslint-disable-next-line no-nested-ternary
-        ? skipProctoring
-          ? <SkipProctoredExamInstruction cancelSkipProctoredExam={toggleSkipProctoredExam} />
-          : prerequisitesPassed
-            ? <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />
-            : <PrerequisitesProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />
-        : <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
+      return renderEmptyAttemptInstructions();
     case attempt.attempt_status === ExamStatus.CREATED:
       return examType === ExamType.PROCTORED && verificationStatus !== VerificationStatus.APPROVED
         ? <VerificationProctoredExamInstructions status={verificationStatus} verificationUrl={verificationUrl} />
@@ -71,6 +87,8 @@ const Instructions = ({ children }) => {
       return <ErrorExamInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.READY_TO_RESUME:
       return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
+    case examType === ExamType.PROCTORED && IS_ONBOARDING_ERROR(attempt.attempt_status):
+      return <OnboardingErrorProctoredExamInstructions />;
     default:
       return children;
   }

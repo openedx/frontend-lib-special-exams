@@ -5,7 +5,12 @@ import Instructions from './index';
 import { store, getExamAttemptsData, startTimedExam } from '../data';
 import { render, screen } from '../setupTest';
 import { ExamStateProvider } from '../index';
-import { ExamStatus, ExamType } from '../constants';
+import {
+  ExamStatus,
+  ExamType,
+  NON_PRACTICE_EXAMS,
+  INCOMPLETE_STATUSES,
+} from '../constants';
 
 jest.mock('../data', () => ({
   store: {},
@@ -671,5 +676,108 @@ describe('SequenceExamWrapper', () => {
 
     expect(screen.getByText('You have submitted this practice proctored exam')).toBeInTheDocument();
     expect(screen.getByTestId('retry-exam-button')).toHaveTextContent('Retry my exam');
+  });
+
+  it('Does not show expired page if exam is passed due date and is practice', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.PRACTICE,
+          time_limit_mins: 30,
+          prerequisite_status: {},
+          passed_due_date: true,
+        },
+        verification: {},
+      },
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText('Continue to my practice exam.')).toBeInTheDocument();
+  });
+
+  it.each(NON_PRACTICE_EXAMS)('Shows expired page when exam is passed due date and is %s', (item) => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: item,
+          time_limit_mins: 30,
+          attempt: {},
+          prerequisite_status: {},
+          passed_due_date: true,
+        },
+        verification: {},
+      },
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText('The due date for this exam has passed')).toBeInTheDocument();
+  });
+
+  [ExamType.PROCTORED, ExamType.TIMED].forEach((examType) => {
+    it.each(INCOMPLETE_STATUSES)(`Shows expired page when exam is ${examType} and has passed due date and attempt is in %s status`,
+      (item) => {
+        store.getState = () => ({
+          examState: {
+            isLoading: false,
+            timeIsOver: false,
+            proctoringSettings: {
+              platform_name: 'Your Platform',
+            },
+            activeAttempt: {},
+            exam: {
+              is_proctored: true,
+              type: examType,
+              time_limit_mins: 30,
+              attempt: {
+                attempt_status: item,
+              },
+              prerequisite_status: {},
+              passed_due_date: true,
+            },
+            verification: {},
+          },
+        });
+
+        render(
+          <ExamStateProvider>
+            <Instructions>
+              <div>Sequence</div>
+            </Instructions>
+          </ExamStateProvider>,
+          { store },
+        );
+
+        expect(screen.getByText('The due date for this exam has passed')).toBeInTheDocument();
+      });
   });
 });
