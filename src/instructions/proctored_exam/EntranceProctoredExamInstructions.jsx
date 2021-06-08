@@ -8,6 +8,8 @@ import Footer from './Footer';
 const EntranceProctoredExamInstructions = () => {
   const state = useContext(ExamStateContext);
   const { exam, startProctoringExam } = state;
+  const { attempt } = exam || {};
+  const { total_time: totalTime = 0 } = attempt;
 
   return (
     <div>
@@ -23,7 +25,8 @@ const EntranceProctoredExamInstructions = () => {
             <p>
               <FormattedMessage
                 id="exam.ReadyToResumeProctoredExamInstructions.text"
-                defaultMessage="You will have 25 minutes to complete your exam."
+                defaultMessage="You will have {totalTime} to complete your exam."
+                values={{ totalTime }}
               />
             </p>
           </div>
