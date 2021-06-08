@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import Instructions from './index';
 import { store, getExamAttemptsData, startExam } from '../data';
-import { render } from '../setupTest';
+import { render, screen } from '../setupTest';
 import { ExamStateProvider } from '../index';
 
 jest.mock('../data', () => ({
@@ -146,5 +146,75 @@ describe('SequenceExamWrapper', () => {
     );
 
     expect(getByTestId('pending-prerequisites')).toBeInTheDocument();
+  });
+
+  it('Instructions for error status', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        proctoringSettings: {
+          link_urls: '',
+        },
+        verification: {
+          status: 'none',
+          can_verify: true,
+        },
+        activeAttempt: {
+          attempt_status: 'error',
+        },
+        exam: {
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: 'error',
+          },
+        },
+      },
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div data-testid="sequence-content">Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
+  });
+
+  it('Instructions for ready to resume status', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        proctoringSettings: {
+          link_urls: '',
+          platform_name: 'Platform Name',
+        },
+        verification: {
+          status: 'none',
+          can_verify: true,
+        },
+        activeAttempt: {
+          attempt_status: 'ready_to_resume',
+        },
+        exam: {
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: 'ready_to_resume',
+          },
+        },
+      },
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div data-testid="sequence-content">Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(screen.getByText('Your exam is ready to be resumed.')).toBeInTheDocument();
+    expect(screen.getByTestId('start-exam-button')).toHaveTextContent('Continue to my proctored exam.');
   });
 });

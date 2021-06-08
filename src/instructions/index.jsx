@@ -4,6 +4,7 @@ import StartExamInstructions from './StartExamInstructions';
 import SubmitExamInstructions from './SubmitExamInstructions';
 import SubmittedExamInstructions from './SubmittedExamInstructions';
 import {
+  ErrorProctoredExamInstructions,
   EntranceProctoredExamInstructions,
   VerificationProctoredExamInstructions,
   SubmitProctoredExamInstructions,
@@ -61,6 +62,10 @@ const Instructions = ({ children }) => {
       return <VerifiedProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.REJECTED:
       return <RejectedProctoredExamInstructions />;
+    case attempt.attempt_status === ExamStatus.ERROR:
+      return <ErrorProctoredExamInstructions />;
+    case attempt.attempt_status === ExamStatus.READY_TO_RESUME:
+      return <EntranceProctoredExamInstructions />;
     default:
       return children;
   }
