@@ -31,4 +31,5 @@ export const VerificationStatus = Object.freeze({
   MUST_REVERIFY: 'must_reverify',
   APPROVED: 'approved',
   EXPIRED: 'expired',
+  NONE: 'none',
 });
