@@ -30,7 +30,7 @@ const ReadyToStartProctoredExamInstructions = () => {
           />
         </div>
         <ul>
-          <li>
+          <li data-testid="duration-text">
             <FormattedMessage
               id="exam.ReadyToStartProctoredExamInstructions.text1"
               defaultMessage={'You have {examDuration} minutes to complete this exam.'}
@@ -80,6 +80,7 @@ const ReadyToStartProctoredExamInstructions = () => {
             variant="link"
             target="_blank"
             href={rulesUrl}
+            data-testid="proctored-exam-instructions-rulesLink"
           >
             <FormattedMessage
               id="exam.ReadyToStartProctoredExamInstructions.rulesLink"

@@ -8,3 +8,4 @@ export { default as VerifiedProctoredExamInstructions } from './VerifiedProctore
 export { default as DownloadSoftwareProctoredExamInstructions } from './download-instructions';
 export { default as ReadyToStartProctoredExamInstructions } from './ReadyToStartProctoredExamInstructions';
 export { default as PrerequisitesProctoredExamInstructions } from './prerequisites-instructions';
+export { default as SkipProctoredExamInstruction } from './SkipProctoredExamInstruction';

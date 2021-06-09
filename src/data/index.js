@@ -3,6 +3,7 @@ export {
   getProctoringSettings,
   startExam,
   startProctoringExam,
+  skipProctoringExam,
   stopExam,
   continueExam,
   submitExam,

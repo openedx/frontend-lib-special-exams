@@ -10,7 +10,7 @@ const VerificationProctoredExamInstructions = ({ status, verificationUrl }) => {
     switch (status) {
       case VerificationStatus.PENDING:
         return (
-          <p>
+          <p data-testid="verification-status-pending">
             <FormattedMessage
               id="exam.VerificationPendingMessage"
               defaultMessage={'Your verification is pending. Results should '
@@ -21,7 +21,7 @@ const VerificationProctoredExamInstructions = ({ status, verificationUrl }) => {
       case VerificationStatus.MUST_REVERIFY:
         return (
           <>
-            <p>
+            <p data-testid="verification-status-must_reverify">
               <FormattedMessage
                 id="exam.VerificationMustReverifyMessage"
                 defaultMessage={'Your verification attempt failed. Please read '
@@ -30,7 +30,7 @@ const VerificationProctoredExamInstructions = ({ status, verificationUrl }) => {
               />
             </p>
             <Button
-              data-testid="exam.VerificationProctoredExamInstructions-retry-button"
+              data-testid="verification-button"
               variant="link"
               href={verificationUrl}
               target="_blank"
@@ -45,7 +45,7 @@ const VerificationProctoredExamInstructions = ({ status, verificationUrl }) => {
       case VerificationStatus.EXPIRED:
         return (
           <>
-            <p>
+            <p data-testid="verification-status-expired">
               <FormattedMessage
                 id="exam.VerificationExpiredMessage"
                 defaultMessage={'Your verification has expired. You must successfully complete '
@@ -53,7 +53,7 @@ const VerificationProctoredExamInstructions = ({ status, verificationUrl }) => {
               />
             </p>
             <Button
-              data-testid="exam.VerificationProctoredExamInstructions-continue-button"
+              data-testid="verification-button"
               href={verificationUrl}
               target="_blank"
             >
@@ -67,7 +67,7 @@ const VerificationProctoredExamInstructions = ({ status, verificationUrl }) => {
       default:
         return (
           <>
-            <p>
+            <p data-testid="verification-status-none">
               <FormattedMessage
                 id="exam.VerificationDefaultMessage"
                 defaultMessage={'Make sure you are on a computer with a webcam, '
@@ -76,7 +76,7 @@ const VerificationProctoredExamInstructions = ({ status, verificationUrl }) => {
               />
             </p>
             <Button
-              data-testid="exam.VerificationProctoredExamInstructions-continue-button"
+              data-testid="verification-button"
               href={verificationUrl}
               target="_blank"
             >

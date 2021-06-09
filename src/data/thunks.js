@@ -31,13 +31,22 @@ function handleAPIError(error, dispatch) {
   dispatch(setApiError({ errorMsg: message || detail }));
 }
 
-function updateAttemptAfter(courseId, sequenceId, promise = null, noLoading = false) {
+/**
+ * Fetch attempt data and update exam state after performing another action if it is provided.
+ * It is assumed that action somehow modifies attempt in the backend, that's why the state needs
+ * to be updated.
+ * @param courseId - id of a course
+ * @param sequenceId - id of a sequence
+ * @param promiseToBeResolvedFirst - a promise that should get resolved before fetching attempt data
+ * @param noLoading - if set to false shows spinner while executing the function
+ */
+function updateAttemptAfter(courseId, sequenceId, promiseToBeResolvedFirst = null, noLoading = false) {
   return async (dispatch) => {
     if (!noLoading) { dispatch(setIsLoading({ isLoading: true })); }
-    if (promise) {
+    if (promiseToBeResolvedFirst) {
       try {
-        const data = await promise;
-        if (!data || !data.exam_attempt_id) {
+        const response = await promiseToBeResolvedFirst;
+        if (!response || !response.exam_attempt_id) {
           if (!noLoading) { dispatch(setIsLoading({ isLoading: false })); }
           return;
         }
@@ -120,6 +129,19 @@ export function startProctoringExam() {
     )(dispatch);
     const proctoringSettings = await fetchProctoringSettings(exam.id);
     dispatch(setProctoringSettings({ proctoringSettings }));
+  };
+}
+
+export function skipProctoringExam() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to skip proctored exam. No exam id.');
+      return;
+    }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, createExamAttempt(exam.id, true, false),
+    )(dispatch);
   };
 }
 
