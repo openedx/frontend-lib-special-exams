@@ -5,6 +5,7 @@ import { Button, Container } from '@edx/paragon';
 import { ExamStatus } from '../../constants';
 import ExamStateContext from '../../context';
 import Footer from './Footer';
+import SkipProctoredExamButton from './SkipProctoredExamButton';
 
 const EntranceProctoredExamInstructions = ({ skipProctoredExam }) => {
   const state = useContext(ExamStateContext);
@@ -64,20 +65,7 @@ const EntranceProctoredExamInstructions = ({ skipProctoredExam }) => {
             />
           </Button>
         </p>
-        {allowProctoringOptOut && (
-          <p className="mt-4 pl-md-4 mb-0">
-            <Button
-              data-testid="start-exam-without-proctoring-button"
-              variant="outline-secondary"
-              onClick={skipProctoredExam}
-            >
-              <FormattedMessage
-                id="exam.startExamInstructions.startExamButtonText"
-                defaultMessage="Take this exam without proctoring."
-              />
-            </Button>
-          </p>
-        )}
+        {allowProctoringOptOut && <SkipProctoredExamButton handleClick={skipProctoredExam} />}
       </Container>
       <Footer />
     </div>

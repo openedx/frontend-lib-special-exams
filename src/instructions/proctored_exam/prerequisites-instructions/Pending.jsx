@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button } from '@edx/paragon';
+import SkipProctoredExamButton from '../SkipProctoredExamButton';
 
 const PendingPrerequisitesProctoredExamInstructions = ({ allowProctoringOptOut, prerequisites, skipProctoredExam }) => (
   <>
@@ -47,20 +47,7 @@ const PendingPrerequisitesProctoredExamInstructions = ({ allowProctoringOptOut, 
         + 'when all prerequisites-instructions have been successfully completed.'}
       />
     </p>
-    {allowProctoringOptOut && (
-      <p className="mb-0">
-        <Button
-          data-testid="start-exam-without-proctoring-button"
-          variant="link"
-          onClick={skipProctoredExam}
-        >
-          <FormattedMessage
-            id="exam.startExamInstructions.startExamButtonText"
-            defaultMessage="Take this exam without proctoring."
-          />
-        </Button>
-      </p>
-    )}
+    {allowProctoringOptOut && <SkipProctoredExamButton handleClick={skipProctoredExam} />}
   </>
 );
 
