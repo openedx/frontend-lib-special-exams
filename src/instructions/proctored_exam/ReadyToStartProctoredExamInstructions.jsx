@@ -10,7 +10,7 @@ const ReadyToStartProctoredExamInstructions = () => {
     exam,
     proctoringSettings,
     getExamReviewPolicy,
-    startProctoringExam,
+    startProctoredExam,
   } = state;
   const { time_limit_mins: examDuration, reviewPolicy } = exam;
   const { link_urls: linkUrls, platform_name: platformName } = proctoringSettings;
@@ -112,7 +112,7 @@ const ReadyToStartProctoredExamInstructions = () => {
         <Button
           data-testid="start-exam-button"
           variant="primary"
-          onClick={startProctoringExam}
+          onClick={startProctoredExam}
         >
           <FormattedMessage
             id="exam.startExamInstructions.startExamButtonText"

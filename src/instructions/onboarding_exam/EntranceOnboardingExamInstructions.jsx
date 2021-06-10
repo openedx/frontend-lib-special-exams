@@ -5,7 +5,7 @@ import ExamStateContext from '../../context';
 
 const EntranceOnboardingExamInstructions = () => {
   const state = useContext(ExamStateContext);
-  const { startProctoringExam, proctoringSettings } = state;
+  const { createProctoredExamAttempt, proctoringSettings } = state;
   const {
     provider_name: providerName,
     learner_notification_from_email: learnerNotificationFromEmail,
@@ -89,7 +89,7 @@ const EntranceOnboardingExamInstructions = () => {
         <Button
           data-testid="start-exam-button"
           variant="primary"
-          onClick={startProctoringExam}
+          onClick={createProctoredExamAttempt}
         >
           <FormattedMessage
             id="exam.EntranceOnboardingExamInstructions.startExamButtonText"

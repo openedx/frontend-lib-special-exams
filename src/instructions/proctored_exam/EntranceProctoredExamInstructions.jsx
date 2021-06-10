@@ -8,7 +8,7 @@ import SkipProctoredExamButton from './SkipProctoredExamButton';
 
 const EntranceProctoredExamInstructions = ({ skipProctoredExam }) => {
   const state = useContext(ExamStateContext);
-  const { exam, startProctoringExam } = state;
+  const { exam, createProctoredExamAttempt } = state;
   const { attempt, allow_proctoring_opt_out: allowProctoringOptOut } = exam || {};
   const { total_time: totalTime = 0 } = attempt;
 
@@ -55,7 +55,7 @@ const EntranceProctoredExamInstructions = ({ skipProctoredExam }) => {
         <Button
           data-testid="start-exam-button"
           variant="primary"
-          onClick={startProctoringExam}
+          onClick={createProctoredExamAttempt}
         >
           <FormattedMessage
             id="exam.startExamInstructions.startExamButtonText"

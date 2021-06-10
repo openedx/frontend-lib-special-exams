@@ -91,7 +91,7 @@ export function getProctoringSettings() {
 
 export function startExam() {
   return async (dispatch, getState) => {
-    const { exam, activeAttempt } = getState().examState;
+    const { exam } = getState().examState;
     if (!exam.id) {
       logError('Failed to start exam. No exam id.');
       handleAPIError(
@@ -100,58 +100,48 @@ export function startExam() {
       );
       return;
     }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, createExamAttempt(exam.id),
+    )(dispatch);
+  };
+}
 
-    const useWorker = window.Worker && activeAttempt && activeAttempt.desktop_application_js_url;
+export function createProctoredExamAttempt() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to create exam attempt. No exam id.');
+      return;
+    }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
+    )(dispatch);
+  };
+}
+
+export function startProctoredExam() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    const { attempt } = exam || {};
+    if (!exam.id) {
+      logError('Failed to start proctored exam. No exam id.');
+      return;
+    }
+    const { desktop_application_js_url: workerUrl } = attempt || {};
+    const useWorker = window.Worker && workerUrl;
 
     if (useWorker) {
-      workerPromiseForEventNames(actionToMessageTypesMap.ping, activeAttempt.desktop_application_js_url)()
-        .then(() => updateAttemptAfter(exam.course_id, exam.content_id, createExamAttempt(exam.id))(dispatch))
+      workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)()
+        .then(() => updateAttemptAfter(
+          exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
+        )(dispatch))
         .catch(() => handleAPIError(
           { message: 'Something has gone wrong starting your exam. Please double-check that the application is running.' },
           dispatch,
         ));
     } else {
       await updateAttemptAfter(
-        exam.course_id, exam.content_id, createExamAttempt(exam.id),
-      )(dispatch);
-    }
-  };
-}
-
-export function startProctoringExam() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().examState;
-    const { attempt } = exam || {};
-    if (!exam.id) {
-      logError('Failed to start exam. No exam id.');
-      return;
-    }
-    const { desktop_application_js_url: workerUrl } = attempt || {};
-    const readyToStart = attempt && attempt.attempt_status === ExamStatus.READY_TO_START;
-    const useWorker = window.Worker && workerUrl;
-
-    // This check if we are currently on the ready_to_start instructions page, if we are
-    // then we need to emit onStartAttempt message using JS worker to proctoring backend provider,
-    // if we are not then that means we are on entrance instructions page and exam attempt
-    // hasn't been created yet so we need to creat it first to proceed to other pages
-    if (readyToStart) {
-      if (useWorker) {
-        workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)()
-          .then(() => updateAttemptAfter(
-            exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
-          )(dispatch))
-          .catch(() => handleAPIError(
-            { message: 'Something has gone wrong starting your exam. Please double-check that the application is running.' },
-            dispatch,
-          ));
-      } else {
-        await updateAttemptAfter(
-          exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
-        )(dispatch);
-      }
-    } else {
-      await updateAttemptAfter(
-        exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
+        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
       )(dispatch);
     }
   };
