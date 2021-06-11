@@ -11,6 +11,7 @@ import {
   fetchVerificationStatus,
   fetchExamReviewPolicy,
   resetAttempt,
+  declineAttempt,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -167,9 +168,16 @@ export function skipProctoringExam() {
       logError('Failed to skip proctored exam. No exam id.');
       return;
     }
-    await updateAttemptAfter(
-      exam.course_id, exam.content_id, createExamAttempt(exam.id, true, false),
-    )(dispatch);
+    const attemptId = exam.attempt.attempt_id;
+    if (attemptId) {
+      await updateAttemptAfter(
+        exam.course_id, exam.content_id, declineAttempt(attemptId),
+      )(dispatch);
+    } else {
+      await updateAttemptAfter(
+        exam.course_id, exam.content_id, createExamAttempt(exam.id, true, false),
+      )(dispatch);
+    }
   };
 }
 

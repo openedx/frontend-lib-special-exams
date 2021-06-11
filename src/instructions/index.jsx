@@ -41,12 +41,8 @@ const Instructions = ({ children }) => {
 
   const renderEmptyAttemptInstructions = () => {
     let component = <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
-    if (examType === ExamType.PROCTORED) {
-      if (skipProctoring) {
-        component = <SkipProctoredExamInstruction cancelSkipProctoredExam={toggleSkipProctoredExam} />;
-      } else if (!prerequisitesPassed) {
-        component = <PrerequisitesProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
-      }
+    if (examType === ExamType.PROCTORED && !prerequisitesPassed) {
+      component = <PrerequisitesProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
     }
     return component;
   };
@@ -59,12 +55,14 @@ const Instructions = ({ children }) => {
   }
 
   switch (true) {
+    case examType === ExamType.PROCTORED && skipProctoring:
+      return <SkipProctoredExamInstruction cancelSkipProctoredExam={toggleSkipProctoredExam} />;
     case isEmpty(attempt) || !attempt.attempt_id:
       return renderEmptyAttemptInstructions();
     case attempt.attempt_status === ExamStatus.CREATED:
       return examType === ExamType.PROCTORED && verificationStatus !== VerificationStatus.APPROVED
         ? <VerificationProctoredExamInstructions status={verificationStatus} verificationUrl={verificationUrl} />
-        : <DownloadSoftwareProctoredExamInstructions />;
+        : <DownloadSoftwareProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
     case attempt.attempt_status === ExamStatus.DOWNLOAD_SOFTWARE_CLICKED:
       return <DownloadSoftwareProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.READY_TO_START:
