@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
 import Instructions from '../index';
-import { store, getExamAttemptsData, startExam } from '../../data';
+import { store, getExamAttemptsData } from '../../data';
 import { render } from '../../setupTest';
 import { ExamStateProvider } from '../../index';
 import { ExamType, ExamStatus, VerificationStatus } from '../../constants';
@@ -10,10 +10,8 @@ import { ExamType, ExamStatus, VerificationStatus } from '../../constants';
 jest.mock('../../data', () => ({
   store: {},
   getExamAttemptsData: jest.fn(),
-  startExam: jest.fn(),
 }));
 getExamAttemptsData.mockReturnValue(jest.fn());
-startExam.mockReturnValue(jest.fn());
 store.subscribe = jest.fn();
 store.dispatch = jest.fn();
 

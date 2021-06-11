@@ -5,7 +5,7 @@ import ExamStateContext from '../../context';
 
 const StartTimedExamInstructions = () => {
   const state = useContext(ExamStateContext);
-  const { exam, startExam } = state;
+  const { exam, startTimedExam } = state;
   const examDuration = exam.time_limit_mins;
 
   return (
@@ -38,7 +38,7 @@ const StartTimedExamInstructions = () => {
       <Button
         data-testid="start-exam-button"
         variant="outline-primary"
-        onClick={startExam}
+        onClick={startTimedExam}
       >
         <FormattedMessage
           id="exam.startExamInstructions.startExamButtonText"

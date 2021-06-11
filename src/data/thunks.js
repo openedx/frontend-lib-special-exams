@@ -89,7 +89,10 @@ export function getProctoringSettings() {
   };
 }
 
-export function startExam() {
+/**
+ * Start a timed exam
+ */
+export function startTimedExam() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
     if (!exam.id) {
@@ -119,6 +122,9 @@ export function createProctoredExamAttempt() {
   };
 }
 
+/**
+ * Start a proctored exam (including onboarding and practice exams)
+ */
 export function startProctoredExam() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;

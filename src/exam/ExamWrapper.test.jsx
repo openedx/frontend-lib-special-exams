@@ -1,17 +1,17 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
-import { store, getExamAttemptsData, startExam } from '../data';
+import { store, getExamAttemptsData, startTimedExam } from '../data';
 import { render } from '../setupTest';
 import { ExamStateProvider } from '../index';
 
 jest.mock('../data', () => ({
   store: {},
   getExamAttemptsData: jest.fn(),
-  startExam: jest.fn(),
+  startTimedExam: jest.fn(),
 }));
 getExamAttemptsData.mockReturnValue(jest.fn());
-startExam.mockReturnValue(jest.fn());
+startTimedExam.mockReturnValue(jest.fn());
 store.subscribe = jest.fn();
 store.dispatch = jest.fn();
 store.getState = () => ({
