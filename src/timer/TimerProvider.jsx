@@ -6,6 +6,7 @@ import {
   TIMER_IS_CRITICALLY_LOW,
   TIMER_IS_LOW,
   TIMER_LIMIT_REACHED,
+  TIMER_REACHED_NULL,
 } from './events';
 import { withExamStore } from '../hocs';
 
@@ -61,6 +62,12 @@ const TimerServiceProvider = ({
       Emitter.emit(TIMER_IS_CRITICALLY_LOW);
     } else if (secondsLeft <= lowTime) {
       Emitter.emit(TIMER_IS_LOW);
+    }
+    // Used to hide continue exam button on submit exam pages.
+    // Since TIME_LIMIT_REACHED is fired after the grace period we
+    // need to emit separate event when timer reaches 00:00
+    if (secondsLeft <= 0) {
+      Emitter.emit(TIMER_REACHED_NULL);
     }
     if (!limitReached && secondsLeft < LIMIT) {
       clearInterval(timer);

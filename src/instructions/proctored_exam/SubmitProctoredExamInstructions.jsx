@@ -8,7 +8,6 @@ const SubmitProctoredExamInstructions = () => {
   const state = useContext(ExamStateContext);
   const {
     submitExam,
-    continueExam,
     exam,
     activeAttempt,
   } = state;
@@ -49,17 +48,10 @@ const SubmitProctoredExamInstructions = () => {
           />
         </p>
       )}
-      <Button variant="primary" onClick={submitExam}>
+      <Button variant="primary" onClick={submitExam} className="mr-2" data-testid="end-exam-button">
         <FormattedMessage
           id="exam.SubmitProctoredExamInstructions.submit"
           defaultMessage="Yes, end my proctored exam"
-        />
-      </Button>
-      &nbsp;
-      <Button variant="outline-primary" onClick={continueExam}>
-        <FormattedMessage
-          id="exam.SubmitProctoredExamInstructions.continue"
-          defaultMessage="No, I'd like to continue working"
         />
       </Button>
     </>
