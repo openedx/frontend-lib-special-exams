@@ -55,7 +55,7 @@ const EntranceOnboardingExamInstructions = () => {
         />
       </p>
       {learnerNotificationFromEmail && (
-        <p>
+        <p data-testid="learner-notification-email-contact">
           <FormattedMessage
             id="exam.EntranceOnboardingExamInstructions.text3"
             defaultMessage={'Once your profile has been reviewed, you will receive an email '
@@ -71,7 +71,7 @@ const EntranceOnboardingExamInstructions = () => {
         </p>
       )}
       {integrationSpecificEmail && (
-        <p>
+        <p data-testid="integration-email-contact">
           <FormattedMessage
             id="exam.EntranceOnboardingExamInstructions.text5"
             defaultMessage="Please contact "

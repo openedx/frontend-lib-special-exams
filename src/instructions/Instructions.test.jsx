@@ -79,14 +79,22 @@ describe('SequenceExamWrapper', () => {
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
   });
 
-  it('Shows onboarding exam entrance instructions when receives onboarding exam', () => {
+  it.each([
+    ['', ''],
+    ['integration@email.com', ''],
+    ['', 'learner_notification@example.com'],
+    ['integration@email.com', 'learner_notification@example.com'],
+  ])('Shows onboarding exam entrance instructions when receives onboarding exam with integration email: "%s", learner email: "%s"', (integrationEmail, learnerEmail) => {
     store.getState = () => ({
       examState: {
         isLoading: false,
         verification: {
           status: 'approved',
         },
-        proctoringSettings: {},
+        proctoringSettings: {
+          learner_notification_from_email: learnerEmail,
+          integration_specific_email: integrationEmail,
+        },
         activeAttempt: {},
         exam: {
           time_limit_mins: 30,
@@ -96,7 +104,7 @@ describe('SequenceExamWrapper', () => {
       },
     });
 
-    const { getByTestId } = render(
+    const { queryByTestId } = render(
       <ExamStateProvider>
         <Instructions>
           <div>Sequence</div>
@@ -104,7 +112,22 @@ describe('SequenceExamWrapper', () => {
       </ExamStateProvider>,
       { store },
     );
-    expect(getByTestId('exam-instructions-title')).toHaveTextContent('Proctoring onboarding exam');
+
+    expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Proctoring onboarding exam');
+    const integrationEmailComponent = queryByTestId('integration-email-contact');
+    const learnerNotificationEmailComponent = queryByTestId('learner-notification-email-contact');
+    if (learnerEmail) {
+      expect(learnerNotificationEmailComponent).toBeInTheDocument();
+      expect(learnerNotificationEmailComponent).toHaveTextContent(learnerEmail);
+    } else {
+      expect(learnerNotificationEmailComponent).not.toBeInTheDocument();
+    }
+    if (integrationEmail) {
+      expect(integrationEmailComponent).toBeInTheDocument();
+      expect(integrationEmailComponent).toHaveTextContent(integrationEmail);
+    } else {
+      expect(integrationEmailComponent).not.toBeInTheDocument();
+    }
   });
 
   it('Shows practice exam entrance instructions when receives practice exam', () => {
@@ -398,13 +421,14 @@ describe('SequenceExamWrapper', () => {
     expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('The time allotted for this exam has expired.');
   });
 
-  it('Shows rejected onboarding exam instructions if exam is onboarding and attempt status is rejected', () => {
+  it.each(['integration@example.com', ''])('Shows correct rejected onboarding exam instructions when attempt is rejected and integration email is "%s"', (integrationEmail) => {
     store.getState = () => ({
       examState: {
         isLoading: false,
         timeIsOver: false,
         proctoringSettings: {
           platform_name: 'Your Platform',
+          integration_specific_email: integrationEmail,
         },
         activeAttempt: {},
         exam: {
@@ -420,7 +444,7 @@ describe('SequenceExamWrapper', () => {
       },
     });
 
-    const { getByTestId } = render(
+    const { queryByTestId } = render(
       <ExamStateProvider>
         <Instructions>
           <div>Sequence</div>
@@ -429,7 +453,14 @@ describe('SequenceExamWrapper', () => {
       { store },
     );
 
-    expect(getByTestId('rejected-onboarding-title')).toBeInTheDocument();
+    expect(queryByTestId('rejected-onboarding-title')).toBeInTheDocument();
+    const contactComponent = queryByTestId('integration-email-contact');
+    if (integrationEmail) {
+      expect(contactComponent).toBeInTheDocument();
+      expect(contactComponent).toHaveTextContent(integrationEmail);
+    } else {
+      expect(contactComponent).not.toBeInTheDocument();
+    }
   });
 
   it('Shows submit onboarding exam instructions if exam is onboarding and attempt status is ready_to_submit', () => {

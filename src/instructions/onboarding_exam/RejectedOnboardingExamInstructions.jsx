@@ -17,7 +17,7 @@ const RejectedOnboardingExamInstructions = () => {
         />
       </h3>
       {integrationSpecificEmail && (
-        <p>
+        <p data-testid="integration-email-contact">
           <FormattedMessage
             id="exam.RejectedOnboardingExamInstructions.text1"
             defaultMessage="Please contact "
