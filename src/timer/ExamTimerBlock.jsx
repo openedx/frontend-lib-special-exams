@@ -54,8 +54,8 @@ const ExamTimerBlock = injectIntl(({
             </Alert.Link>
             <FormattedMessage
               id="exam.examTimer.text"
-              defaultMessage='" as {exam_type}. '
-              values={{ exam_type: attempt.exam_type }}
+              defaultMessage='" as {examType}. '
+              values={{ examType: attempt.exam_type }}
             />
             {
               isShowMore

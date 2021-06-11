@@ -10,6 +10,7 @@ import {
   softwareDownloadAttempt,
   fetchVerificationStatus,
   fetchExamReviewPolicy,
+  resetAttempt,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -88,9 +89,12 @@ export function getProctoringSettings() {
   };
 }
 
-export function startExam() {
+/**
+ * Start a timed exam
+ */
+export function startTimedExam() {
   return async (dispatch, getState) => {
-    const { exam, activeAttempt } = getState().examState;
+    const { exam } = getState().examState;
     if (!exam.id) {
       logError('Failed to start exam. No exam id.');
       handleAPIError(
@@ -99,36 +103,53 @@ export function startExam() {
       );
       return;
     }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, createExamAttempt(exam.id),
+    )(dispatch);
+  };
+}
 
-    const useWorker = window.Worker && activeAttempt && activeAttempt.desktop_application_js_url;
+export function createProctoredExamAttempt() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to create exam attempt. No exam id.');
+      return;
+    }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
+    )(dispatch);
+  };
+}
+
+/**
+ * Start a proctored exam (including onboarding and practice exams)
+ */
+export function startProctoredExam() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    const { attempt } = exam || {};
+    if (!exam.id) {
+      logError('Failed to start proctored exam. No exam id.');
+      return;
+    }
+    const { desktop_application_js_url: workerUrl } = attempt || {};
+    const useWorker = window.Worker && workerUrl;
 
     if (useWorker) {
-      workerPromiseForEventNames(actionToMessageTypesMap.ping, activeAttempt.desktop_application_js_url)()
-        .then(() => updateAttemptAfter(exam.course_id, exam.content_id, createExamAttempt(exam.id))(dispatch))
+      workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)()
+        .then(() => updateAttemptAfter(
+          exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
+        )(dispatch))
         .catch(() => handleAPIError(
           { message: 'Something has gone wrong starting your exam. Please double-check that the application is running.' },
           dispatch,
         ));
     } else {
       await updateAttemptAfter(
-        exam.course_id, exam.content_id, createExamAttempt(exam.id),
+        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
       )(dispatch);
     }
-  };
-}
-
-export function startProctoringExam() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().examState;
-    if (!exam.id) {
-      logError('Failed to start exam. No exam id.');
-      return;
-    }
-    await updateAttemptAfter(
-      exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
-    )(dispatch);
-    const proctoringSettings = await fetchProctoringSettings(exam.id);
-    dispatch(setProctoringSettings({ proctoringSettings }));
   };
 }
 
@@ -211,6 +232,24 @@ export function continueExam(noLoading = true) {
     }
     await updateAttemptAfter(
       exam.course_id, exam.content_id, continueAttempt(attemptId), noLoading,
+    )(dispatch);
+  };
+}
+
+export function resetExam() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    const attemptId = exam.attempt.attempt_id;
+    if (!attemptId) {
+      logError('Failed to reset exam attempt. No attempt id.');
+      handleAPIError(
+        { message: 'Failed to reset exam attempt. No attempt id was found.' },
+        dispatch,
+      );
+      return;
+    }
+    await updateAttemptAfter(
+      exam.course_id, exam.content_id, resetAttempt(attemptId),
     )(dispatch);
   };
 }

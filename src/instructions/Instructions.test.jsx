@@ -2,17 +2,18 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
 import Instructions from './index';
-import { store, getExamAttemptsData, startExam } from '../data';
+import { store, getExamAttemptsData, startTimedExam } from '../data';
 import { render, screen } from '../setupTest';
 import { ExamStateProvider } from '../index';
+import { ExamStatus, ExamType } from '../constants';
 
 jest.mock('../data', () => ({
   store: {},
   getExamAttemptsData: jest.fn(),
-  startExam: jest.fn(),
+  startTimedExam: jest.fn(),
 }));
 getExamAttemptsData.mockReturnValue(jest.fn());
-startExam.mockReturnValue(jest.fn());
+startTimedExam.mockReturnValue(jest.fn());
 store.subscribe = jest.fn();
 store.dispatch = jest.fn();
 
@@ -22,6 +23,7 @@ describe('SequenceExamWrapper', () => {
       examState: {
         isLoading: false,
         activeAttempt: null,
+        proctoringSettings: {},
         verification: {
           status: 'none',
           can_verify: true,
@@ -29,6 +31,7 @@ describe('SequenceExamWrapper', () => {
         exam: {
           time_limit_mins: 30,
           attempt: {},
+          type: ExamType.TIMED,
         },
       },
     });
@@ -57,6 +60,7 @@ describe('SequenceExamWrapper', () => {
         },
         exam: {
           time_limit_mins: 30,
+          type: ExamType.PROCTORED,
           attempt: {
             attempt_status: 'started',
           },
@@ -75,6 +79,85 @@ describe('SequenceExamWrapper', () => {
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
   });
 
+  it.each([
+    ['', ''],
+    ['integration@email.com', ''],
+    ['', 'learner_notification@example.com'],
+    ['integration@email.com', 'learner_notification@example.com'],
+  ])('Shows onboarding exam entrance instructions when receives onboarding exam with integration email: "%s", learner email: "%s"', (integrationEmail, learnerEmail) => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        verification: {
+          status: 'approved',
+        },
+        proctoringSettings: {
+          learner_notification_from_email: learnerEmail,
+          integration_specific_email: integrationEmail,
+        },
+        activeAttempt: {},
+        exam: {
+          time_limit_mins: 30,
+          type: ExamType.ONBOARDING,
+          attempt: {},
+        },
+      },
+    });
+
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Proctoring onboarding exam');
+    const integrationEmailComponent = queryByTestId('integration-email-contact');
+    const learnerNotificationEmailComponent = queryByTestId('learner-notification-email-contact');
+    if (learnerEmail) {
+      expect(learnerNotificationEmailComponent).toBeInTheDocument();
+      expect(learnerNotificationEmailComponent).toHaveTextContent(learnerEmail);
+    } else {
+      expect(learnerNotificationEmailComponent).not.toBeInTheDocument();
+    }
+    if (integrationEmail) {
+      expect(integrationEmailComponent).toBeInTheDocument();
+      expect(integrationEmailComponent).toHaveTextContent(integrationEmail);
+    } else {
+      expect(integrationEmailComponent).not.toBeInTheDocument();
+    }
+  });
+
+  it('Shows practice exam entrance instructions when receives practice exam', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        verification: {
+          status: 'approved',
+        },
+        activeAttempt: {},
+        proctoringSettings: {},
+        exam: {
+          time_limit_mins: 30,
+          type: ExamType.PRACTICE,
+          attempt: {},
+        },
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(getByTestId('exam-instructions-title')).toHaveTextContent('Try a proctored exam');
+  });
+
   it('Shows failed prerequisites page if user has failed prerequisites for the exam', () => {
     store.getState = () => ({
       examState: {
@@ -89,7 +172,9 @@ describe('SequenceExamWrapper', () => {
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {},
+          type: ExamType.PROCTORED,
           prerequisite_status: {
+            are_prerequisites_satisfied: false,
             failed_prerequisites: [
               {
                 test: 'failed',
@@ -131,9 +216,11 @@ describe('SequenceExamWrapper', () => {
         exam: {
           allow_proctoring_opt_out: false,
           is_proctored: true,
+          type: ExamType.PROCTORED,
           time_limit_mins: 30,
           attempt: {},
           prerequisite_status: {
+            are_prerequisites_satisfied: false,
             pending_prerequisites: [
               {
                 test: 'failed',
@@ -164,7 +251,11 @@ describe('SequenceExamWrapper', () => {
       examState: {
         isLoading: false,
         proctoringSettings: {
-          link_urls: '',
+          link_urls: [
+            {
+              contact_us: 'http://localhost:2000',
+            },
+          ],
         },
         verification: {
           status: 'none',
@@ -209,6 +300,7 @@ describe('SequenceExamWrapper', () => {
           attempt_status: 'ready_to_resume',
         },
         exam: {
+          type: 'proctored',
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'ready_to_resume',
@@ -238,10 +330,12 @@ describe('SequenceExamWrapper', () => {
           status: 'none',
           can_verify: true,
         },
+        proctoringSettings: {},
         activeAttempt: {
           attempt_status: 'ready_to_submit',
         },
         exam: {
+          type: 'timed',
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'ready_to_submit',
@@ -270,6 +364,7 @@ describe('SequenceExamWrapper', () => {
           status: 'none',
           can_verify: true,
         },
+        proctoringSettings: {},
         activeAttempt: {
           attempt_status: 'submitted',
         },
@@ -302,6 +397,7 @@ describe('SequenceExamWrapper', () => {
           status: 'none',
           can_verify: true,
         },
+        proctoringSettings: {},
         activeAttempt: {
           attempt_status: 'submitted',
         },
@@ -323,5 +419,81 @@ describe('SequenceExamWrapper', () => {
       { store },
     );
     expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('The time allotted for this exam has expired.');
+  });
+
+  it.each(['integration@example.com', ''])('Shows correct rejected onboarding exam instructions when attempt is rejected and integration email is "%s"', (integrationEmail) => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+          integration_specific_email: integrationEmail,
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.ONBOARDING,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: ExamStatus.REJECTED,
+          },
+          prerequisite_status: {},
+        },
+        verification: {},
+      },
+    });
+
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(queryByTestId('rejected-onboarding-title')).toBeInTheDocument();
+    const contactComponent = queryByTestId('integration-email-contact');
+    if (integrationEmail) {
+      expect(contactComponent).toBeInTheDocument();
+      expect(contactComponent).toHaveTextContent(integrationEmail);
+    } else {
+      expect(contactComponent).not.toBeInTheDocument();
+    }
+  });
+
+  it('Shows submit onboarding exam instructions if exam is onboarding and attempt status is ready_to_submit', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.ONBOARDING,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: ExamStatus.READY_TO_SUBMIT,
+          },
+          prerequisite_status: {},
+        },
+        verification: {},
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(getByTestId('submit-onboarding-exam')).toBeInTheDocument();
   });
 });

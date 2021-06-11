@@ -1,8 +1,8 @@
 export {
   getExamAttemptsData,
   getProctoringSettings,
-  startExam,
-  startProctoringExam,
+  startTimedExam,
+  startProctoredExam,
   skipProctoringExam,
   stopExam,
   continueExam,
@@ -12,6 +12,7 @@ export {
   getVerificationData,
   getExamReviewPolicy,
   pingAttempt,
+  resetExam,
 } from './thunks';
 
 export { default as store } from './store';

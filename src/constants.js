@@ -23,6 +23,7 @@ export const ExamAction = Object.freeze({
   PING: 'ping',
   SUBMIT: 'submit',
   ERROR: 'error',
+  RESET: 'reset_attempt',
   CLICK_DOWNLOAD_SOFTWARE: 'click_download_software',
 });
 
@@ -32,4 +33,11 @@ export const VerificationStatus = Object.freeze({
   APPROVED: 'approved',
   EXPIRED: 'expired',
   NONE: 'none',
+});
+
+export const ExamType = Object.freeze({
+  ONBOARDING: 'onboarding',
+  PRACTICE: 'practice',
+  PROCTORED: 'proctored',
+  TIMED: 'timed',
 });
