@@ -12,5 +12,5 @@ export const shouldRenderExpiredPage = (exam) => {
   if (!passedDueDate || examType === ExamType.PRACTICE) {
     return false;
   }
-  return (isEmpty(attempt) || IS_INCOMPLETE_STATUS(attempt.attempt_status));
+  return (isEmpty(attempt) || !attempt.attempt_id || IS_INCOMPLETE_STATUS(attempt.attempt_status));
 };
