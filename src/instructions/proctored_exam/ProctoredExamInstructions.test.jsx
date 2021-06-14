@@ -293,6 +293,7 @@ describe('SequenceExamWrapper', () => {
           time_limit_mins: 30,
           attempt: {
             attempt_status: ExamStatus.CREATED,
+            attempt_id: 1,
           },
         },
         proctoringSettings: {},

@@ -736,9 +736,7 @@ describe('SequenceExamWrapper', () => {
           is_proctored: true,
           type: item,
           time_limit_mins: 30,
-          attempt: {
-            attempt_id: 1,
-          },
+          attempt: {},
           prerequisite_status: {},
           passed_due_date: true,
         },
