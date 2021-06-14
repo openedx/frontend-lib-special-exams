@@ -1,8 +1,7 @@
 import React, { useContext } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Container, Hyperlink, MailtoLink } from '@edx/paragon';
+import { Hyperlink, MailtoLink } from '@edx/paragon';
 import ExamStateContext from '../../context';
-import Footer from './Footer';
 
 const ErrorProctoredExamInstructions = () => {
   const state = useContext(ExamStateContext);
@@ -39,18 +38,15 @@ const ErrorProctoredExamInstructions = () => {
 
   return (
     <div>
-      <Container className="border py-5 mb-4">
-        <div className="h3">
-          <FormattedMessage
-            id="exam.ErrorProctoredExamInstructions.title"
-            defaultMessage="Error with proctored exam"
-          />
-        </div>
-        <p className="mb-0">
-          {renderBody()}
-        </p>
-      </Container>
-      <Footer />
+      <div className="h3">
+        <FormattedMessage
+          id="exam.ErrorProctoredExamInstructions.title"
+          defaultMessage="Error with proctored exam"
+        />
+      </div>
+      <p className="mb-0">
+        {renderBody()}
+      </p>
     </div>
   );
 };

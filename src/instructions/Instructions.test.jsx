@@ -55,14 +55,12 @@ describe('SequenceExamWrapper', () => {
           status: 'none',
           can_verify: true,
         },
-        activeAttempt: {
-          attempt_status: 'started',
-        },
+        activeAttempt: {},
         exam: {
           time_limit_mins: 30,
           type: ExamType.PROCTORED,
           attempt: {
-            attempt_status: 'started',
+            attempt_status: ExamStatus.STARTED,
           },
         },
       },
@@ -163,12 +161,12 @@ describe('SequenceExamWrapper', () => {
       examState: {
         isLoading: false,
         timeIsOver: true,
+        allowProctoringOptOut: true,
         proctoringSettings: {
           platform_name: 'Your Platform',
         },
         activeAttempt: {},
         exam: {
-          allow_proctoring_opt_out: true,
           is_proctored: true,
           time_limit_mins: 30,
           attempt: {},
@@ -261,13 +259,12 @@ describe('SequenceExamWrapper', () => {
           status: 'none',
           can_verify: true,
         },
-        activeAttempt: {
-          attempt_status: 'error',
-        },
+        activeAttempt: {},
         exam: {
+          type: ExamType.PROCTORED,
           time_limit_mins: 30,
           attempt: {
-            attempt_status: 'error',
+            attempt_status: ExamStatus.ERROR,
           },
         },
       },
@@ -296,14 +293,12 @@ describe('SequenceExamWrapper', () => {
           status: 'none',
           can_verify: true,
         },
-        activeAttempt: {
-          attempt_status: 'ready_to_resume',
-        },
+        activeAttempt: {},
         exam: {
-          type: 'proctored',
+          type: ExamType.PROCTORED,
           time_limit_mins: 30,
           attempt: {
-            attempt_status: 'ready_to_resume',
+            attempt_status: ExamStatus.READY_TO_RESUME,
           },
         },
       },
@@ -331,14 +326,12 @@ describe('SequenceExamWrapper', () => {
           can_verify: true,
         },
         proctoringSettings: {},
-        activeAttempt: {
-          attempt_status: 'ready_to_submit',
-        },
+        activeAttempt: {},
         exam: {
-          type: 'timed',
+          type: ExamType.TIMED,
           time_limit_mins: 30,
           attempt: {
-            attempt_status: 'ready_to_submit',
+            attempt_status: ExamStatus.READY_TO_SUBMIT,
           },
         },
       },
@@ -365,13 +358,12 @@ describe('SequenceExamWrapper', () => {
           can_verify: true,
         },
         proctoringSettings: {},
-        activeAttempt: {
-          attempt_status: 'submitted',
-        },
+        activeAttempt: {},
         exam: {
+          type: ExamType.TIMED,
           time_limit_mins: 30,
           attempt: {
-            attempt_status: 'submitted',
+            attempt_status: ExamStatus.SUBMITTED,
           },
         },
       },
@@ -398,13 +390,12 @@ describe('SequenceExamWrapper', () => {
           can_verify: true,
         },
         proctoringSettings: {},
-        activeAttempt: {
-          attempt_status: 'submitted',
-        },
+        activeAttempt: {},
         exam: {
+          type: ExamType.TIMED,
           time_limit_mins: 30,
           attempt: {
-            attempt_status: 'submitted',
+            attempt_status: ExamStatus.SUBMITTED,
           },
         },
       },
@@ -495,5 +486,190 @@ describe('SequenceExamWrapper', () => {
     );
 
     expect(getByTestId('submit-onboarding-exam')).toBeInTheDocument();
+  });
+
+  it('Shows error onboarding exam instructions if exam is onboarding and attempt status is error', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.ONBOARDING,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: ExamStatus.ERROR,
+          },
+          prerequisite_status: {},
+        },
+        verification: {},
+      },
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText('Error: There was a problem with your onboarding session')).toBeInTheDocument();
+    expect(screen.getByTestId('retry-exam-button')).toHaveTextContent('Retry my exam');
+  });
+
+  it('Shows submitted onboarding exam instructions if exam is onboarding and attempt status is submitted', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+          integration_specific_email: 'test@example.com',
+          learner_notification_from_email: 'test_notification@example.com',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.ONBOARDING,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: ExamStatus.SUBMITTED,
+          },
+          prerequisite_status: {},
+        },
+        verification: {},
+      },
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    const retryExamButton = screen.getByTestId('retry-exam-button');
+    expect(retryExamButton).toHaveTextContent('Retry my exam');
+    expect(screen.getByText('You have submitted this onboarding exam')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'test@example.com' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'test_notification@example.com' })).toBeInTheDocument();
+
+    expect(retryExamButton).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'I understand and want to reset this onboarding exam.' }));
+    expect(retryExamButton).not.toBeDisabled();
+  });
+
+  it('Shows verified onboarding exam instructions if exam is onboarding and attempt status is verified', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+          integration_specific_email: 'test@example.com',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.ONBOARDING,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: ExamStatus.VERIFIED,
+          },
+          prerequisite_status: {},
+        },
+        verification: {},
+      },
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText('Your onboarding profile was reviewed successfully')).toBeInTheDocument();
+    expect(screen.getByRole('link')).toHaveTextContent('test@example.com');
+  });
+
+  it('Shows error practice exam instructions if exam is onboarding and attempt status is error', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.PRACTICE,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: ExamStatus.ERROR,
+          },
+          prerequisite_status: {},
+        },
+        verification: {},
+      },
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText('There was a problem with your practice proctoring session')).toBeInTheDocument();
+    expect(screen.getByTestId('retry-exam-button')).toHaveTextContent('Retry my exam');
+  });
+
+  it('Shows submitted practice exam instructions if exam is onboarding and attempt status is submitted', () => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        timeIsOver: false,
+        proctoringSettings: {
+          platform_name: 'Your Platform',
+        },
+        activeAttempt: {},
+        exam: {
+          is_proctored: true,
+          type: ExamType.PRACTICE,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_status: ExamStatus.SUBMITTED,
+          },
+          prerequisite_status: {},
+        },
+        verification: {},
+      },
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText('You have submitted this practice proctored exam')).toBeInTheDocument();
+    expect(screen.getByTestId('retry-exam-button')).toHaveTextContent('Retry my exam');
   });
 });

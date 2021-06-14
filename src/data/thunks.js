@@ -22,6 +22,7 @@ import {
   setVerificationData,
   setReviewPolicy,
   setApiError,
+  setAllowProctoringOptOut,
 } from './slice';
 import { ExamStatus } from '../constants';
 import { workerPromiseForEventNames, pingApplication } from './messages/handlers';
@@ -357,5 +358,11 @@ export function getExamReviewPolicy() {
     }
     const data = await fetchExamReviewPolicy(exam.id);
     dispatch(setReviewPolicy({ policy: data.review_policy }));
+  };
+}
+
+export function getAllowProctoringOptOut(allowProctoringOptOut) {
+  return (dispatch) => {
+    dispatch(setAllowProctoringOptOut({ allowProctoringOptOut }));
   };
 }

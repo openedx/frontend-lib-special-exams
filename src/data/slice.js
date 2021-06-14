@@ -7,12 +7,16 @@ export const examSlice = createSlice({
     isLoading: true,
     timeIsOver: false,
     activeAttempt: null,
+    allowProctoringOptOut: false,
     proctoringSettings: {},
     exam: {},
     verification: {},
     apiErrorMsg: '',
   },
   reducers: {
+    setAllowProctoringOptOut: (state, { payload }) => {
+      state.allowProctoringOptOut = payload.allowProctoringOptOut;
+    },
     setIsLoading: (state, { payload }) => {
       state.isLoading = payload.isLoading;
     },
@@ -46,7 +50,7 @@ export const examSlice = createSlice({
 export const {
   setIsLoading, setExamState, getExamId, expireExamAttempt,
   setActiveAttempt, setProctoringSettings, setVerificationData,
-  setReviewPolicy, setApiError,
+  setReviewPolicy, setApiError, setAllowProctoringOptOut,
 } = examSlice.actions;
 
 export default examSlice.reducer;

@@ -4,7 +4,7 @@ import { Container } from '@edx/paragon';
 import { ExamType } from '../constants';
 import { EntranceProctoredExamInstructions } from './proctored_exam';
 import { EntranceOnboardingExamInstructions } from './onboarding_exam';
-import EntrancePracticeExamInstructions from './practice_exam';
+import { EntrancePracticeExamInstructions } from './practice_exam';
 import { StartTimedExamInstructions, TimedExamFooter } from './timed_exam';
 import Footer from './proctored_exam/Footer';
 

@@ -1,11 +1,7 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import SubmittedExamInstructions from './SubmittedExamInstructions';
 import {
-  ErrorProctoredExamInstructions,
   VerificationProctoredExamInstructions,
-  SubmittedProctoredExamInstructions,
-  VerifiedProctoredExamInstructions,
   DownloadSoftwareProctoredExamInstructions,
   ReadyToStartProctoredExamInstructions,
   PrerequisitesProctoredExamInstructions,
@@ -17,16 +13,25 @@ import ExamStateContext from '../context';
 import EntranceExamInstructions from './EntranceInstructions';
 import SubmitExamInstructions from './SubmitInstructions';
 import RejectedInstructions from './RejectedInstructions';
+import ErrorExamInstructions from './ErrorInstructions';
+import SubmittedExamInstructions from './SubmittedInstructions';
+import VerifiedExamInstructions from './VerifiedInstructions';
 
 const Instructions = ({ children }) => {
   const state = useContext(ExamStateContext);
-  const { exam, verification } = state;
+  const { exam, verification, getVerificationData } = state;
   const { attempt, type: examType, prerequisite_status: prerequisitesData } = exam || {};
   const prerequisitesPassed = prerequisitesData ? prerequisitesData.are_prerequisites_satisifed : true;
   let verificationStatus = verification.status || '';
   const { verification_url: verificationUrl } = attempt || {};
   const [skipProctoring, toggleSkipProctoring] = useState(false);
   const toggleSkipProctoredExam = () => toggleSkipProctoring(!skipProctoring);
+
+  useEffect(() => {
+    if (examType === ExamType.PROCTORED) {
+      getVerificationData();
+    }
+  }, []);
 
   // The API does not explicitly return 'expired' status, so we have to check manually.
   // expires attribute is returned only for approved status, so it is safe to do this
@@ -47,9 +52,9 @@ const Instructions = ({ children }) => {
             : <PrerequisitesProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />
         : <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
     case attempt.attempt_status === ExamStatus.CREATED:
-      return verificationStatus === VerificationStatus.APPROVED
-        ? <DownloadSoftwareProctoredExamInstructions />
-        : <VerificationProctoredExamInstructions status={verificationStatus} verificationUrl={verificationUrl} />;
+      return examType === ExamType.PROCTORED && verificationStatus !== VerificationStatus.APPROVED
+        ? <VerificationProctoredExamInstructions status={verificationStatus} verificationUrl={verificationUrl} />
+        : <DownloadSoftwareProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.DOWNLOAD_SOFTWARE_CLICKED:
       return <DownloadSoftwareProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.READY_TO_START:
@@ -57,15 +62,13 @@ const Instructions = ({ children }) => {
     case attempt.attempt_status === ExamStatus.READY_TO_SUBMIT:
       return <SubmitExamInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.SUBMITTED:
-      return examType === ExamType.PROCTORED
-        ? <SubmittedProctoredExamInstructions />
-        : <SubmittedExamInstructions />;
+      return <SubmittedExamInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.VERIFIED:
-      return <VerifiedProctoredExamInstructions />;
+      return <VerifiedExamInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.REJECTED:
       return <RejectedInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.ERROR:
-      return <ErrorProctoredExamInstructions />;
+      return <ErrorExamInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.READY_TO_RESUME:
       return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
     default:
