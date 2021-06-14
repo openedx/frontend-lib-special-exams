@@ -11,7 +11,6 @@ import {
   fetchVerificationStatus,
   fetchExamReviewPolicy,
   resetAttempt,
-  getSequenceMetadata,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -362,11 +361,8 @@ export function getExamReviewPolicy() {
   };
 }
 
-export function getAllowProctoringOptOut(sequenceId) {
-  return async (dispatch) => {
-    dispatch(setIsLoading({ isLoading: true }));
-    const data = await getSequenceMetadata(sequenceId);
-    dispatch(setAllowProctoringOptOut({ allowProctoringOptOut: data.allow_proctoring_opt_out }));
-    dispatch(setIsLoading({ isLoading: false }));
+export function getAllowProctoringOptOut(allowProctoringOptOut) {
+  return (dispatch) => {
+    dispatch(setAllowProctoringOptOut({ allowProctoringOptOut }));
   };
 }

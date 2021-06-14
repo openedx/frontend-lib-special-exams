@@ -12,7 +12,7 @@ const ExamWrapper = ({ children, ...props }) => {
 
   const loadInitialData = async () => {
     await state.getExamAttemptsData(courseId, sequence.id);
-    await state.getAllowProctoringOptOut(sequence.id);
+    await state.getAllowProctoringOptOut(sequence.allowProctoringOptOut);
     state.getProctoringSettings();
   };
 
@@ -31,6 +31,7 @@ ExamWrapper.propTypes = {
   sequence: PropTypes.shape({
     id: PropTypes.string.isRequired,
     isTimeLimited: PropTypes.bool,
+    allowProctoringOptOut: PropTypes.bool,
   }).isRequired,
   courseId: PropTypes.string.isRequired,
   children: PropTypes.element.isRequired,
