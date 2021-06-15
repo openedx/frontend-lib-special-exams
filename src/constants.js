@@ -58,5 +58,3 @@ export const ExamType = Object.freeze({
   PROCTORED: 'proctored',
   TIMED: 'timed',
 });
-
-export const NON_PRACTICE_EXAMS = [ExamType.ONBOARDING, ExamType.PROCTORED, ExamType.TIMED];

@@ -5,12 +5,7 @@ import Instructions from './index';
 import { store, getExamAttemptsData, startTimedExam } from '../data';
 import { render, screen } from '../setupTest';
 import { ExamStateProvider } from '../index';
-import {
-  ExamStatus,
-  ExamType,
-  NON_PRACTICE_EXAMS,
-  INCOMPLETE_STATUSES,
-} from '../constants';
+import { ExamStatus, ExamType, INCOMPLETE_STATUSES } from '../constants';
 
 jest.mock('../data', () => ({
   store: {},
@@ -723,7 +718,7 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('Continue to my practice exam.')).toBeInTheDocument();
   });
 
-  it.each(NON_PRACTICE_EXAMS)('Shows expired page when exam is passed due date and is %s', (item) => {
+  it.each([ExamType.TIMED, ExamType.PROCTORED, ExamType.ONBOARDING])('Shows expired page when exam is passed due date and is %s', (examType) => {
     store.getState = () => ({
       examState: {
         isLoading: false,
@@ -734,7 +729,7 @@ describe('SequenceExamWrapper', () => {
         activeAttempt: {},
         exam: {
           is_proctored: true,
-          type: item,
+          type: examType,
           time_limit_mins: 30,
           attempt: {},
           prerequisite_status: {},

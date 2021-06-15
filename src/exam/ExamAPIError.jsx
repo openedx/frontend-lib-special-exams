@@ -20,7 +20,7 @@ export default function ExamAPIError() {
               + 'Please reach out to {supportLink} for assistance, '
               + 'and return to the exam once you receive further instructions.'
           }
-          values={{ supportLink: <a href={contactUs} target="_blank" rel="noopener noreferrer">{platformName} Support</a> }}
+          values={{ supportLink: <a data-testid="support-link" href={contactUs} target="_blank" rel="noopener noreferrer">{platformName} Support</a> }}
         />
       );
     }
@@ -34,9 +34,9 @@ export default function ExamAPIError() {
   };
 
   return (
-    <Alert variant="danger">
+    <Alert variant="danger" data-testid="exam-api-error-component">
       <Icon src={Info} className="alert-icon" />
-      <Alert.Heading>
+      <Alert.Heading data-testid="heading">
         {renderHeading()}
       </Alert.Heading>
       <p>
@@ -45,7 +45,7 @@ export default function ExamAPIError() {
           defaultMessage="Details"
         />:
         <span className="pl-2">
-          <Alert.Link onClick={() => setShowError(!showError)}>
+          <Alert.Link onClick={() => setShowError(!showError)} data-testid="show-button">
             {showError ? (
               <FormattedMessage
                 id="exam.apiError.showLink"
@@ -60,7 +60,7 @@ export default function ExamAPIError() {
           </Alert.Link>
         </span>
       </p>
-      {showError && <p>{apiErrorMsg}</p>}
+      {showError && <p data-testid="error-details">{apiErrorMsg}</p>}
     </Alert>
   );
 }
