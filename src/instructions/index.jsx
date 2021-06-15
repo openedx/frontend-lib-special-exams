@@ -70,7 +70,7 @@ const Instructions = ({ children }) => {
     case attempt.attempt_status === ExamStatus.READY_TO_START:
       return <ReadyToStartProctoredExamInstructions />;
     case attempt.attempt_status === ExamStatus.READY_TO_SUBMIT:
-      return <SubmitExamInstructions examType={examType} />;
+      return <SubmitExamInstructions />;
     case attempt.attempt_status === ExamStatus.SUBMITTED:
       return <SubmittedExamInstructions examType={examType} />;
     case attempt.attempt_status === ExamStatus.VERIFIED:
