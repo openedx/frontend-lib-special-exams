@@ -10,6 +10,7 @@ with the ability to take control over the rendering process and show exam-relate
 Usage example is
 
 .. code-block:: javascript
+
     <LearningApp>  // Learning app
       ...
       <SequenceExamWrapper>

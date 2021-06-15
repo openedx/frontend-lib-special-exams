@@ -1,10 +1,11 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Spinner } from '@edx/paragon';
 import { ExamTimerBlock } from '../timer';
 import Instructions from '../instructions';
 import ExamStateContext from '../context';
 import ExamAPIError from './ExamAPIError';
+import { ExamType } from '../constants';
 
 /**
  * Exam component is intended to render exam instructions before and after exam.
@@ -18,9 +19,26 @@ import ExamAPIError from './ExamAPIError';
 const Exam = ({ isTimeLimited, children }) => {
   const state = useContext(ExamStateContext);
   const {
-    isLoading, activeAttempt, showTimer, stopExam,
+    isLoading, activeAttempt, showTimer, stopExam, exam,
     expireExam, pollAttempt, apiErrorMsg, pingAttempt,
+    getVerificationData, getAllowProctoringOptOut, getProctoringSettings,
   } = state;
+
+  const { type: examType, content_id: sequenceId, id: examId } = exam || {};
+
+  useEffect(() => {
+    if (examId) {
+      getProctoringSettings();
+    }
+    if (examType === ExamType.PROCTORED) {
+      getVerificationData();
+      getAllowProctoringOptOut(sequenceId);
+    }
+
+    // this makes sure useEffect gets called only one time after the exam has been fetched
+    // we can't leave this empty since initially exam is just an empty object, so
+    // API calls above would not get triggered
+  }, [examId]);
 
   if (isLoading) {
     return (
@@ -43,7 +61,7 @@ const Exam = ({ isTimeLimited, children }) => {
           pingAttempt={pingAttempt}
         />
       )}
-      {apiErrorMsg && <ExamAPIError details={apiErrorMsg} />}
+      {apiErrorMsg && <ExamAPIError />}
       {isTimeLimited
         ? <Instructions>{sequenceContent}</Instructions>
         : sequenceContent}

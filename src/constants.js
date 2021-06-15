@@ -1,5 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 export const ExamStatus = Object.freeze({
+  ELIGIBLE: 'eligible',
   CREATED: 'created',
   DOWNLOAD_SOFTWARE_CLICKED: 'download_software_clicked',
   READY_TO_START: 'ready_to_start',
@@ -11,9 +12,25 @@ export const ExamStatus = Object.freeze({
   REJECTED: 'rejected',
   ERROR: 'error',
   READY_TO_RESUME: 'ready_to_resume',
+  ONBOARDING_MISSING: 'onboarding_missing',
+  ONBOARDING_PENDING: 'onboarding_pending',
+  ONBOARDING_FAILED: 'onboarding_failed',
+  ONBOARDING_EXPIRED: 'onboarding_expired',
 });
 
+export const INCOMPLETE_STATUSES = [
+  ExamStatus.ELIGIBLE, ExamStatus.CREATED, ExamStatus.DOWNLOAD_SOFTWARE_CLICKED,
+  ExamStatus.READY_TO_START, ExamStatus.STARTED, ExamStatus.READY_TO_SUBMIT,
+];
+
+export const ONBOARDING_ERRORS = [
+  ExamStatus.ONBOARDING_EXPIRED, ExamStatus.ONBOARDING_FAILED,
+  ExamStatus.ONBOARDING_MISSING, ExamStatus.ONBOARDING_PENDING,
+];
+
 export const IS_STARTED_STATUS = (status) => [ExamStatus.STARTED, ExamStatus.READY_TO_SUBMIT].includes(status);
+export const IS_INCOMPLETE_STATUS = (status) => INCOMPLETE_STATUSES.includes(status);
+export const IS_ONBOARDING_ERROR = (status) => ONBOARDING_ERRORS.includes(status);
 
 // Available actions are taken from
 // https://github.com/edx/edx-proctoring/blob/1444ca40a43869fb4e2731cea4862888c5b5f286/edx_proctoring/views.py#L765

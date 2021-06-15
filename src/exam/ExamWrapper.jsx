@@ -9,11 +9,10 @@ import ExamStateContext from '../context';
 const ExamWrapper = ({ children, ...props }) => {
   const state = useContext(ExamStateContext);
   const { sequence, courseId } = props;
-
+  const { getExamAttemptsData, getAllowProctoringOptOut } = state;
   const loadInitialData = async () => {
-    await state.getExamAttemptsData(courseId, sequence.id);
-    await state.getAllowProctoringOptOut(sequence.allowProctoringOptOut);
-    state.getProctoringSettings();
+    await getExamAttemptsData(courseId, sequence.id);
+    await getAllowProctoringOptOut(sequence.allowProctoringOptOut);
   };
 
   useEffect(() => {

@@ -5,7 +5,12 @@ import Instructions from '../index';
 import { store, getExamAttemptsData } from '../../data';
 import { render } from '../../setupTest';
 import { ExamStateProvider } from '../../index';
-import { ExamType, ExamStatus, VerificationStatus } from '../../constants';
+import {
+  ExamType,
+  ExamStatus,
+  VerificationStatus,
+  ONBOARDING_ERRORS,
+} from '../../constants';
 
 jest.mock('../../data', () => ({
   store: {},
@@ -73,6 +78,7 @@ describe('SequenceExamWrapper', () => {
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'started',
+            attempt_id: 1,
           },
         },
       },
@@ -109,6 +115,7 @@ describe('SequenceExamWrapper', () => {
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'ready_to_start',
+            attempt_id: 1,
           },
         },
       },
@@ -146,6 +153,7 @@ describe('SequenceExamWrapper', () => {
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'submitted',
+            attempt_id: 1,
           },
         },
       },
@@ -180,6 +188,7 @@ describe('SequenceExamWrapper', () => {
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'ready_to_submit',
+            attempt_id: 1,
           },
         },
       },
@@ -216,6 +225,7 @@ describe('SequenceExamWrapper', () => {
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'verified',
+            attempt_id: 1,
           },
         },
       },
@@ -250,6 +260,7 @@ describe('SequenceExamWrapper', () => {
           time_limit_mins: 30,
           attempt: {
             attempt_status: 'rejected',
+            attempt_id: 1,
           },
         },
       },
@@ -282,6 +293,7 @@ describe('SequenceExamWrapper', () => {
           time_limit_mins: 30,
           attempt: {
             attempt_status: ExamStatus.CREATED,
+            attempt_id: 1,
           },
         },
         proctoringSettings: {},
@@ -311,5 +323,43 @@ describe('SequenceExamWrapper', () => {
         expect(getByTestId('verification-button')).toBeInTheDocument();
       }
     }
+  });
+
+  it.each(ONBOARDING_ERRORS)('Renders correct onboarding error instructions when status is %s ', (status) => {
+    store.getState = () => ({
+      examState: {
+        isLoading: false,
+        verification: {
+          status: 'none',
+          can_verify: true,
+        },
+        activeAttempt: {
+          attempt_status: 'rejected',
+        },
+        proctoringSettings: {},
+        exam: {
+          type: ExamType.PROCTORED,
+          is_proctored: true,
+          time_limit_mins: 30,
+          attempt: {
+            attempt_id: 1,
+            attempt_status: status,
+          },
+        },
+      },
+    });
+
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    const testId = status === ExamStatus.ONBOARDING_EXPIRED ? ExamStatus.ONBOARDING_MISSING : status;
+
+    expect(getByTestId(testId)).toBeInTheDocument();
   });
 });
