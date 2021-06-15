@@ -211,19 +211,25 @@ export function pollAttempt(url) {
 
 export function stopExam() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
-    const attemptId = exam.attempt.attempt_id;
-    if (!attemptId) {
-      logError('Failed to stop exam. No attempt id.');
+    const { exam, activeAttempt } = getState().examState;
+
+    if (!activeAttempt) {
+      logError('Failed to stop exam. No active attempt.');
       handleAPIError(
-        { message: 'Failed to stop exam. No attempt id was found.' },
+        { message: 'Failed to stop exam. No active attempt was found.' },
         dispatch,
       );
       return;
     }
+
+    const { attempt_id: attemptId, exam_url_path: examUrl } = activeAttempt;
     await updateAttemptAfter(
       exam.course_id, exam.content_id, stopAttempt(attemptId), true,
     )(dispatch);
+
+    if (attemptId !== exam.attempt.attempt_id) {
+      window.location.href = examUrl;
+    }
   };
 }
 
@@ -293,8 +299,7 @@ export function submitExam() {
 export function expireExam() {
   return async (dispatch, getState) => {
     const { exam, activeAttempt } = getState().examState;
-    const attemptId = exam.attempt.attempt_id;
-    const { desktop_application_js_url: workerUrl } = activeAttempt || {};
+    const { desktop_application_js_url: workerUrl, attempt_id: attemptId } = activeAttempt || {};
     const useWorker = window.Worker && activeAttempt && workerUrl;
 
     if (!attemptId) {
