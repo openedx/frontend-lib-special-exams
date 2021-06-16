@@ -43,6 +43,7 @@ export const ExamAction = Object.freeze({
   ERROR: 'error',
   RESET: 'reset_attempt',
   CLICK_DOWNLOAD_SOFTWARE: 'click_download_software',
+  DECLINE: 'decline',
 });
 
 export const VerificationStatus = Object.freeze({
