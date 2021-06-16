@@ -12,7 +12,8 @@ const ReadyToStartProctoredExamInstructions = () => {
     getExamReviewPolicy,
     startProctoredExam,
   } = state;
-  const { time_limit_mins: examDuration, reviewPolicy } = exam;
+  const { attempt, reviewPolicy } = exam;
+  const { total_time: examDuration } = attempt;
   const { link_urls: linkUrls, platform_name: platformName } = proctoringSettings;
   const rulesUrl = linkUrls && linkUrls.online_proctoring_rules;
 
@@ -33,7 +34,7 @@ const ReadyToStartProctoredExamInstructions = () => {
           <li data-testid="duration-text">
             <FormattedMessage
               id="exam.ReadyToStartProctoredExamInstructions.text1"
-              defaultMessage={'You have {examDuration} minutes to complete this exam.'}
+              defaultMessage={'You have {examDuration} to complete this exam.'}
               values={{ examDuration }}
             />
           </li>

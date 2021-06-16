@@ -6,14 +6,14 @@ import ExamStateContext from '../../context';
 const StartTimedExamInstructions = () => {
   const state = useContext(ExamStateContext);
   const { exam, startTimedExam } = state;
-  const examDuration = exam.time_limit_mins;
+  const examDuration = exam.total_time;
 
   return (
     <>
       <div className="h3" data-testid="exam-instructions-title">
         <FormattedMessage
           id="exam.startExamInstructions.title"
-          defaultMessage="Subsection is a Timed Exam ({examDuration} minutes)"
+          defaultMessage="Subsection is a Timed Exam ({examDuration})"
           values={{ examDuration }}
         />
       </div>
@@ -31,7 +31,7 @@ const StartTimedExamInstructions = () => {
         <FormattedMessage
           id="exam.startExamInstructions.text3"
           defaultMessage={'After you select "I am ready to start this timed exam", '
-          + 'you will have {examDuration} minutes to complete and submit the exam.'}
+          + 'you will have {examDuration} to complete and submit the exam.'}
           values={{ examDuration }}
         />
       </p>
