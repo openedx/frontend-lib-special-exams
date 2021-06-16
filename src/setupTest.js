@@ -1,5 +1,9 @@
 import 'babel-polyfill';
 import '@testing-library/jest-dom';
+import './data/__factories__';
+import { getConfig, mergeConfig } from '@edx/frontend-platform';
+import { configure as configureLogging } from '@edx/frontend-platform/logging';
+import { configure as configureAuth, MockAuthService } from '@edx/frontend-platform/auth';
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
@@ -12,24 +16,50 @@ window.getComputedStyle = jest.fn(() => ({
   getPropertyValue: jest.fn(),
 }));
 
+class MockLoggingService {
+  constructor() {
+    this.logInfo = jest.fn();
+    this.logError = jest.fn();
+  }
+}
+
+export function initializeMockApp() {
+  mergeConfig({
+    authenticatedUser: {
+      userId: 'abc123',
+      username: 'Mock User',
+      roles: [],
+      administrator: false,
+    },
+  });
+
+  const loggingService = configureLogging(MockLoggingService, {
+    config: getConfig(),
+  });
+  const authService = configureAuth(MockAuthService, {
+    config: getConfig(),
+    loggingService,
+  });
+
+  return { loggingService, authService };
+}
+
 let globalStore;
 
-export async function initializeTestStore(options = null, overrideStore = true) {
-  const preloadedState = options || {
-    examState: {
-      isLoading: true,
-      timeIsOver: false,
-      activeAttempt: {},
-      proctoringSettings: {},
-      exam: {},
-    },
-  };
-  const store = configureStore({
+export async function initializeTestStore(preloadedState = null, overrideStore = true) {
+  let store = configureStore({
     reducer: {
       examState: examReducer,
     },
-    preloadedState,
   });
+  if (preloadedState) {
+    store = configureStore({
+      reducer: {
+        examState: examReducer,
+      },
+      preloadedState,
+    });
+  }
   if (overrideStore) {
     globalStore = store;
   }

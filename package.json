@@ -86,6 +86,7 @@
     "@reduxjs/toolkit": "^1.5.1",
     "reactifex": "1.1.1",
     "react-intl": "2.9.0",
-    "semantic-release": "17.2.3"
+    "semantic-release": "17.2.3",
+    "rosie": "2.0.1"
   }
 }
