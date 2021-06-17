@@ -43,7 +43,7 @@ describe('SequenceExamWrapper', () => {
         exam: {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          time_limit_mins: 30,
+          total_time: '30 minutes',
           attempt: {},
         },
       },
@@ -81,10 +81,10 @@ describe('SequenceExamWrapper', () => {
         exam: {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          time_limit_mins: 30,
           attempt: {
             attempt_status: 'started',
             attempt_id: 1,
+            total_time: '30 minutes',
           },
         },
       },
@@ -118,10 +118,10 @@ describe('SequenceExamWrapper', () => {
         exam: {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          time_limit_mins: 30,
           attempt: {
             attempt_status: 'ready_to_start',
             attempt_id: 1,
+            total_time: '30 minutes',
           },
         },
       },
@@ -156,10 +156,10 @@ describe('SequenceExamWrapper', () => {
         exam: {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          time_limit_mins: 30,
           attempt: {
             attempt_status: 'submitted',
             attempt_id: 1,
+            total_time: '30 minutes',
           },
         },
       },

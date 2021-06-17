@@ -25,6 +25,7 @@ store.getState = () => ({
     },
     exam: {
       time_limit_mins: 30,
+      total_time: '30 minutes',
       type: 'timed',
       attempt: {},
     },
@@ -63,7 +64,7 @@ describe('SequenceExamWrapper', () => {
           can_verify: true,
         },
         exam: {
-          time_limit_mins: 30,
+          total_time: '30 minutes',
           type: 'timed',
           attempt: {},
         },
