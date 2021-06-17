@@ -35,7 +35,7 @@ const ExamCode = ({ code }) => {
       </Form.Label>
       <Form.Control
         value={code}
-        readonly
+        readOnly
         className="w-50"
         trailingElement={(
           <StatefulButton

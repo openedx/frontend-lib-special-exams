@@ -41,7 +41,7 @@ const Exam = ({ isTimeLimited, children }) => {
 
   if (isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center flex-column my-5 py-5">
+      <div data-testid="spinner" className="d-flex justify-content-center align-items-center flex-column my-5 py-5">
         <Spinner animation="border" variant="primary" />
       </div>
     );

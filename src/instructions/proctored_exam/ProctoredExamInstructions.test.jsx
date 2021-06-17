@@ -1,10 +1,11 @@
 import '@testing-library/jest-dom';
+import { Factory } from 'rosie';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
 import Instructions from '../index';
 import { store, getExamAttemptsData } from '../../data';
 import { submitExam } from '../../data/thunks';
-import { render } from '../../setupTest';
+import { render, screen } from '../../setupTest';
 import { ExamStateProvider } from '../../index';
 import {
   ExamType,
@@ -29,24 +30,13 @@ store.dispatch = jest.fn();
 describe('SequenceExamWrapper', () => {
   it('Start exam instructions can be successfully rendered', () => {
     store.getState = () => ({
-      examState: {
-        isLoading: false,
-        activeAttempt: null,
+      examState: Factory.build('examState', {
         allowProctoringOptOut: true,
-        proctoringSettings: {
-          platform_name: 'Your Platform',
-        },
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        exam: {
+        exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          total_time: '30 minutes',
-          attempt: {},
-        },
-      },
+        }),
+      }),
     });
 
     const { getByTestId } = render(
@@ -67,27 +57,18 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Instructions are not shown when exam is started', () => {
+    const attempt = Factory.build('attempt', {
+      attempt_status: ExamStatus.STARTED,
+    });
     store.getState = () => ({
-      examState: {
-        isLoading: false,
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        activeAttempt: {
-          attempt_status: 'started',
-        },
-        proctoringSettings: {},
-        exam: {
+      examState: Factory.build('examState', {
+        activeAttempt: attempt,
+        exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          attempt: {
-            attempt_status: 'started',
-            attempt_id: 1,
-            total_time: '30 minutes',
-          },
-        },
-      },
+          attempt,
+        }),
+      }),
     });
 
     const { getByTestId } = render(
@@ -103,31 +84,19 @@ describe('SequenceExamWrapper', () => {
 
   it('Shows correct instructions when attempt status is ready_to_start', () => {
     store.getState = () => ({
-      examState: {
-        isLoading: false,
-        proctoringSettings: {
-          platform_name: 'Your Platform',
-        },
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        activeAttempt: {
-          attempt_status: 'ready_to_start',
-        },
-        exam: {
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          attempt: {
-            attempt_status: 'ready_to_start',
-            attempt_id: 1,
-            total_time: '30 minutes',
-          },
-        },
-      },
+          reviewPolicy: 'review policy',
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.READY_TO_START,
+          }),
+        }),
+      }),
     });
 
-    const { getByTestId } = render(
+    render(
       <ExamStateProvider>
         <Instructions>
           <div>Sequence</div>
@@ -135,34 +104,22 @@ describe('SequenceExamWrapper', () => {
       </ExamStateProvider>,
       { store },
     );
-    expect(getByTestId('proctored-exam-instructions-rulesLink')).toHaveTextContent('Rules for Online Proctored Exams');
-    expect(getByTestId('duration-text')).toHaveTextContent('You have 30 minutes to complete this exam.');
+    expect(screen.getByTestId('proctored-exam-instructions-rulesLink')).toHaveTextContent('Rules for Online Proctored Exams');
+    expect(screen.getByTestId('duration-text')).toHaveTextContent('You have 30 minutes to complete this exam.');
+    expect(screen.getByText('review policy')).toBeInTheDocument();
   });
 
   it('Instructions are shown when attempt status is submitted', () => {
     store.getState = () => ({
-      examState: {
-        isLoading: false,
-        proctoringSettings: {
-          platform_name: 'Your Platform',
-        },
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        activeAttempt: {
-          attempt_status: 'submitted',
-        },
-        exam: {
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          attempt: {
-            attempt_status: 'submitted',
-            attempt_id: 1,
-            total_time: '30 minutes',
-          },
-        },
-      },
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.SUBMITTED,
+          }),
+        }),
+      }),
     });
 
     const { getByTestId } = render(
@@ -177,27 +134,18 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows correct instructions when attempt status is ready_to_submit ', () => {
+    const attempt = Factory.build('attempt', {
+      attempt_status: ExamStatus.READY_TO_SUBMIT,
+    });
     store.getState = () => ({
-      examState: {
-        isLoading: false,
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        activeAttempt: {
-          attempt_status: 'ready_to_submit',
-        },
-        proctoringSettings: {},
-        exam: {
+      examState: Factory.build('examState', {
+        activeAttempt: attempt,
+        exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          time_limit_mins: 30,
-          attempt: {
-            attempt_status: 'ready_to_submit',
-            attempt_id: 1,
-          },
-        },
-      },
+          attempt,
+        }),
+      }),
     });
 
     const { queryByTestId } = render(
@@ -216,28 +164,15 @@ describe('SequenceExamWrapper', () => {
 
   it('Instructions are shown when attempt status is verified', () => {
     store.getState = () => ({
-      examState: {
-        isLoading: false,
-        proctoringSettings: {
-          platform_name: 'Your Platform',
-        },
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        activeAttempt: {
-          attempt_status: 'verified',
-        },
-        exam: {
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          time_limit_mins: 30,
-          attempt: {
-            attempt_status: 'verified',
-            attempt_id: 1,
-          },
-        },
-      },
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.VERIFIED,
+          }),
+        }),
+      }),
     });
 
     const { getByTestId } = render(
@@ -253,26 +188,15 @@ describe('SequenceExamWrapper', () => {
 
   it('Instructions are shown when attempt status is rejected', () => {
     store.getState = () => ({
-      examState: {
-        isLoading: false,
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        activeAttempt: {
-          attempt_status: 'rejected',
-        },
-        proctoringSettings: {},
-        exam: {
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          time_limit_mins: 30,
-          attempt: {
-            attempt_status: 'rejected',
-            attempt_id: 1,
-          },
-        },
-      },
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.REJECTED,
+          }),
+        }),
+      }),
     });
 
     const { getByTestId } = render(
@@ -289,24 +213,19 @@ describe('SequenceExamWrapper', () => {
 
   it.each(Object.values(VerificationStatus))('Renders correct instructions page when verification status is %s', (status) => {
     store.getState = () => ({
-      examState: {
-        isLoading: false,
+      examState: Factory.build('examState', {
         verification: {
           status,
           can_verify: true,
         },
-        activeAttempt: {},
-        exam: {
+        exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          time_limit_mins: 30,
-          attempt: {
+          attempt: Factory.build('attempt', {
             attempt_status: ExamStatus.CREATED,
-            attempt_id: 1,
-          },
-        },
-        proctoringSettings: {},
-      },
+          }),
+        }),
+      }),
     });
 
     const { getByTestId } = render(
@@ -336,26 +255,15 @@ describe('SequenceExamWrapper', () => {
 
   it.each(ONBOARDING_ERRORS)('Renders correct onboarding error instructions when status is %s ', (status) => {
     store.getState = () => ({
-      examState: {
-        isLoading: false,
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        activeAttempt: {
-          attempt_status: 'rejected',
-        },
-        proctoringSettings: {},
-        exam: {
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
-          time_limit_mins: 30,
-          attempt: {
-            attempt_id: 1,
+          attempt: Factory.build('attempt', {
             attempt_status: status,
-          },
-        },
-      },
+          }),
+        }),
+      }),
     });
 
     const { getByTestId } = render(
