@@ -5,6 +5,7 @@ Object {
   "examState": Object {
     "activeAttempt": Object {
       "accessibility_time_string": "you have 30 minutes remaining",
+      "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "started",
       "course_id": "course-v1:test+special+exam",
@@ -16,14 +17,17 @@ Object {
       "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
       "in_timed_exam": true,
       "low_threshold_sec": 360,
+      "software_download_url": "",
       "taking_as_proctored": false,
       "time_remaining_seconds": 1799.9,
+      "total_time": "30 minutes",
     },
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
     "exam": Object {
       "attempt": Object {
         "accessibility_time_string": "you have 30 minutes remaining",
+        "attempt_code": "",
         "attempt_id": 1,
         "attempt_status": "started",
         "course_id": "course-v1:test+special+exam",
@@ -35,8 +39,10 @@ Object {
         "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
         "in_timed_exam": true,
         "low_threshold_sec": 360,
+        "software_download_url": "",
         "taking_as_proctored": false,
         "time_remaining_seconds": 1799.9,
+        "total_time": "30 minutes",
       },
       "backend": "test",
       "content_id": "block-v1:test+special+exam+type@sequential+block@abc123",
@@ -57,6 +63,7 @@ Object {
         "satisfied_prerequisites": Array [],
       },
       "time_limit_mins": 30,
+      "total_time": "30 minutes",
       "type": "timed",
     },
     "isLoading": false,
@@ -136,9 +143,10 @@ Object {
 }
 `;
 
-exports[`Data layer integration tests Test pollAttempt Should start exam, and update attempt and exam 1`] = `
+exports[`Data layer integration tests Test pollAttempt Should poll exam attempt, and update attempt and exam 1`] = `
 Object {
   "accessibility_time_string": "you have 30 minutes remaining",
+  "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
   "course_id": "course-v1:test+special+exam",
@@ -150,14 +158,17 @@ Object {
   "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
   "in_timed_exam": true,
   "low_threshold_sec": 360,
+  "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "total_time": "30 minutes",
 }
 `;
 
-exports[`Data layer integration tests Test pollAttempt Should start exam, and update attempt and exam 2`] = `
+exports[`Data layer integration tests Test pollAttempt Should poll exam attempt, and update attempt and exam 2`] = `
 Object {
   "accessibility_time_string": "you have 30 minutes remaining",
+  "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
   "course_id": "course-v1:test+special+exam",
@@ -169,8 +180,10 @@ Object {
   "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
   "in_timed_exam": true,
   "low_threshold_sec": 360,
+  "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "total_time": "30 minutes",
 }
 `;
 
@@ -183,6 +196,7 @@ Object {
     "exam": Object {
       "attempt": Object {
         "accessibility_time_string": "you have 30 minutes remaining",
+        "attempt_code": "",
         "attempt_id": 2,
         "attempt_status": "created",
         "course_id": "course-v1:test+special+exam",
@@ -194,8 +208,10 @@ Object {
         "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
         "in_timed_exam": true,
         "low_threshold_sec": 360,
+        "software_download_url": "",
         "taking_as_proctored": false,
         "time_remaining_seconds": 1799.9,
+        "total_time": "30 minutes",
       },
       "backend": "test",
       "content_id": "block-v1:test+special+exam+type@sequential+block@abc123",
@@ -216,6 +232,7 @@ Object {
         "satisfied_prerequisites": Array [],
       },
       "time_limit_mins": 30,
+      "total_time": "30 minutes",
       "type": "timed",
     },
     "isLoading": false,
@@ -245,9 +262,10 @@ Object {
 }
 `;
 
-exports[`Data layer integration tests Test startTimedExam Should start exam, and update attempt and exam 1`] = `
+exports[`Data layer integration tests Test startProctoredExam Should start exam, and update attempt and exam 1`] = `
 Object {
   "accessibility_time_string": "you have 30 minutes remaining",
+  "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
   "course_id": "course-v1:test+special+exam",
@@ -259,7 +277,31 @@ Object {
   "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
   "in_timed_exam": true,
   "low_threshold_sec": 360,
+  "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "total_time": "30 minutes",
+}
+`;
+
+exports[`Data layer integration tests Test startTimedExam Should start exam, and update attempt and exam 1`] = `
+Object {
+  "accessibility_time_string": "you have 30 minutes remaining",
+  "attempt_code": "",
+  "attempt_id": 1,
+  "attempt_status": "started",
+  "course_id": "course-v1:test+special+exam",
+  "critically_low_threshold_sec": 90,
+  "desktop_application_js_url": "",
+  "exam_display_name": "timed",
+  "exam_started_poll_url": "/api/edx_proctoring/v1/proctored_exam/attempt/1",
+  "exam_type": "a timed exam",
+  "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
+  "in_timed_exam": true,
+  "low_threshold_sec": 360,
+  "software_download_url": "",
+  "taking_as_proctored": false,
+  "time_remaining_seconds": 1799.9,
+  "total_time": "30 minutes",
 }
 `;

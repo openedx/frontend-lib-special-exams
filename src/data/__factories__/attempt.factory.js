@@ -16,4 +16,7 @@ Factory.define('attempt')
     accessibility_time_string: 'you have 30 minutes remaining',
     exam_started_poll_url: '/api/edx_proctoring/v1/proctored_exam/attempt/1',
     desktop_application_js_url: '',
+    attempt_code: '',
+    software_download_url: '',
+    total_time: '30 minutes',
   });

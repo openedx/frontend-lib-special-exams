@@ -18,6 +18,7 @@ Factory.define('exam')
     content_id: 'block-v1:test+special+exam+type@sequential+block@abc123',
     external_id: null,
     time_limit_mins: 30,
+    total_time: '30 minutes',
     is_proctored: false,
     is_practice_exam: false,
     is_active: true,

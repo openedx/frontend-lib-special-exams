@@ -7,9 +7,13 @@ Factory.define('examState')
   .attr('proctoringSettings', Factory.build('proctoringSettings'))
   .attr('exam', Factory.build('exam'))
   .attrs({
-    isLoading: true,
+    isLoading: false,
     activeAttempt: null,
-    verification: {},
+    verification: {
+      status: 'none',
+      can_verify: true,
+    },
     timeIsOver: false,
     apiErrorMsg: '',
+    allowProctoringOptOut: false,
   });

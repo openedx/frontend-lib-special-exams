@@ -1,9 +1,11 @@
 import '@testing-library/jest-dom';
+import { Factory } from 'rosie';
 import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
 import { store, getExamAttemptsData, startTimedExam } from '../data';
 import { render } from '../setupTest';
 import { ExamStateProvider } from '../index';
+import { ExamType } from '../constants';
 
 jest.mock('../data', () => ({
   store: {},
@@ -14,23 +16,6 @@ getExamAttemptsData.mockReturnValue(jest.fn());
 startTimedExam.mockReturnValue(jest.fn());
 store.subscribe = jest.fn();
 store.dispatch = jest.fn();
-store.getState = () => ({
-  examState: {
-    isLoading: false,
-    activeAttempt: null,
-    proctoringSettings: {},
-    verification: {
-      status: 'none',
-      can_verify: true,
-    },
-    exam: {
-      time_limit_mins: 30,
-      total_time: '30 minutes',
-      type: 'timed',
-      attempt: {},
-    },
-  },
-});
 
 describe('SequenceExamWrapper', () => {
   const sequence = {
@@ -40,6 +25,9 @@ describe('SequenceExamWrapper', () => {
   const courseId = 'course-v1:test+test+test';
 
   it('is successfully rendered and shows instructions', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState'),
+    });
     const { queryByTestId } = render(
       <ExamStateProvider>
         <SequenceExamWrapper sequence={sequence} courseId={courseId}>
@@ -52,23 +40,47 @@ describe('SequenceExamWrapper', () => {
     expect(queryByTestId('exam-api-error-component')).not.toBeInTheDocument();
   });
 
+  it('is successfully rendered and shows instructions for proctored exam', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+        }),
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+          <div>children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('proctored-exam-instructions-title')).toHaveTextContent('This exam is proctored');
+  });
+
+  it('shows loader if isLoading true', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        isLoading: true,
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+          <div>children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('spinner')).toBeInTheDocument();
+  });
+
   it('shows exam api error component together with other content if there is an error', () => {
     store.getState = () => ({
-      examState: {
-        isLoading: false,
-        activeAttempt: null,
+      examState: Factory.build('examState', {
         apiErrorMsg: 'Something bad has happened.',
-        proctoringSettings: {},
-        verification: {
-          status: 'none',
-          can_verify: true,
-        },
-        exam: {
-          total_time: '30 minutes',
-          type: 'timed',
-          attempt: {},
-        },
-      },
+      }),
     });
 
     const { queryByTestId } = render(
