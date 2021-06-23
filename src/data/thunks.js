@@ -349,10 +349,6 @@ export function pingAttempt(timeoutInSeconds, workerUrl) {
         await updateAttemptAfter(
           exam.course_id, exam.content_id, endExamWithFailure(activeAttempt.attempt_id, message),
         )(dispatch);
-        handleAPIError(
-          { message },
-          dispatch,
-        );
       });
   };
 }
