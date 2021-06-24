@@ -19,7 +19,8 @@ const axiosMock = new MockAdapter(getAuthenticatedHttpClient());
 describe('Data layer integration tests', () => {
   const exam = Factory.build('exam', { attempt: Factory.build('attempt') });
   const { course_id: courseId, content_id: contentId, attempt } = exam;
-  const fetchExamAttemptsDataUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}/content_id/${contentId}?is_learning_mfe=true`;
+  const fetchExamAttemptsDataUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`
+    + `?content_id=${encodeURIComponent(contentId)}&is_learning_mfe=true`;
   const updateAttemptStatusUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attempt.attempt_id}`;
   let store;
 
