@@ -12,6 +12,7 @@ import {
   fetchExamReviewPolicy,
   resetAttempt,
   declineAttempt,
+  endExamWithFailure,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -340,12 +341,15 @@ export function expireExam() {
  * @param workerUrl - location of the worker from the provider
  */
 export function pingAttempt(timeoutInSeconds, workerUrl) {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     await pingApplication(timeoutInSeconds, workerUrl)
-      .catch((error) => handleAPIError(
-        { message: error ? error.message : 'Worker failed to respond.' },
-        dispatch,
-      ));
+      .catch(async (error) => {
+        const { exam, activeAttempt } = getState().examState;
+        const message = error ? error.message : 'Worker failed to respond.';
+        await updateAttemptAfter(
+          exam.course_id, exam.content_id, endExamWithFailure(activeAttempt.attempt_id, message),
+        )(dispatch);
+      });
   };
 }
 
