@@ -25,7 +25,7 @@ const EntranceProctoredExamInstructions = ({ skipProctoredExam }) => {
           <p>
             <FormattedMessage
               id="exam.ReadyToResumeProctoredExamInstructions.text"
-              ddefaultMessage="You will have {totalTime} to complete your exam."
+              defaultMessage="You will have {totalTime} to complete your exam."
               values={{ totalTime }}
             />
           </p>
