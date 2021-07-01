@@ -1,4 +1,5 @@
 import React, { useContext, useEffect } from 'react';
+import { AppContext } from '@edx/frontend-platform/react';
 import PropTypes from 'prop-types';
 import Exam from './Exam';
 import ExamStateContext from '../context';
@@ -8,12 +9,17 @@ import ExamStateContext from '../context';
  */
 const ExamWrapper = ({ children, ...props }) => {
   const state = useContext(ExamStateContext);
+  const { authenticatedUser } = useContext(AppContext);
   const { sequence, courseId } = props;
   const { getExamAttemptsData, getAllowProctoringOptOut } = state;
   const loadInitialData = async () => {
     await getExamAttemptsData(courseId, sequence.id);
     await getAllowProctoringOptOut(sequence.allowProctoringOptOut);
   };
+
+  if (!authenticatedUser) {
+    return children;
+  }
 
   useEffect(() => {
     loadInitialData();
