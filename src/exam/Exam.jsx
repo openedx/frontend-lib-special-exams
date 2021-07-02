@@ -49,6 +49,10 @@ const Exam = ({ isTimeLimited, children }) => {
 
   const sequenceContent = <>{children}</>;
 
+  // Temporary fix for CR-3842. We need to show this timer but the end exam button does not
+  // fully work yet.
+  const allowEndExam = !!examId;
+
   return (
     <div className="d-flex flex-column justify-content-center">
       {showTimer && (
@@ -58,6 +62,7 @@ const Exam = ({ isTimeLimited, children }) => {
           expireExamAttempt={expireExam}
           pollExamAttempt={pollAttempt}
           pingAttempt={pingAttempt}
+          allowEndExam={allowEndExam}
         />
       )}
       {apiErrorMsg && <ExamAPIError />}
