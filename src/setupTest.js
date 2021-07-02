@@ -1,9 +1,10 @@
 import 'babel-polyfill';
 import '@testing-library/jest-dom';
 import './data/__factories__';
-import { getConfig, mergeConfig } from '@edx/frontend-platform';
+import { getConfig } from '@edx/frontend-platform';
 import { configure as configureLogging } from '@edx/frontend-platform/logging';
 import { configure as configureAuth, MockAuthService } from '@edx/frontend-platform/auth';
+import { AppContext } from '@edx/frontend-platform/react';
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
@@ -24,15 +25,6 @@ class MockLoggingService {
 }
 
 export function initializeMockApp() {
-  mergeConfig({
-    authenticatedUser: {
-      userId: 'abc123',
-      username: 'Mock User',
-      roles: [],
-      administrator: false,
-    },
-  });
-
   const loggingService = configureLogging(MockLoggingService, {
     config: getConfig(),
   });
@@ -70,17 +62,28 @@ function render(
   ui,
   {
     store = null,
+    appContext = null,
     ...renderOptions
   } = {},
 ) {
   function Wrapper({ children }) {
+    const defaultAppContext = {
+      authenticatedUser: {
+        userId: 'abc123',
+        username: 'Mock User',
+        roles: [],
+        administrator: false,
+      },
+    };
     return (
       // eslint-disable-next-line react/jsx-filename-extension
-      <IntlProvider locale="en">
-        <Provider store={store || globalStore}>
-          {children}
-        </Provider>
-      </IntlProvider>
+      <AppContext.Provider value={appContext || defaultAppContext}>
+        <IntlProvider locale="en">
+          <Provider store={store || globalStore}>
+            {children}
+          </Provider>
+        </IntlProvider>
+      </AppContext.Provider>
     );
   }
 

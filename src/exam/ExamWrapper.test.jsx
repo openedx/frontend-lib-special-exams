@@ -106,4 +106,19 @@ describe('SequenceExamWrapper', () => {
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('children');
   });
+
+  it('does not take any actions if the sequence item is not an exam and the user is anonymous', () => {
+    const appContext = {
+      authenticatedUser: null,
+    };
+    const { getByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store, appContext },
+    );
+    expect(getByTestId('sequence-content')).toHaveTextContent('children');
+  });
 });
