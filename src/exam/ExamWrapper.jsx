@@ -17,6 +17,8 @@ const ExamWrapper = ({ children, ...props }) => {
     await getAllowProctoringOptOut(sequence.allowProctoringOptOut);
   };
 
+// if the user is browsing public content (not logged in) they cannot be in an exam
+// any requests for exam state will 403 so just short circuit this component here
   if (!authenticatedUser) {
     return children;
   }
