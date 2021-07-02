@@ -124,7 +124,11 @@ ExamTimerBlock.propTypes = {
   }),
   stopExamAttempt: PropTypes.func.isRequired,
   expireExamAttempt: PropTypes.func.isRequired,
-  allowEndExam: PropTypes.bool.isRequired,
+  allowEndExam: PropTypes.bool,
+};
+
+ExamTimerBlock.defaultProps = {
+  allowEndExam: true,
 };
 
 export default ExamTimerBlock;
