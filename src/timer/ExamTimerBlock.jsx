@@ -16,7 +16,7 @@ import {
  * Exam timer block component.
  */
 const ExamTimerBlock = injectIntl(({
-  attempt, stopExamAttempt, expireExamAttempt, pollExamAttempt, intl, pingAttempt,
+  attempt, stopExamAttempt, expireExamAttempt, pollExamAttempt, intl, pingAttempt, allowEndExam,
 }) => {
   const [isShowMore, showMore, showLess] = useToggle(false);
   const [alertVariant, setAlertVariant] = useState('info');
@@ -94,6 +94,7 @@ const ExamTimerBlock = injectIntl(({
           >
 
             {attempt.attempt_status !== ExamStatus.READY_TO_SUBMIT
+              && allowEndExam
               && (
               <Button className="mr-3" variant="outline-primary" onClick={stopExamAttempt}>
                 <FormattedMessage
@@ -123,6 +124,11 @@ ExamTimerBlock.propTypes = {
   }),
   stopExamAttempt: PropTypes.func.isRequired,
   expireExamAttempt: PropTypes.func.isRequired,
+  allowEndExam: PropTypes.bool,
+};
+
+ExamTimerBlock.defaultProps = {
+  allowEndExam: true,
 };
 
 export default ExamTimerBlock;
