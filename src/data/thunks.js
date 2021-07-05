@@ -233,7 +233,7 @@ export function stopExam() {
 
     const { attempt_id: attemptId, exam_url_path: examUrl } = activeAttempt;
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, stopAttempt(attemptId), true,
+      exam.course_id, exam.content_id, stopAttempt(attemptId),
     )(dispatch);
 
     if (attemptId !== exam.attempt.attempt_id) {
@@ -242,7 +242,7 @@ export function stopExam() {
   };
 }
 
-export function continueExam(noLoading = true) {
+export function continueExam() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
     const attemptId = exam.attempt.attempt_id;
@@ -255,7 +255,7 @@ export function continueExam(noLoading = true) {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, continueAttempt(attemptId), noLoading,
+      exam.course_id, exam.content_id, continueAttempt(attemptId),
     )(dispatch);
   };
 }
