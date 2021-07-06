@@ -112,7 +112,7 @@ const ExamTimerBlock = injectIntl(({
             {attempt.attempt_status !== ExamStatus.READY_TO_SUBMIT
               && allowEndExam
               && (
-              <Button className="mr-3" variant="outline-primary" onClick={handleEndExamClick}>
+              <Button data-testid="end-button" className="mr-3" variant="outline-primary" onClick={handleEndExamClick}>
                 <FormattedMessage
                   id="exam.examTimer.endExamBtn"
                   defaultMessage="End My Exam"
