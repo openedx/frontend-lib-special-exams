@@ -305,7 +305,7 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state.examState.apiErrorMsg).toBe('Failed to submit exam. No attempt id was found.');
+      expect(state.examState.apiErrorMsg).toBe('Failed to submit exam. No active attempt was found.');
     });
   });
 

@@ -281,18 +281,36 @@ export function resetExam() {
 export function submitExam() {
   return async (dispatch, getState) => {
     const { exam, activeAttempt } = getState().examState;
-    const attemptId = exam.attempt.attempt_id;
     const { desktop_application_js_url: workerUrl } = activeAttempt || {};
     const useWorker = window.Worker && activeAttempt && workerUrl;
 
-    if (!attemptId) {
-      logError('Failed to submit exam. No attempt id.');
+    if (!activeAttempt) {
+      logError('Failed to submit exam. No active attempt.');
       handleAPIError(
-        { message: 'Failed to submit exam. No attempt id was found.' },
+        { message: 'Failed to submit exam. No active attempt was found.' },
         dispatch,
       );
       return;
     }
+
+    const { attempt_id: attemptId, exam_url_path: examUrl } = activeAttempt;
+    if (!exam.attempt || attemptId !== exam.attempt.attempt_id) {
+      try {
+        await submitAttempt(attemptId);
+        window.location.href = examUrl;
+        if (useWorker) {
+          workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)()
+            .catch(() => handleAPIError(
+              { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
+              dispatch,
+            ));
+        }
+      } catch (error) {
+        handleAPIError(error, dispatch);
+      }
+      return;
+    }
+
     await updateAttemptAfter(exam.course_id, exam.content_id, submitAttempt(attemptId))(dispatch);
 
     if (useWorker) {
