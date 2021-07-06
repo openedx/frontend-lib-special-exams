@@ -21,7 +21,7 @@ const Exam = ({ isTimeLimited, children }) => {
   const {
     isLoading, activeAttempt, showTimer, stopExam, exam,
     expireExam, pollAttempt, apiErrorMsg, pingAttempt,
-    getVerificationData, getProctoringSettings,
+    getVerificationData, getProctoringSettings, submitExam,
   } = state;
 
   const { type: examType, id: examId } = exam || {};
@@ -59,6 +59,7 @@ const Exam = ({ isTimeLimited, children }) => {
         <ExamTimerBlock
           attempt={activeAttempt}
           stopExamAttempt={stopExam}
+          submitExam={submitExam}
           expireExamAttempt={expireExam}
           pollExamAttempt={pollAttempt}
           pingAttempt={pingAttempt}
