@@ -284,6 +284,18 @@ export function submitExam() {
     const { desktop_application_js_url: workerUrl } = activeAttempt || {};
     const useWorker = window.Worker && activeAttempt && workerUrl;
 
+    const handleBackendProviderSubmission = () => {
+      // if a backend provider is being used during the exam
+      // send it a message that exam is being submitted
+      if (useWorker) {
+        workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)()
+          .catch(() => handleAPIError(
+            { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
+            dispatch,
+          ));
+      }
+    };
+
     if (!activeAttempt) {
       logError('Failed to submit exam. No active attempt.');
       handleAPIError(
@@ -298,13 +310,7 @@ export function submitExam() {
       try {
         await submitAttempt(attemptId);
         window.location.href = examUrl;
-        if (useWorker) {
-          workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)()
-            .catch(() => handleAPIError(
-              { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
-              dispatch,
-            ));
-        }
+        handleBackendProviderSubmission();
       } catch (error) {
         handleAPIError(error, dispatch);
       }
@@ -312,14 +318,7 @@ export function submitExam() {
     }
 
     await updateAttemptAfter(exam.course_id, exam.content_id, submitAttempt(attemptId))(dispatch);
-
-    if (useWorker) {
-      workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)()
-        .catch(() => handleAPIError(
-          { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
-          dispatch,
-        ));
-    }
+    handleBackendProviderSubmission();
   };
 }
 
