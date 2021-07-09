@@ -36,16 +36,12 @@ const ExamWrapper = ({ children, ...props }) => {
 
 ExamWrapper.propTypes = {
   sequence: PropTypes.shape({
-    id: PropTypes.string,
+    id: PropTypes.string.isRequired,
     isTimeLimited: PropTypes.bool,
     allowProctoringOptOut: PropTypes.bool,
-  }),
+  }).isRequired,
   courseId: PropTypes.string.isRequired,
   children: PropTypes.element.isRequired,
-};
-
-ExamWrapper.defaultProps = {
-  sequence: {},
 };
 
 export default ExamWrapper;
