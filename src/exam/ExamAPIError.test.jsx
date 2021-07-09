@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { store } from '../data';
 import { render, fireEvent } from '../setupTest';
-import { ExamStateProvider } from '../index';
+import ExamStateProvider from '../core/ExamStateProvider';
 import ExamAPIError from './ExamAPIError';
 
 jest.mock('../data', () => ({
