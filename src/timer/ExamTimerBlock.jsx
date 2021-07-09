@@ -18,7 +18,7 @@ import {
  */
 const ExamTimerBlock = injectIntl(({
   attempt, stopExamAttempt, expireExamAttempt, pollExamAttempt,
-  intl, pingAttempt, submitExam, allowEndExam,
+  intl, pingAttempt, submitExam,
 }) => {
   const [isShowMore, showMore, showLess] = useToggle(false);
   const [alertVariant, setAlertVariant] = useState('info');
@@ -59,7 +59,10 @@ const ExamTimerBlock = injectIntl(({
   return (
     <TimerProvider attempt={attempt} pollHandler={pollExamAttempt} pingHandler={pingAttempt}>
       <Alert variant={alertVariant}>
-        <div className="d-flex justify-content-between flex-column flex-lg-row align-items-start">
+        <div
+          className="d-flex justify-content-between flex-column flex-lg-row align-items-start"
+          data-testid="exam-timer"
+        >
           <div>
             <FormattedMessage
               id="exam.examTimer.text"
@@ -109,16 +112,14 @@ const ExamTimerBlock = injectIntl(({
             })}
           >
 
-            {attempt.attempt_status !== ExamStatus.READY_TO_SUBMIT
-              && allowEndExam
-              && (
+            {attempt.attempt_status !== ExamStatus.READY_TO_SUBMIT && (
               <Button data-testid="end-button" className="mr-3" variant="outline-primary" onClick={handleEndExamClick}>
                 <FormattedMessage
                   id="exam.examTimer.endExamBtn"
                   defaultMessage="End My Exam"
                 />
               </Button>
-              )}
+            )}
             <span className="sr-only timer-announce" aria-live="assertive">{attempt.accessibility_time_string}</span>
 
             <CountDownTimer />
@@ -141,11 +142,6 @@ ExamTimerBlock.propTypes = {
   stopExamAttempt: PropTypes.func.isRequired,
   expireExamAttempt: PropTypes.func.isRequired,
   submitExam: PropTypes.func.isRequired,
-  allowEndExam: PropTypes.bool,
-};
-
-ExamTimerBlock.defaultProps = {
-  allowEndExam: true,
 };
 
 export default ExamTimerBlock;

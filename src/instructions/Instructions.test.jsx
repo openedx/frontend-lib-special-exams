@@ -8,7 +8,7 @@ import { continueExam, submitExam } from '../data/thunks';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
 import { render, screen, act } from '../setupTest';
-import { ExamStateProvider } from '../index';
+import ExamStateProvider from '../core/ExamStateProvider';
 import {
   ExamStatus, ExamType, INCOMPLETE_STATUSES, VerificationStatus,
 } from '../constants';

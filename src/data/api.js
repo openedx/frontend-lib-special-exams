@@ -6,8 +6,12 @@ const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 
 export async function fetchExamAttemptsData(courseId, sequenceId) {
   const url = new URL(
-    `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}/content_id/${sequenceId}?is_learning_mfe=true`,
+    `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`,
   );
+  if (sequenceId) {
+    url.searchParams.append('content_id', sequenceId);
+  }
+  url.searchParams.append('is_learning_mfe', true);
   const { data } = await getAuthenticatedHttpClient().get(url.href);
   return data;
 }

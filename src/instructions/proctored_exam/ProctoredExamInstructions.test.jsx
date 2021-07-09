@@ -6,7 +6,7 @@ import Instructions from '../index';
 import { store, getExamAttemptsData } from '../../data';
 import { submitExam } from '../../data/thunks';
 import { render, screen } from '../../setupTest';
-import { ExamStateProvider } from '../../index';
+import ExamStateProvider from '../../core/ExamStateProvider';
 import {
   ExamType,
   ExamStatus,

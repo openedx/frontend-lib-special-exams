@@ -4,7 +4,7 @@ import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
 import { store, getExamAttemptsData, startTimedExam } from '../data';
 import { render } from '../setupTest';
-import { ExamStateProvider } from '../index';
+import ExamStateProvider from '../core/ExamStateProvider';
 import { ExamType } from '../constants';
 
 jest.mock('../data', () => ({
