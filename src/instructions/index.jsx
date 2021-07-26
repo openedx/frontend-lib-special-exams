@@ -80,6 +80,8 @@ const Instructions = ({ children }) => {
     // instead show exam content
     case attemptStatus === ExamStatus.SUBMITTED && !(examType === ExamType.TIMED && passedDueDate && !hideAfterDue):
       return <SubmittedExamInstructions examType={examType} />;
+    case attemptStatus === ExamStatus.SECOND_REVIEW_REQUIRED:
+      return <SubmittedExamInstructions examType={examType} />;
     case attemptStatus === ExamStatus.VERIFIED:
       return <VerifiedExamInstructions examType={examType} />;
     case attemptStatus === ExamStatus.REJECTED:
