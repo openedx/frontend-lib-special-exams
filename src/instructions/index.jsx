@@ -27,10 +27,16 @@ import ExpiredInstructions from './ExpiredInstructions';
 const Instructions = ({ children }) => {
   const state = useContext(ExamStateContext);
   const { exam, verification } = state;
-  const { attempt, type: examType, prerequisite_status: prerequisitesData } = exam || {};
+  const {
+    attempt,
+    type: examType,
+    prerequisite_status: prerequisitesData,
+    passed_due_date: passedDueDate,
+    hide_after_due: hideAfterDue,
+  } = exam || {};
   const prerequisitesPassed = prerequisitesData ? prerequisitesData.are_prerequisites_satisifed : true;
   let verificationStatus = verification.status || '';
-  const { verification_url: verificationUrl } = attempt || {};
+  const { verification_url: verificationUrl, attempt_status: attemptStatus } = attempt || {};
   const [skipProctoring, toggleSkipProctoring] = useState(false);
   const toggleSkipProctoredExam = () => toggleSkipProctoring(!skipProctoring);
   const expired = shouldRenderExpiredPage(exam);
@@ -59,27 +65,30 @@ const Instructions = ({ children }) => {
       return <SkipProctoredExamInstruction cancelSkipProctoredExam={toggleSkipProctoredExam} />;
     case isEmpty(attempt) || !attempt.attempt_id:
       return renderEmptyAttemptInstructions();
-    case attempt.attempt_status === ExamStatus.CREATED:
+    case attemptStatus === ExamStatus.CREATED:
       return examType === ExamType.PROCTORED && verificationStatus !== VerificationStatus.APPROVED
         ? <VerificationProctoredExamInstructions status={verificationStatus} verificationUrl={verificationUrl} />
         : <DownloadSoftwareProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
-    case attempt.attempt_status === ExamStatus.DOWNLOAD_SOFTWARE_CLICKED:
+    case attemptStatus === ExamStatus.DOWNLOAD_SOFTWARE_CLICKED:
       return <DownloadSoftwareProctoredExamInstructions />;
-    case attempt.attempt_status === ExamStatus.READY_TO_START:
+    case attemptStatus === ExamStatus.READY_TO_START:
       return <ReadyToStartProctoredExamInstructions />;
-    case attempt.attempt_status === ExamStatus.READY_TO_SUBMIT:
+    case attemptStatus === ExamStatus.READY_TO_SUBMIT:
       return <SubmitExamInstructions />;
-    case attempt.attempt_status === ExamStatus.SUBMITTED:
+    // don't show submitted page for timed exam if exam has passed due date
+    // and in studio visibility option is set to 'show entire section'
+    // instead show exam content
+    case attemptStatus === ExamStatus.SUBMITTED && !(examType === ExamType.TIMED && passedDueDate && !hideAfterDue):
       return <SubmittedExamInstructions examType={examType} />;
-    case attempt.attempt_status === ExamStatus.VERIFIED:
+    case attemptStatus === ExamStatus.VERIFIED:
       return <VerifiedExamInstructions examType={examType} />;
-    case attempt.attempt_status === ExamStatus.REJECTED:
+    case attemptStatus === ExamStatus.REJECTED:
       return <RejectedInstructions examType={examType} />;
-    case attempt.attempt_status === ExamStatus.ERROR:
+    case attemptStatus === ExamStatus.ERROR:
       return <ErrorExamInstructions examType={examType} />;
-    case attempt.attempt_status === ExamStatus.READY_TO_RESUME:
+    case attemptStatus === ExamStatus.READY_TO_RESUME:
       return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
-    case examType === ExamType.PROCTORED && IS_ONBOARDING_ERROR(attempt.attempt_status):
+    case examType === ExamType.PROCTORED && IS_ONBOARDING_ERROR(attemptStatus):
       return <OnboardingErrorProctoredExamInstructions />;
     default:
       return children;

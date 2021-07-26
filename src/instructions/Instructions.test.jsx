@@ -623,6 +623,7 @@ describe('SequenceExamWrapper', () => {
           is_proctored: true,
           type: examType,
           passed_due_date: true,
+          hide_after_due: true,
         }),
       }),
     });
@@ -655,6 +656,7 @@ describe('SequenceExamWrapper', () => {
                 attempt_status: item,
               }),
               passed_due_date: true,
+              hide_after_due: true,
             }),
           }),
         });
@@ -670,6 +672,66 @@ describe('SequenceExamWrapper', () => {
 
         expect(screen.getByText('The due date for this exam has passed')).toBeInTheDocument();
       });
+  });
+
+  it('Shows exam content for timed exam if attempt status is submitted, due date has passed and hide after due is set to false', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        proctoringSettings: Factory.build('proctoringSettings', {
+          platform_name: 'Your Platform',
+        }),
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          type: ExamType.TIMED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.SUBMITTED,
+          }),
+          passed_due_date: true,
+          hide_after_due: false,
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div data-testid="exam-content">children</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByTestId('exam-content')).toHaveTextContent('children');
+  });
+
+  it('Shows submitted exam page for proctored exams if attempt status is submitted, due date has passed and hide after due is set to false', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        proctoringSettings: Factory.build('proctoringSettings', {
+          platform_name: 'Your Platform',
+        }),
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.SUBMITTED,
+          }),
+          passed_due_date: true,
+          hide_after_due: false,
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>children</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
   });
 
   it('Shows download software proctored exam instructions if attempt status is created and verification status is approved', () => {
