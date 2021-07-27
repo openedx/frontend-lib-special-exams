@@ -27,7 +27,7 @@ export default function ExamAPIError() {
 
     return (
       <FormattedMessage
-        id="exam.apiError.text2"
+        id="exam.defaultError"
         defaultMessage="A system error has occurred with your exam. Please reach out to support for assistance."
       />
     );

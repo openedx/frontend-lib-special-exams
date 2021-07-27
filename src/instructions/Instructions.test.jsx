@@ -812,4 +812,32 @@ describe('SequenceExamWrapper', () => {
       expect(screen.getByText(instruction)).toBeInTheDocument();
     });
   });
+
+  it('Shows error message if receives unknown attempt status', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        proctoringSettings: Factory.build('proctoringSettings', {
+          platform_name: 'Your Platform',
+        }),
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          type: ExamType.TIMED,
+          attempt: Factory.build('attempt', {
+            attempt_status: 'something new',
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>children</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByTestId('unknown-status-error')).toBeInTheDocument();
+  });
 });

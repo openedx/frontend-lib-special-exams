@@ -23,6 +23,7 @@ import ErrorExamInstructions from './ErrorInstructions';
 import SubmittedExamInstructions from './SubmittedInstructions';
 import VerifiedExamInstructions from './VerifiedInstructions';
 import ExpiredInstructions from './ExpiredInstructions';
+import UnknownAttemptStatusError from './UnknownAttemptStatusError';
 
 const Instructions = ({ children }) => {
   const state = useContext(ExamStateContext);
@@ -75,10 +76,13 @@ const Instructions = ({ children }) => {
       return <ReadyToStartProctoredExamInstructions />;
     case attemptStatus === ExamStatus.READY_TO_SUBMIT:
       return <SubmitExamInstructions />;
-    // don't show submitted page for timed exam if exam has passed due date
-    // and in studio visibility option is set to 'show entire section'
-    // instead show exam content
-    case attemptStatus === ExamStatus.SUBMITTED && !(examType === ExamType.TIMED && passedDueDate && !hideAfterDue):
+    case attemptStatus === ExamStatus.SUBMITTED:
+      // don't show submitted page for timed exam if exam has passed due date
+      // and in studio visibility option is set to 'show entire section'
+      // instead show exam content
+      if (examType === ExamType.TIMED && passedDueDate && !hideAfterDue) {
+        return children;
+      }
       return <SubmittedExamInstructions examType={examType} />;
     case attemptStatus === ExamStatus.SECOND_REVIEW_REQUIRED:
       return <SubmittedExamInstructions examType={examType} />;
@@ -92,8 +96,10 @@ const Instructions = ({ children }) => {
       return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
     case examType === ExamType.PROCTORED && IS_ONBOARDING_ERROR(attemptStatus):
       return <OnboardingErrorProctoredExamInstructions />;
-    default:
+    case attemptStatus === ExamStatus.STARTED:
       return children;
+    default:
+      return <UnknownAttemptStatusError />;
   }
 };
 
