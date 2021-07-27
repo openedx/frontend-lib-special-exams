@@ -7,6 +7,7 @@ export const ExamStatus = Object.freeze({
   STARTED: 'started',
   READY_TO_SUBMIT: 'ready_to_submit',
   SUBMITTED: 'submitted',
+  SECOND_REVIEW_REQUIRED: 'second_review_required',
   TIMED_OUT: 'timed_out',
   VERIFIED: 'verified',
   REJECTED: 'rejected',

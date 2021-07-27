@@ -734,6 +734,35 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
   });
 
+  it('Shows submitted page when proctored exam is in second_review_required status', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        proctoringSettings: Factory.build('proctoringSettings', {
+          platform_name: 'Your Platform',
+        }),
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.SECOND_REVIEW_REQUIRED,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
+  });
+
   it('Shows download software proctored exam instructions if attempt status is created and verification status is approved', () => {
     const instructions = [
       'instruction 1',
@@ -782,5 +811,33 @@ describe('SequenceExamWrapper', () => {
     instructions.forEach((instruction) => {
       expect(screen.getByText(instruction)).toBeInTheDocument();
     });
+  });
+
+  it('Shows error message if receives unknown attempt status', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        proctoringSettings: Factory.build('proctoringSettings', {
+          platform_name: 'Your Platform',
+        }),
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          type: ExamType.TIMED,
+          attempt: Factory.build('attempt', {
+            attempt_status: 'something new',
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>children</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByTestId('unknown-status-error')).toBeInTheDocument();
   });
 });
