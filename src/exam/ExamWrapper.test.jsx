@@ -24,7 +24,7 @@ describe('SequenceExamWrapper', () => {
   };
   const courseId = 'course-v1:test+test+test';
 
-  it('is successfully rendered and shows instructions', () => {
+  it('is successfully rendered and shows instructions if the user is not staff', () => {
     store.getState = () => ({
       examState: Factory.build('examState'),
     });
@@ -120,5 +120,24 @@ describe('SequenceExamWrapper', () => {
       { store, appContext },
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('children');
+  });
+
+  it('renders exam content without an active attempt if the user is staff', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+        }),
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={sequence} courseId={courseId} isStaff>
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('sequence-content')).toHaveTextContent('children');
   });
 });
