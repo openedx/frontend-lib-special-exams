@@ -10,7 +10,7 @@ import ExamStateContext from '../context';
 const ExamWrapper = ({ children, ...props }) => {
   const state = useContext(ExamStateContext);
   const { authenticatedUser } = useContext(AppContext);
-  const { sequence, courseId } = props;
+  const { sequence, courseId, isStaff } = props;
   const { getExamAttemptsData, getAllowProctoringOptOut } = state;
   const loadInitialData = async () => {
     await getExamAttemptsData(courseId, sequence.id);
@@ -18,8 +18,9 @@ const ExamWrapper = ({ children, ...props }) => {
   };
 
   // if the user is browsing public content (not logged in) they cannot be in an exam
+  // if the user is staff they may view exam content without an exam attempt
   // any requests for exam state will 403 so just short circuit this component here
-  if (!authenticatedUser) {
+  if (!authenticatedUser || isStaff) {
     return children;
   }
 
@@ -42,6 +43,11 @@ ExamWrapper.propTypes = {
   }).isRequired,
   courseId: PropTypes.string.isRequired,
   children: PropTypes.element.isRequired,
+  isStaff: PropTypes.bool,
+};
+
+ExamWrapper.defaultProps = {
+  isStaff: false,
 };
 
 export default ExamWrapper;
