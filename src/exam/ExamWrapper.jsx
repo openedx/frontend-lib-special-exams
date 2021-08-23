@@ -10,7 +10,12 @@ import ExamStateContext from '../context';
 const ExamWrapper = ({ children, ...props }) => {
   const state = useContext(ExamStateContext);
   const { authenticatedUser } = useContext(AppContext);
-  const { sequence, courseId, isStaff } = props;
+  const {
+    sequence,
+    courseId,
+    isStaff,
+    originalUserIsStaff,
+  } = props;
   const { getExamAttemptsData, getAllowProctoringOptOut } = state;
   const loadInitialData = async () => {
     await getExamAttemptsData(courseId, sequence.id);
@@ -29,7 +34,7 @@ const ExamWrapper = ({ children, ...props }) => {
   }, []);
 
   return (
-    <Exam isTimeLimited={sequence.isTimeLimited}>
+    <Exam isTimeLimited={sequence.isTimeLimited} originalUserIsStaff={originalUserIsStaff}>
       {children}
     </Exam>
   );
@@ -44,10 +49,12 @@ ExamWrapper.propTypes = {
   courseId: PropTypes.string.isRequired,
   children: PropTypes.element.isRequired,
   isStaff: PropTypes.bool,
+  originalUserIsStaff: PropTypes.bool,
 };
 
 ExamWrapper.defaultProps = {
   isStaff: false,
+  originalUserIsStaff: false,
 };
 
 export default ExamWrapper;

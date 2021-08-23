@@ -1,11 +1,13 @@
 import React, { useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Spinner } from '@edx/paragon';
+import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { Alert, Spinner } from '@edx/paragon';
+import { Info } from '@edx/paragon/icons';
 import { ExamTimerBlock } from '../timer';
 import Instructions from '../instructions';
 import ExamStateContext from '../context';
 import ExamAPIError from './ExamAPIError';
-import { ExamType } from '../constants';
+import { ExamStatus, ExamType } from '../constants';
 
 /**
  * Exam component is intended to render exam instructions before and after exam.
@@ -16,7 +18,7 @@ import { ExamType } from '../constants';
  * @returns {JSX.Element}
  * @constructor
  */
-const Exam = ({ isTimeLimited, children }) => {
+const Exam = ({ isTimeLimited, originalUserIsStaff, children }) => {
   const state = useContext(ExamStateContext);
   const {
     isLoading, activeAttempt, showTimer, stopExam, exam,
@@ -24,7 +26,28 @@ const Exam = ({ isTimeLimited, children }) => {
     getVerificationData, getProctoringSettings, submitExam,
   } = state;
 
-  const { type: examType, id: examId } = exam || {};
+  const {
+    attempt,
+    type: examType,
+    id: examId,
+    passed_due_date: passedDueDate,
+    hide_after_due: hideAfterDue,
+  } = exam || {};
+  const { attempt_status: attemptStatus } = attempt || {};
+
+  const shouldShowMasqueradeAlert = () => {
+    // if course staff is masquerading as a specific learner, they should be able
+    // to view the exam content regardless of the learner's current state
+    if (originalUserIsStaff) {
+      if (examType === ExamType.TIMED && passedDueDate && !hideAfterDue) {
+        // if the learner is able to view exam content after the due date is passed,
+        // don't show this alert
+        return false;
+      }
+      return attemptStatus !== ExamStatus.STARTED;
+    }
+    return false;
+  };
 
   useEffect(() => {
     if (examId) {
@@ -51,6 +74,14 @@ const Exam = ({ isTimeLimited, children }) => {
 
   return (
     <div className="d-flex flex-column justify-content-center">
+      {shouldShowMasqueradeAlert() && (
+        <Alert variant="info" icon={Info} data-testid="masquerade-alert">
+          <FormattedMessage
+            id="exam.hiddenContent"
+            defaultMessage="This exam is hidden from the learner."
+          />
+        </Alert>
+      )}
       {showTimer && (
         <ExamTimerBlock
           attempt={activeAttempt}
@@ -62,7 +93,7 @@ const Exam = ({ isTimeLimited, children }) => {
         />
       )}
       {apiErrorMsg && <ExamAPIError />}
-      {isTimeLimited
+      {isTimeLimited && !originalUserIsStaff
         ? <Instructions>{sequenceContent}</Instructions>
         : sequenceContent}
     </div>
@@ -71,6 +102,7 @@ const Exam = ({ isTimeLimited, children }) => {
 
 Exam.propTypes = {
   isTimeLimited: PropTypes.bool.isRequired,
+  originalUserIsStaff: PropTypes.bool.isRequired,
   children: PropTypes.element.isRequired,
 };
 

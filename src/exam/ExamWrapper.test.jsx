@@ -5,7 +5,7 @@ import SequenceExamWrapper from './ExamWrapper';
 import { store, getExamAttemptsData, startTimedExam } from '../data';
 import { render } from '../setupTest';
 import ExamStateProvider from '../core/ExamStateProvider';
-import { ExamType } from '../constants';
+import { ExamStatus, ExamType } from '../constants';
 
 jest.mock('../data', () => ({
   store: {},
@@ -139,5 +139,77 @@ describe('SequenceExamWrapper', () => {
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
+  });
+
+  it('renders exam content for staff masquerading as a learner', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          passed_due_date: false,
+          hide_after_due: false,
+        }),
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('sequence-content')).toHaveTextContent('children');
+    expect(queryByTestId('masquerade-alert')).toBeInTheDocument();
+  });
+
+  it('does not display masquerade alert if specified learner is in the middle of the exam', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          attempt: {
+            attempt_status: ExamStatus.STARTED,
+          },
+          passed_due_date: false,
+          hide_after_due: false,
+        }),
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('sequence-content')).toHaveTextContent('children');
+    expect(queryByTestId('masquerade-alert')).not.toBeInTheDocument();
+  });
+
+  it('does not display masquerade alert if learner can view the exam after the due date', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.TIMED,
+          attempt: {
+            attempt_status: ExamStatus.SUBMITTED,
+          },
+          passed_due_date: true,
+          hide_after_due: false,
+        }),
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('sequence-content')).toHaveTextContent('children');
+    expect(queryByTestId('masquerade-alert')).not.toBeInTheDocument();
   });
 });
