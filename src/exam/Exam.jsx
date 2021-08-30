@@ -38,7 +38,7 @@ const Exam = ({ isTimeLimited, originalUserIsStaff, children }) => {
   const shouldShowMasqueradeAlert = () => {
     // if course staff is masquerading as a specific learner, they should be able
     // to view the exam content regardless of the learner's current state
-    if (originalUserIsStaff) {
+    if (originalUserIsStaff && isTimeLimited) {
       if (examType === ExamType.TIMED && passedDueDate && !hideAfterDue) {
         // if the learner is able to view exam content after the due date is passed,
         // don't show this alert
