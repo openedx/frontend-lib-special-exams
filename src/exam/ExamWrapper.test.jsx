@@ -212,4 +212,17 @@ describe('SequenceExamWrapper', () => {
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
     expect(queryByTestId('masquerade-alert')).not.toBeInTheDocument();
   });
+
+  it('does not display masquerade alert if sequence is not time gated', () => {
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId} originalUserIsStaff>
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('sequence-content')).toHaveTextContent('children');
+    expect(queryByTestId('masquerade-alert')).not.toBeInTheDocument();
+  });
 });
