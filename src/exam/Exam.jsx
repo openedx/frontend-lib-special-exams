@@ -18,7 +18,9 @@ import { ExamStatus, ExamType } from '../constants';
  * @returns {JSX.Element}
  * @constructor
  */
-const Exam = ({ isTimeLimited, originalUserIsStaff, children }) => {
+const Exam = ({
+  isGated, isTimeLimited, originalUserIsStaff, children,
+}) => {
   const state = useContext(ExamStateContext);
   const {
     isLoading, activeAttempt, showTimer, stopExam, exam,
@@ -93,7 +95,7 @@ const Exam = ({ isTimeLimited, originalUserIsStaff, children }) => {
         />
       )}
       {apiErrorMsg && <ExamAPIError />}
-      {isTimeLimited && !originalUserIsStaff
+      {isTimeLimited && !originalUserIsStaff && !isGated
         ? <Instructions>{sequenceContent}</Instructions>
         : sequenceContent}
     </div>
@@ -102,6 +104,7 @@ const Exam = ({ isTimeLimited, originalUserIsStaff, children }) => {
 
 Exam.propTypes = {
   isTimeLimited: PropTypes.bool.isRequired,
+  isGated: PropTypes.bool.isRequired,
   originalUserIsStaff: PropTypes.bool.isRequired,
   children: PropTypes.element.isRequired,
 };

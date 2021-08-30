@@ -163,6 +163,28 @@ describe('SequenceExamWrapper', () => {
     expect(queryByTestId('masquerade-alert')).toBeInTheDocument();
   });
 
+  it('allows default content rendering for gated sections even for exams', () => {
+    sequence.gatedContent = {
+      gated: true,
+    };
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+        }),
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('sequence-content')).toHaveTextContent('children');
+  });
+
   it('does not display masquerade alert if specified learner is in the middle of the exam', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
