@@ -11,9 +11,9 @@ const DefaultInstructions = ({ code }) => (
         defaultMessage="Step 1."
       />
     </div>
-    <p>
+    <div>
       <ExamCode code={code} />
-    </p>
+    </div>
     <p>
       <FormattedMessage
         id="exam.DefaultDownloadSoftwareProctoredExamInstructions.step1.body"

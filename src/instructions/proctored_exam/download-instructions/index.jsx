@@ -105,7 +105,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
           downloadClicked={downloadClicked}
         />
         {!withProviderInstructions && (
-          <p className="pt-3">
+          <div className="pt-3">
             <div className="h4">
               <FormattedMessage
                 id="exam.DefaultDownloadSoftwareProctoredExamInstructions.step3.title"
@@ -120,7 +120,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
                 + 'direct you to the RPNow proctoring experience.'}
               />
             </p>
-          </p>
+          </div>
         )}
       </Container>
       {allowProctoringOptOut && <SkipProctoredExamButton handleClick={skipProctoredExam} />}
