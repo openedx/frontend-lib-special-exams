@@ -39,8 +39,8 @@ const TimerServiceProvider = ({
     critically_low_threshold_sec: criticalLowTime,
     low_threshold_sec: lowTime,
   } = attempt;
-  const startValue = Math.floor(timeRemaining);
   const LIMIT = GRACE_PERIOD_SECS ? 0 - GRACE_PERIOD_SECS : 0;
+  let liveInterval = null;
 
   const getTimeString = () => Object.values(timeState).map(
     item => {
@@ -77,26 +77,29 @@ const TimerServiceProvider = ({
   };
 
   useEffect(() => {
-    let secondsLeft = startValue;
     let timerTick = 0;
-    const interval = setInterval(() => {
+    let secondsLeft = Math.floor(timeRemaining);
+    liveInterval = setInterval(() => {
       secondsLeft -= 1;
       timerTick += 1;
       setTimeState(getFormattedRemainingTime(secondsLeft));
-      processTimeLeft(interval, secondsLeft);
+      processTimeLeft(liveInterval, secondsLeft);
       // no polling during grace period
       if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
         pollExam();
       }
-
       // if exam is proctored ping provider app also
       if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
         pingHandler(pingInterval, workerUrl);
       }
     }, 1000);
-
-    return () => { clearInterval(interval); };
-  }, []);
+    return () => {
+      if (liveInterval) {
+        clearInterval(liveInterval);
+        liveInterval = null;
+      }
+    };
+  }, [timeRemaining]);
 
   return (
     <TimerContext.Provider value={{
