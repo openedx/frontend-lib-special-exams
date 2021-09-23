@@ -52,6 +52,7 @@ describe('ExamTimerBlock', () => {
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
         pollExamAttempt={pollAttempt}
+        submitExam={submitAttempt}
       />,
     );
 
@@ -80,6 +81,7 @@ describe('ExamTimerBlock', () => {
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
         pollExamAttempt={pollAttempt}
+        submitExam={submitAttempt}
       />,
     );
     expect(container.firstChild).not.toBeInTheDocument();
@@ -92,6 +94,7 @@ describe('ExamTimerBlock', () => {
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
         pollExamAttempt={pollAttempt}
+        submitExam={submitAttempt}
       />,
     );
     await waitFor(() => expect(screen.getByText('00:00:09')).toBeInTheDocument());
@@ -127,6 +130,7 @@ describe('ExamTimerBlock', () => {
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
         pollExamAttempt={pollAttempt}
+        submitExam={submitAttempt}
       />,
     );
     await waitFor(() => expect(screen.getByText('00:00:04')).toBeInTheDocument());
@@ -140,6 +144,7 @@ describe('ExamTimerBlock', () => {
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
         pollExamAttempt={pollAttempt}
+        submitExam={submitAttempt}
       />,
     );
     await waitFor(() => expect(screen.getByText('00:00:09')).toBeInTheDocument());
@@ -162,6 +167,7 @@ describe('ExamTimerBlock', () => {
         stopExamAttempt={stopExamAttempt}
         expireExamAttempt={expireExamAttempt}
         pollExamAttempt={pollAttempt}
+        submitExam={submitAttempt}
       />,
     );
     await waitFor(() => expect(screen.getByText('00:00:09')).toBeInTheDocument());
@@ -229,5 +235,62 @@ describe('ExamTimerBlock', () => {
 
     fireEvent.click(screen.getByTestId('end-button'));
     expect(stopExamAttempt).toHaveBeenCalledTimes(1);
+  });
+
+  it('Update exam timer when attempt time_remaining_seconds is smaller than displayed time', async () => {
+    const preloadedState = {
+      examState: {
+        isLoading: true,
+        timeIsOver: false,
+        activeAttempt: {
+          attempt_status: 'started',
+          exam_url_path: 'exam_url_path',
+          exam_display_name: 'exam name',
+          time_remaining_seconds: 240,
+          low_threshold_sec: 15,
+          critically_low_threshold_sec: 5,
+          exam_started_poll_url: '',
+          taking_as_proctored: false,
+          exam_type: 'a timed exam',
+        },
+        proctoringSettings: {},
+        exam: {},
+      },
+    };
+    let testStore = await initializeTestStore(preloadedState);
+    examStore.getState = store.testStore;
+    attempt = testStore.getState().examState.activeAttempt;
+    const { rerender } = render(
+      <ExamTimerBlock
+        attempt={attempt}
+        stopExamAttempt={stopExamAttempt}
+        expireExamAttempt={expireExamAttempt}
+        pollExamAttempt={pollAttempt}
+        submitExam={submitAttempt}
+      />,
+    );
+    await waitFor(() => expect(screen.getByText('00:03:59')).toBeInTheDocument());
+
+    preloadedState.examState.activeAttempt = {
+      ...attempt,
+      time_remaining_seconds: 20,
+    };
+    testStore = await initializeTestStore(preloadedState);
+    examStore.getState = store.testStore;
+    const updatedAttempt = testStore.getState().examState.activeAttempt;
+
+    expect(updatedAttempt.time_remaining_seconds).toBe(20);
+
+    rerender(
+      <ExamTimerBlock
+        attempt={updatedAttempt}
+        stopExamAttempt={stopExamAttempt}
+        expireExamAttempt={expireExamAttempt}
+        pollExamAttempt={pollAttempt}
+        submitExam={submitAttempt}
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByText('00:00:19')).toBeInTheDocument());
   });
 });
