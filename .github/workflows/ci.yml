@@ -20,6 +20,8 @@ jobs:
       run: npm run lint
     - name: Test
       run: npm run test
+    - name: commit-lint
+      run: git log -1 --pretty=format:"%s" | npx commitlint
     - name: Build
       run: npm run build
     - name: i18n_extract
