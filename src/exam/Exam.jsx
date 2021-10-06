@@ -94,7 +94,9 @@ const Exam = ({
           pingAttempt={pingAttempt}
         />
       )}
-      {apiErrorMsg && <ExamAPIError />}
+      { // show the error message only if you are in the exam sequence
+        isTimeLimited && apiErrorMsg && <ExamAPIError />
+      }
       {isTimeLimited && !originalUserIsStaff && !isGated
         ? <Instructions>{sequenceContent}</Instructions>
         : sequenceContent}
