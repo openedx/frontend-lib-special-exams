@@ -95,6 +95,25 @@ describe('SequenceExamWrapper', () => {
     expect(queryByTestId('exam-api-error-component')).toBeInTheDocument();
   });
 
+  it('does not show exam api error component on a non-exam sequence', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        apiErrorMsg: 'Something bad has happened.',
+      }),
+    });
+
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+          <div>children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('exam-instructions-title')).not.toBeInTheDocument();
+    expect(queryByTestId('exam-api-error-component')).not.toBeInTheDocument();
+  });
+
   it('does not take any actions if sequence item is not exam', () => {
     const { getByTestId } = render(
       <ExamStateProvider>
