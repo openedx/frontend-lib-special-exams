@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@edx/paragon';
-import { ExamStatus } from '../../constants';
 import ExamStateContext from '../../context';
 import SkipProctoredExamButton from './SkipProctoredExamButton';
 
@@ -14,7 +13,7 @@ const EntranceProctoredExamInstructions = ({ skipProctoredExam }) => {
 
   return (
     <>
-      { attempt.attempt_status === ExamStatus.READY_TO_RESUME ? (
+      { attempt.attempt_ready_to_resume ? (
         <div>
           <div className="h3" data-testid="proctored-exam-instructions-title">
             <FormattedMessage

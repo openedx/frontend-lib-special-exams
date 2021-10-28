@@ -247,7 +247,7 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
   });
 
-  it('Instructions for ready to resume status', () => {
+  it('Instructions for ready to resume state', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         timeIsOver: true,
@@ -257,7 +257,8 @@ describe('SequenceExamWrapper', () => {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.READY_TO_RESUME,
+            attempt_status: ExamStatus.ERROR,
+            attempt_ready_to_resume: true,
           }),
         }),
       }),

@@ -37,7 +37,11 @@ const Instructions = ({ children }) => {
   } = exam || {};
   const prerequisitesPassed = prerequisitesData ? prerequisitesData.are_prerequisites_satisifed : true;
   let verificationStatus = verification.status || '';
-  const { verification_url: verificationUrl, attempt_status: attemptStatus } = attempt || {};
+  const {
+    verification_url: verificationUrl,
+    attempt_status: attemptStatus,
+    attempt_ready_to_resume: attemptReadyToResume,
+  } = attempt || {};
   const [skipProctoring, toggleSkipProctoring] = useState(false);
   const toggleSkipProctoredExam = () => toggleSkipProctoring(!skipProctoring);
   const expired = shouldRenderExpiredPage(exam);
@@ -66,6 +70,8 @@ const Instructions = ({ children }) => {
       return <SkipProctoredExamInstruction cancelSkipProctoredExam={toggleSkipProctoredExam} />;
     case isEmpty(attempt) || !attempt.attempt_id:
       return renderEmptyAttemptInstructions();
+    case attemptReadyToResume:
+      return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
     case attemptStatus === ExamStatus.CREATED:
       return examType === ExamType.PROCTORED && verificationStatus !== VerificationStatus.APPROVED
         ? <VerificationProctoredExamInstructions status={verificationStatus} verificationUrl={verificationUrl} />
@@ -92,8 +98,6 @@ const Instructions = ({ children }) => {
       return <RejectedInstructions examType={examType} />;
     case attemptStatus === ExamStatus.ERROR:
       return <ErrorExamInstructions examType={examType} />;
-    case attemptStatus === ExamStatus.READY_TO_RESUME:
-      return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
     case examType === ExamType.PROCTORED && IS_ONBOARDING_ERROR(attemptStatus):
       return <OnboardingErrorProctoredExamInstructions />;
     case attemptStatus === ExamStatus.STARTED:
