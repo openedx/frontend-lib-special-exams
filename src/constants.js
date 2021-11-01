@@ -12,7 +12,6 @@ export const ExamStatus = Object.freeze({
   VERIFIED: 'verified',
   REJECTED: 'rejected',
   ERROR: 'error',
-  READY_TO_RESUME: 'ready_to_resume',
   ONBOARDING_MISSING: 'onboarding_missing',
   ONBOARDING_PENDING: 'onboarding_pending',
   ONBOARDING_FAILED: 'onboarding_failed',
