@@ -814,6 +814,56 @@ describe('SequenceExamWrapper', () => {
     });
   });
 
+  it('Shows download software proctored exam instructions verification is not approved, but integrity signature flag is turned on', () => {
+    const instructions = [
+      'instruction 1',
+      'instruction 2',
+      'instruction 3',
+    ];
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'Provider Name',
+          provider_tech_support_email: 'support@example.com',
+          provider_tech_support_phone: '+123456789',
+          exam_proctoring_backend: {
+            instructions,
+          },
+        }),
+        verification: {
+          status: VerificationStatus.NONE,
+          can_verify: true,
+        },
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.CREATED,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions isIntegritySignatureEnabled>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText(
+      'If you have issues relating to proctoring, you can contact '
+      + 'Provider Name technical support by emailing support@example.com or by calling +123456789.',
+    )).toBeInTheDocument();
+    expect(screen.getByText('Set up and start your proctored exam.')).toBeInTheDocument();
+    instructions.forEach((instruction) => {
+      expect(screen.getByText(instruction)).toBeInTheDocument();
+    });
+  });
+
   it('Shows error message if receives unknown attempt status', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {

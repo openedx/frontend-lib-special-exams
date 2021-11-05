@@ -25,7 +25,7 @@ import VerifiedExamInstructions from './VerifiedInstructions';
 import ExpiredInstructions from './ExpiredInstructions';
 import UnknownAttemptStatusError from './UnknownAttemptStatusError';
 
-const Instructions = ({ children }) => {
+const Instructions = ({ isIntegritySignatureEnabled, children }) => {
   const state = useContext(ExamStateContext);
   const { exam, verification } = state;
   const {
@@ -58,6 +58,8 @@ const Instructions = ({ children }) => {
     return component;
   };
 
+  const blockedByIdv = () => !isIntegritySignatureEnabled && verificationStatus !== VerificationStatus.APPROVED;
+
   // The API does not explicitly return 'expired' status, so we have to check manually.
   // expires attribute is returned only for approved status, so it is safe to do this
   // (meaning we won't override 'must_reverify' status for example)
@@ -73,7 +75,7 @@ const Instructions = ({ children }) => {
     case attemptReadyToResume:
       return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
     case attemptStatus === ExamStatus.CREATED:
-      return examType === ExamType.PROCTORED && verificationStatus !== VerificationStatus.APPROVED
+      return examType === ExamType.PROCTORED && blockedByIdv()
         ? <VerificationProctoredExamInstructions status={verificationStatus} verificationUrl={verificationUrl} />
         : <DownloadSoftwareProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
     case attemptStatus === ExamStatus.DOWNLOAD_SOFTWARE_CLICKED:
@@ -109,6 +111,11 @@ const Instructions = ({ children }) => {
 
 Instructions.propTypes = {
   children: PropTypes.element.isRequired,
+  isIntegritySignatureEnabled: PropTypes.bool,
+};
+
+Instructions.defaultProps = {
+  isIntegritySignatureEnabled: false,
 };
 
 export default Instructions;

@@ -15,6 +15,7 @@ const ExamWrapper = ({ children, ...props }) => {
     courseId,
     isStaff,
     originalUserIsStaff,
+    isIntegritySignatureEnabled,
   } = props;
   const { getExamAttemptsData, getAllowProctoringOptOut } = state;
   const loadInitialData = async () => {
@@ -36,7 +37,12 @@ const ExamWrapper = ({ children, ...props }) => {
   }, []);
 
   return (
-    <Exam isGated={isGated} isTimeLimited={sequence.isTimeLimited} originalUserIsStaff={originalUserIsStaff}>
+    <Exam
+      isGated={isGated}
+      isTimeLimited={sequence.isTimeLimited}
+      originalUserIsStaff={originalUserIsStaff}
+      isIntegritySignatureEnabled={isIntegritySignatureEnabled}
+    >
       {children}
     </Exam>
   );
@@ -55,11 +61,13 @@ ExamWrapper.propTypes = {
   children: PropTypes.element.isRequired,
   isStaff: PropTypes.bool,
   originalUserIsStaff: PropTypes.bool,
+  isIntegritySignatureEnabled: PropTypes.bool,
 };
 
 ExamWrapper.defaultProps = {
   isStaff: false,
   originalUserIsStaff: false,
+  isIntegritySignatureEnabled: false,
 };
 
 export default ExamWrapper;

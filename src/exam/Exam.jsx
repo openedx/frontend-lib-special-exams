@@ -19,7 +19,7 @@ import { ExamStatus, ExamType } from '../constants';
  * @constructor
  */
 const Exam = ({
-  isGated, isTimeLimited, originalUserIsStaff, children,
+  isGated, isTimeLimited, originalUserIsStaff, isIntegritySignatureEnabled, children,
 }) => {
   const state = useContext(ExamStateContext);
   const {
@@ -98,7 +98,7 @@ const Exam = ({
         isTimeLimited && apiErrorMsg && <ExamAPIError />
       }
       {isTimeLimited && !originalUserIsStaff && !isGated
-        ? <Instructions>{sequenceContent}</Instructions>
+        ? <Instructions isIntegritySignatureEnabled={isIntegritySignatureEnabled}>{sequenceContent}</Instructions>
         : sequenceContent}
     </div>
   );
@@ -108,7 +108,12 @@ Exam.propTypes = {
   isTimeLimited: PropTypes.bool.isRequired,
   isGated: PropTypes.bool.isRequired,
   originalUserIsStaff: PropTypes.bool.isRequired,
+  isIntegritySignatureEnabled: PropTypes.bool,
   children: PropTypes.element.isRequired,
+};
+
+Exam.defaultProps = {
+  isIntegritySignatureEnabled: false,
 };
 
 export default Exam;
