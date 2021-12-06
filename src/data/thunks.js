@@ -1,4 +1,4 @@
-import { logError } from '@edx/frontend-platform/logging';
+import { logError, logInfo } from '@edx/frontend-platform/logging';
 import {
   fetchExamAttemptsData,
   createExamAttempt,
@@ -150,10 +150,22 @@ export function startProctoredExam() {
         .then(() => updateAttemptAfter(
           exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
         )(dispatch))
-        .catch(() => handleAPIError(
-          { message: 'Something has gone wrong starting your exam. Please double-check that the application is running.' },
-          dispatch,
-        ));
+        .catch(error => {
+          if (error) {
+            logInfo(
+              error,
+              {
+                attemptId: attempt.attempt_id,
+                courseId: attempt.course_id,
+                examId: exam.id,
+              },
+            );
+          }
+          handleAPIError(
+            { message: 'Something has gone wrong starting your exam. Please double-check that the application is running.' },
+            dispatch,
+          );
+        });
     } else {
       await updateAttemptAfter(
         exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
