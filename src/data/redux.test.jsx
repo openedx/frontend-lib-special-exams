@@ -16,6 +16,20 @@ const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 const { loggingService } = initializeMockApp();
 const axiosMock = new MockAdapter(getAuthenticatedHttpClient());
 
+let windowSpy;
+
+// Mock for worker failure
+const mockPromise = jest.fn(() => (
+  new Promise((resolve, reject) => {
+    reject(Error('test error'));
+  })
+));
+jest.mock('./messages/handlers', () => ({
+  ...jest.requireActual('./messages/handlers'),
+  createWorker: jest.fn(),
+  workerPromiseForEventNames: jest.fn(() => mockPromise),
+}));
+
 describe('Data layer integration tests', () => {
   const exam = Factory.build('exam', { attempt: Factory.build('attempt') });
   const { course_id: courseId, content_id: contentId, attempt } = exam;
@@ -25,10 +39,17 @@ describe('Data layer integration tests', () => {
   let store;
 
   beforeEach(async () => {
+    windowSpy = jest.spyOn(window, 'window', 'get');
     axiosMock.reset();
     loggingService.logError.mockReset();
+    loggingService.logInfo.mockReset();
     store = await initializeTestStore();
   });
+
+  afterEach(() => {
+    windowSpy.mockRestore();
+  });
+
   describe('Test getVerificationData', () => {
     const getVerificationDataUrl = `${getConfig().LMS_BASE_URL}/verify_student/status/`;
 
@@ -497,6 +518,41 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
 
       expect(loggingService.logError).toHaveBeenCalled();
+    });
+
+    it('Should log an error on worker failure', async () => {
+      windowSpy.mockImplementation(() => ({
+        Worker: jest.fn(),
+        URL: { createObjectURL: jest.fn() },
+      }));
+
+      const createdWorkerAttempt = Factory.build(
+        'attempt', { attempt_status: ExamStatus.CREATED, desktop_application_js_url: 'http://proctortest.com' },
+      );
+      const startedWorkerAttempt = Factory.build(
+        'attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' },
+      );
+      const createdWorkerExam = Factory.build('exam', { attempt: createdWorkerAttempt });
+      const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
+      const continueWorkerAttemptUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${createdWorkerAttempt.attempt_id}`;
+
+      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(
+        200, { exam: createdWorkerExam, active_attempt: createdWorkerAttempt },
+      );
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(
+        200, { exam: startedWorkerExam, active_attempt: startedWorkerAttempt },
+      );
+      axiosMock.onPost(continueWorkerAttemptUrl).reply(200, { exam_attempt_id: startedWorkerAttempt.attempt_id });
+
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
+      expect(loggingService.logInfo).toHaveBeenCalledWith(
+        Error('test error'), {
+          attemptId: createdWorkerAttempt.attempt_id,
+          courseId: createdWorkerAttempt.course_id,
+          examId: createdWorkerExam.id,
+        },
+      );
     });
   });
 
