@@ -146,10 +146,12 @@ export function startProctoredExam() {
     const useWorker = window.Worker && workerUrl;
 
     if (useWorker) {
-      workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)()
-        .then(() => updateAttemptAfter(
-          exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
-        )(dispatch))
+      const startExamTimeoutMilliseconds = 2000;
+      workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)(
+        startExamTimeoutMilliseconds,
+      ).then(() => updateAttemptAfter(
+        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
+      )(dispatch))
         .catch(error => {
           if (error) {
             logInfo(
