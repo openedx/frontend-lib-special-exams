@@ -546,7 +546,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
-      expect(loggingService.logInfo).toHaveBeenCalledWith(
+      expect(loggingService.logError).toHaveBeenCalledWith(
         Error('test error'), {
           attemptId: createdWorkerAttempt.attempt_id,
           courseId: createdWorkerAttempt.course_id,
