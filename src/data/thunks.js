@@ -35,6 +35,8 @@ function handleAPIError(error, dispatch) {
   dispatch(setApiError({ errorMsg: message || detail }));
 }
 
+const EXAM_START_TIMEOUT_MILLISECONDS = 5000;
+
 /**
  * Fetch attempt data and update exam state after performing another action if it is provided.
  * It is assumed that action somehow modifies attempt in the backend, that's why the state needs
@@ -146,7 +148,7 @@ export function startProctoredExam() {
     const useWorker = window.Worker && workerUrl;
 
     if (useWorker) {
-      const startExamTimeoutMilliseconds = 2000;
+      const startExamTimeoutMilliseconds = EXAM_START_TIMEOUT_MILLISECONDS;
       workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)(
         startExamTimeoutMilliseconds,
       ).then(() => updateAttemptAfter(
