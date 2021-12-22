@@ -1,4 +1,4 @@
-import { logError, logInfo } from '@edx/frontend-platform/logging';
+import { logError } from '@edx/frontend-platform/logging';
 import {
   fetchExamAttemptsData,
   createExamAttempt,
@@ -34,6 +34,8 @@ function handleAPIError(error, dispatch) {
   const { message, detail } = error;
   dispatch(setApiError({ errorMsg: message || detail }));
 }
+
+const EXAM_START_TIMEOUT_MILLISECONDS = 5000;
 
 /**
  * Fetch attempt data and update exam state after performing another action if it is provided.
@@ -146,13 +148,15 @@ export function startProctoredExam() {
     const useWorker = window.Worker && workerUrl;
 
     if (useWorker) {
-      workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)()
-        .then(() => updateAttemptAfter(
-          exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
-        )(dispatch))
+      const startExamTimeoutMilliseconds = EXAM_START_TIMEOUT_MILLISECONDS;
+      workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)(
+        startExamTimeoutMilliseconds,
+      ).then(() => updateAttemptAfter(
+        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
+      )(dispatch))
         .catch(error => {
           if (error) {
-            logInfo(
+            logError(
               error,
               {
                 attemptId: attempt.attempt_id,
@@ -381,6 +385,14 @@ export function pingAttempt(timeoutInSeconds, workerUrl) {
       .catch(async (error) => {
         const { exam, activeAttempt } = getState().examState;
         const message = error ? error.message : 'Worker failed to respond.';
+        logError(
+          message,
+          {
+            attemptId: activeAttempt.attempt_id,
+            courseId: activeAttempt.course_id,
+            examId: activeAttempt.exam.id,
+          },
+        );
         await updateAttemptAfter(
           exam.course_id, exam.content_id, endExamWithFailure(activeAttempt.attempt_id, message),
         )(dispatch);

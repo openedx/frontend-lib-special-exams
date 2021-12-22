@@ -891,4 +891,64 @@ describe('SequenceExamWrapper', () => {
 
     expect(screen.getByTestId('unknown-status-error')).toBeInTheDocument();
   });
+
+  it('Shows ready to start page when proctored exam is in ready_to_start status', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        proctoringSettings: Factory.build('proctoringSettings', {
+          platform_name: 'Your Platform',
+        }),
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.READY_TO_START,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText('You must adhere to the following rules while you complete this exam.')).toBeInTheDocument();
+  });
+
+  it('Shows loading spinner while waiting to start exam', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        proctoringSettings: Factory.build('proctoringSettings', {
+          platform_name: 'Your Platform',
+        }),
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.READY_TO_START,
+          }),
+        }),
+        startProctoredExam: jest.fn(),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    fireEvent.click(screen.getByTestId('start-exam-button'));
+    expect(screen.getByTestId('exam-loading-spinner')).toBeInTheDocument();
+  });
 });

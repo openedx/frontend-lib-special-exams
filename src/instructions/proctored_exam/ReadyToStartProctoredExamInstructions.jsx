@@ -1,6 +1,6 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button, Container } from '@edx/paragon';
+import { Button, Container, Spinner } from '@edx/paragon';
 import ExamStateContext from '../../context';
 import Footer from './Footer';
 
@@ -16,10 +16,16 @@ const ReadyToStartProctoredExamInstructions = () => {
   const { total_time: examDuration } = attempt;
   const { link_urls: linkUrls, platform_name: platformName } = proctoringSettings;
   const rulesUrl = linkUrls && linkUrls.online_proctoring_rules;
+  const [beginExamClicked, setBeginExamClicked] = useState(false);
 
   useEffect(() => {
     getExamReviewPolicy();
   }, []);
+
+  const handleStart = () => {
+    setBeginExamClicked(true);
+    startProctoredExam();
+  };
 
   return (
     <div>
@@ -113,8 +119,10 @@ const ReadyToStartProctoredExamInstructions = () => {
         <Button
           data-testid="start-exam-button"
           variant="primary"
-          onClick={startProctoredExam}
+          onClick={handleStart}
+          disabled={beginExamClicked}
         >
+          { beginExamClicked && <Spinner data-testid="exam-loading-spinner" animation="border" /> }
           <FormattedMessage
             id="exam.startExamInstructions.startExamButtonText"
             defaultMessage="Start exam"
