@@ -28,6 +28,7 @@ jest.mock('./messages/handlers', () => ({
   ...jest.requireActual('./messages/handlers'),
   createWorker: jest.fn(),
   workerPromiseForEventNames: jest.fn(() => mockPromise),
+  pingApplication: jest.fn(() => mockPromise()),
 }));
 
 describe('Data layer integration tests', () => {
@@ -547,8 +548,9 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
       expect(loggingService.logError).toHaveBeenCalledWith(
-        Error('test error'), {
+        'test error', {
           attemptId: createdWorkerAttempt.attempt_id,
+          attemptStatus: createdWorkerAttempt.attempt_status,
           courseId: createdWorkerAttempt.course_id,
           examId: createdWorkerExam.id,
         },
@@ -630,6 +632,37 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(state.examState.apiErrorMsg).toBe('Network Error');
+    });
+  });
+
+  describe('Test pingAttempt', () => {
+    it('Should send attempt to error state on ping failure', async () => {
+      const startedWorkerAttempt = Factory.build(
+        'attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' },
+      );
+      const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(
+        200, { exam: startedWorkerExam, active_attempt: startedWorkerAttempt },
+      );
+      axiosMock.onPut(updateAttemptStatusUrl).reply(200, { exam_attempt_id: startedWorkerAttempt.attempt_id });
+
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await executeThunk(thunks.pingAttempt(), store.dispatch, store.getState);
+
+      expect(loggingService.logError).toHaveBeenCalledWith(
+        'test error', {
+          attemptId: startedWorkerAttempt.attempt_id,
+          attemptStatus: startedWorkerAttempt.attempt_status,
+          courseId: startedWorkerAttempt.course_id,
+          examId: startedWorkerExam.id,
+        },
+      );
+      const request = axiosMock.history.put[0];
+      expect(request.url).toEqual(updateAttemptStatusUrl);
+      expect(request.data).toEqual(JSON.stringify({
+        action: 'error',
+        detail: 'test error',
+      }));
     });
   });
 });

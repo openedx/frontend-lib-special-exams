@@ -155,16 +155,16 @@ export function startProctoredExam() {
         exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
       )(dispatch))
         .catch(error => {
-          if (error) {
-            logError(
-              error,
-              {
-                attemptId: attempt.attempt_id,
-                courseId: attempt.course_id,
-                examId: exam.id,
-              },
-            );
-          }
+          const message = error ? error.message : 'Worker failed to respond.';
+          logError(
+            message,
+            {
+              attemptId: attempt.attempt_id,
+              attemptStatus: attempt.attempt_status,
+              courseId: attempt.course_id,
+              examId: exam.id,
+            },
+          );
           handleAPIError(
             { message: 'Something has gone wrong starting your exam. Please double-check that the application is running.' },
             dispatch,
@@ -385,12 +385,18 @@ export function pingAttempt(timeoutInSeconds, workerUrl) {
       .catch(async (error) => {
         const { exam, activeAttempt } = getState().examState;
         const message = error ? error.message : 'Worker failed to respond.';
+        /**
+         * Note: The exam id logged here represents the current section being rendered.
+         * This may be different from the exam they are currently attempting
+         * if the learner has navigated to other course content during the exam.
+         * */
         logError(
           message,
           {
             attemptId: activeAttempt.attempt_id,
+            attemptStatus: activeAttempt.attempt_status,
             courseId: activeAttempt.course_id,
-            examId: activeAttempt.exam.id,
+            examId: exam.id,
           },
         );
         await updateAttemptAfter(
