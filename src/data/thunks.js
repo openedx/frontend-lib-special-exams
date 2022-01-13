@@ -385,6 +385,11 @@ export function pingAttempt(timeoutInSeconds, workerUrl) {
       .catch(async (error) => {
         const { exam, activeAttempt } = getState().examState;
         const message = error ? error.message : 'Worker failed to respond.';
+        /**
+         * Note: The exam id logged here represents the current section being rendered.
+         * This may be different from the exam they are currently attempting
+         * if the learner has navigated to other course content during the exam.
+         * */
         logError(
           message,
           {
