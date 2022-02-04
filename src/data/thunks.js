@@ -155,7 +155,7 @@ export function startProctoredExam() {
         exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
       )(dispatch))
         .catch(error => {
-          const message = error ? error.message : 'Worker failed to respond.';
+          const message = error?.message || 'Worker failed to respond.';
           logError(
             message,
             {
@@ -384,7 +384,7 @@ export function pingAttempt(timeoutInSeconds, workerUrl) {
     await pingApplication(timeoutInSeconds, workerUrl)
       .catch(async (error) => {
         const { exam, activeAttempt } = getState().examState;
-        const message = error ? error.message : 'Worker failed to respond.';
+        const message = error?.message || 'Worker failed to respond.';
         /**
          * Note: The exam id logged here represents the current section being rendered.
          * This may be different from the exam they are currently attempting
