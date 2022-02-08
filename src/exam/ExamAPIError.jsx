@@ -1,66 +1,51 @@
-import React, { useState, useContext } from 'react';
-import { Alert, Icon } from '@edx/paragon';
+import React, { useContext } from 'react';
+import { getConfig } from '@edx/frontend-platform';
+import { Alert, Hyperlink, Icon } from '@edx/paragon';
 import { Info } from '@edx/paragon/icons';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { injectIntl, intlShape, FormattedMessage } from '@edx/frontend-platform/i18n';
 import ExamStateContext from '../context';
+import messages from './messages';
 
-export default function ExamAPIError() {
+function ExamAPIError({ intl }) {
   const state = useContext(ExamStateContext);
-  const { apiErrorMsg, proctoringSettings } = state;
-  const { contact_us: contactUs, platform_name: platformName } = proctoringSettings;
-  const [showError, setShowError] = useState(false);
-
-  const renderHeading = () => {
-    if (contactUs && platformName) {
-      return (
-        <FormattedMessage
-          id="exam.apiError.text1"
-          defaultMessage={
-            'A system error has occurred with your exam. '
-              + 'Please reach out to {supportLink} for assistance, '
-              + 'and return to the exam once you receive further instructions.'
-          }
-          values={{ supportLink: <a data-testid="support-link" href={contactUs} target="_blank" rel="noopener noreferrer">{platformName} Support</a> }}
-        />
-      );
-    }
-
-    return (
-      <FormattedMessage
-        id="exam.defaultError"
-        defaultMessage="A system error has occurred with your exam. Please reach out to support for assistance."
-      />
-    );
-  };
+  const { SITE_NAME, SUPPORT_URL } = getConfig();
+  const { apiErrorMsg } = state;
+  const shouldShowApiErrorMsg = !!apiErrorMsg && !apiErrorMsg.includes('<');
 
   return (
     <Alert variant="danger" data-testid="exam-api-error-component">
       <Icon src={Info} className="alert-icon" />
-      <Alert.Heading data-testid="heading">
-        {renderHeading()}
+      <Alert.Heading data-testid="error-details">
+        {shouldShowApiErrorMsg ? apiErrorMsg : intl.formatMessage(messages.apiErrorDefault)}
       </Alert.Heading>
       <p>
-        <FormattedMessage
-          id="exam.apiError.details"
-          defaultMessage="Details"
-        />:
-        <span className="pl-2">
-          <Alert.Link onClick={() => setShowError(!showError)} data-testid="show-button">
-            {showError ? (
-              <FormattedMessage
-                id="exam.apiError.showLink"
-                defaultMessage="Hide"
-              />
-            ) : (
-              <FormattedMessage
-                id="exam.apiError.hideLink"
-                defaultMessage="Show"
-              />
-            )}
-          </Alert.Link>
-        </span>
+        {SITE_NAME && SUPPORT_URL ? (
+          <FormattedMessage
+            id="exam.apiError.supportText.withLink"
+            defaultMessage={
+              'If the issue persists, please reach out to {supportLink} for assistance, '
+              + 'and return to the exam once you receive further instructions.'
+            }
+            values={{
+              supportLink: (
+                <Hyperlink
+                  data-testid="support-link"
+                  destination={SUPPORT_URL}
+                  target="_blank"
+                >
+                  {SITE_NAME} Support
+                </Hyperlink>
+              ),
+            }}
+          />
+        ) : intl.formatMessage(messages.supportTextWithoutLink)}
       </p>
-      {showError && <p data-testid="error-details">{apiErrorMsg}</p>}
     </Alert>
   );
 }
+
+ExamAPIError.propTypes = {
+  intl: intlShape.isRequired,
+};
+
+export default injectIntl(ExamAPIError);
