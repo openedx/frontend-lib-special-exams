@@ -266,4 +266,58 @@ describe('SequenceExamWrapper', () => {
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
     expect(queryByTestId('masquerade-alert')).not.toBeInTheDocument();
   });
+
+  it('shows access denied if learner is not accessible to proctoring exams', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          attempt: null,
+          passed_due_date: false,
+          hide_after_due: false,
+        }),
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper
+          sequence={{ ...sequence, isTimeLimited: false }}
+          courseId={courseId}
+          canAccessProctoredExams={false}
+        >
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('no-access')).toHaveTextContent('You do not have access to proctored exams with your current enrollment.');
+    expect(queryByTestId('sequence-content')).toBeNull();
+  });
+
+  it('learner has access to timed exams', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.TIMED,
+          attempt: null,
+          passed_due_date: false,
+          hide_after_due: false,
+        }),
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper
+          sequence={{ ...sequence, isTimeLimited: false }}
+          courseId={courseId}
+          canAccessProctoredExams={false}
+        >
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('no-access')).toBeNull();
+    expect(queryByTestId('sequence-content')).toHaveTextContent('children');
+  });
 });

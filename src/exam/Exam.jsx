@@ -1,6 +1,6 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { injectIntl, intlShape, FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Alert, Spinner } from '@edx/paragon';
 import { Info } from '@edx/paragon/icons';
 import { ExamTimerBlock } from '../timer';
@@ -8,6 +8,7 @@ import Instructions from '../instructions';
 import ExamStateContext from '../context';
 import ExamAPIError from './ExamAPIError';
 import { ExamStatus, ExamType } from '../constants';
+import messages from './messages';
 
 /**
  * Exam component is intended to render exam instructions before and after exam.
@@ -19,7 +20,7 @@ import { ExamStatus, ExamType } from '../constants';
  * @constructor
  */
 const Exam = ({
-  isGated, isTimeLimited, originalUserIsStaff, isIntegritySignatureEnabled, children,
+  isGated, isTimeLimited, originalUserIsStaff, isIntegritySignatureEnabled, canAccessProctoredExams, children, intl,
 }) => {
   const state = useContext(ExamStateContext);
   const {
@@ -51,14 +52,19 @@ const Exam = ({
     return false;
   };
 
+  const [hasProctoredExamAccess, setHasProctoredExamAccess] = useState(true);
+
   useEffect(() => {
     if (examId) {
       getProctoringSettings();
     }
+    if (examType !== ExamType.TIMED) {
+      // Only exclude Timed Exam when restricting access to exams
+      setHasProctoredExamAccess(canAccessProctoredExams);
+    }
     if (examType === ExamType.PROCTORED) {
       getVerificationData();
     }
-
     // this makes sure useEffect gets called only one time after the exam has been fetched
     // we can't leave this empty since initially exam is just an empty object, so
     // API calls above would not get triggered
@@ -68,6 +74,16 @@ const Exam = ({
     return (
       <div data-testid="spinner" className="d-flex justify-content-center align-items-center flex-column my-5 py-5">
         <Spinner animation="border" variant="primary" />
+      </div>
+    );
+  }
+
+  if (!hasProctoredExamAccess) {
+    // If the user cannot acces proctoring exam, and the current exam is a proctoring exam,
+    // we want to display a message box to let learner know they have no access.
+    return (
+      <div data-testid="no-access" className="d-flex justify-content-center align-items-center flex-column">
+        {intl.formatMessage(messages.proctoredExamAccessDenied)}
       </div>
     );
   }
@@ -109,11 +125,14 @@ Exam.propTypes = {
   isGated: PropTypes.bool.isRequired,
   originalUserIsStaff: PropTypes.bool.isRequired,
   isIntegritySignatureEnabled: PropTypes.bool,
+  canAccessProctoredExams: PropTypes.bool,
   children: PropTypes.element.isRequired,
+  intl: intlShape.isRequired,
 };
 
 Exam.defaultProps = {
   isIntegritySignatureEnabled: false,
+  canAccessProctoredExams: true,
 };
 
-export default Exam;
+export default injectIntl(Exam);
