@@ -320,4 +320,31 @@ describe('SequenceExamWrapper', () => {
     expect(queryByTestId('no-access')).toBeNull();
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
   });
+
+  it('learner has access to content that are not exams', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: '',
+          attempt: null,
+          passed_due_date: false,
+          hide_after_due: false,
+        }),
+      }),
+    });
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <SequenceExamWrapper
+          sequence={{ ...sequence, isTimeLimited: false }}
+          courseId={courseId}
+          canAccessProctoredExams={false}
+        >
+          <div data-testid="sequence-content">children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(queryByTestId('no-access')).toBeNull();
+    expect(queryByTestId('sequence-content')).toHaveTextContent('children');
+  });
 });
