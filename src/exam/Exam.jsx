@@ -54,11 +54,13 @@ const Exam = ({
 
   const [hasProctoredExamAccess, setHasProctoredExamAccess] = useState(true);
 
+  const proctoredExamTypes = [ExamType.ONBOARDING, ExamType.PRACTICE, ExamType.PROCTORED];
+
   useEffect(() => {
     if (examId) {
       getProctoringSettings();
     }
-    if (examType !== ExamType.TIMED) {
+    if (proctoredExamTypes.includes(examType)) {
       // Only exclude Timed Exam when restricting access to exams
       setHasProctoredExamAccess(canAccessProctoredExams);
     }
