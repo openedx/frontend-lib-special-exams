@@ -1,7 +1,6 @@
 import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import {
-  VerificationProctoredExamInstructions,
   DownloadSoftwareProctoredExamInstructions,
   ReadyToStartProctoredExamInstructions,
   PrerequisitesProctoredExamInstructions,
@@ -11,7 +10,6 @@ import {
 import { isEmpty, shouldRenderExpiredPage } from '../helpers';
 import {
   ExamStatus,
-  VerificationStatus,
   ExamType,
   IS_ONBOARDING_ERROR,
 } from '../constants';
@@ -25,9 +23,9 @@ import VerifiedExamInstructions from './VerifiedInstructions';
 import ExpiredInstructions from './ExpiredInstructions';
 import UnknownAttemptStatusError from './UnknownAttemptStatusError';
 
-const Instructions = ({ isIntegritySignatureEnabled, children }) => {
+const Instructions = ({ children }) => {
   const state = useContext(ExamStateContext);
-  const { exam, verification } = state;
+  const { exam } = state;
   const {
     attempt,
     type: examType,
@@ -36,9 +34,7 @@ const Instructions = ({ isIntegritySignatureEnabled, children }) => {
     hide_after_due: hideAfterDue,
   } = exam || {};
   const prerequisitesPassed = prerequisitesData ? prerequisitesData.are_prerequisites_satisifed : true;
-  let verificationStatus = verification.status || '';
   const {
-    verification_url: verificationUrl,
     attempt_status: attemptStatus,
     attempt_ready_to_resume: attemptReadyToResume,
   } = attempt || {};
@@ -58,15 +54,6 @@ const Instructions = ({ isIntegritySignatureEnabled, children }) => {
     return component;
   };
 
-  const blockedByIdv = () => !isIntegritySignatureEnabled && verificationStatus !== VerificationStatus.APPROVED;
-
-  // The API does not explicitly return 'expired' status, so we have to check manually.
-  // expires attribute is returned only for approved status, so it is safe to do this
-  // (meaning we won't override 'must_reverify' status for example)
-  if (verification.expires && new Date() > new Date(verification.expires)) {
-    verificationStatus = VerificationStatus.EXPIRED;
-  }
-
   switch (true) {
     case examType === ExamType.PROCTORED && skipProctoring:
       return <SkipProctoredExamInstruction cancelSkipProctoredExam={toggleSkipProctoredExam} />;
@@ -75,9 +62,7 @@ const Instructions = ({ isIntegritySignatureEnabled, children }) => {
     case attemptReadyToResume:
       return <EntranceExamInstructions examType={examType} skipProctoredExam={toggleSkipProctoredExam} />;
     case attemptStatus === ExamStatus.CREATED:
-      return examType === ExamType.PROCTORED && blockedByIdv()
-        ? <VerificationProctoredExamInstructions status={verificationStatus} verificationUrl={verificationUrl} />
-        : <DownloadSoftwareProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
+      return <DownloadSoftwareProctoredExamInstructions skipProctoredExam={toggleSkipProctoredExam} />;
     case attemptStatus === ExamStatus.DOWNLOAD_SOFTWARE_CLICKED:
       return <DownloadSoftwareProctoredExamInstructions />;
     case attemptStatus === ExamStatus.READY_TO_START:
@@ -111,11 +96,6 @@ const Instructions = ({ isIntegritySignatureEnabled, children }) => {
 
 Instructions.propTypes = {
   children: PropTypes.element.isRequired,
-  isIntegritySignatureEnabled: PropTypes.bool,
-};
-
-Instructions.defaultProps = {
-  isIntegritySignatureEnabled: false,
 };
 
 export default Instructions;

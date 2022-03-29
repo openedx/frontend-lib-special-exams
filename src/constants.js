@@ -46,14 +46,6 @@ export const ExamAction = Object.freeze({
   DECLINE: 'decline',
 });
 
-export const VerificationStatus = Object.freeze({
-  PENDING: 'pending',
-  MUST_REVERIFY: 'must_reverify',
-  APPROVED: 'approved',
-  EXPIRED: 'expired',
-  NONE: 'none',
-});
-
 export const ExamType = Object.freeze({
   ONBOARDING: 'onboarding',
   PRACTICE: 'practice',

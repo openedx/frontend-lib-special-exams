@@ -83,11 +83,3 @@ export async function fetchProctoringSettings(examId) {
   const { data } = await getAuthenticatedHttpClient().get(url.href);
   return data;
 }
-
-export async function fetchVerificationStatus() {
-  const url = new URL(
-    `${getConfig().LMS_BASE_URL}/verify_student/status/`,
-  );
-  const { data } = await getAuthenticatedHttpClient().get(url.href);
-  return data;
-}

@@ -20,13 +20,13 @@ import messages from './messages';
  * @constructor
  */
 const Exam = ({
-  isGated, isTimeLimited, originalUserIsStaff, isIntegritySignatureEnabled, canAccessProctoredExams, children, intl,
+  isGated, isTimeLimited, originalUserIsStaff, canAccessProctoredExams, children, intl,
 }) => {
   const state = useContext(ExamStateContext);
   const {
     isLoading, activeAttempt, showTimer, stopExam, exam,
     expireExam, pollAttempt, apiErrorMsg, pingAttempt,
-    getVerificationData, getProctoringSettings, submitExam,
+    getProctoringSettings, submitExam,
   } = state;
 
   const {
@@ -63,9 +63,6 @@ const Exam = ({
     if (proctoredExamTypes.includes(examType)) {
       // Only exclude Timed Exam when restricting access to exams
       setHasProctoredExamAccess(canAccessProctoredExams);
-    }
-    if (examType === ExamType.PROCTORED) {
-      getVerificationData();
     }
     // this makes sure useEffect gets called only one time after the exam has been fetched
     // we can't leave this empty since initially exam is just an empty object, so
@@ -116,7 +113,7 @@ const Exam = ({
         isTimeLimited && apiErrorMsg && <ExamAPIError />
       }
       {isTimeLimited && !originalUserIsStaff && !isGated
-        ? <Instructions isIntegritySignatureEnabled={isIntegritySignatureEnabled}>{sequenceContent}</Instructions>
+        ? <Instructions>{sequenceContent}</Instructions>
         : sequenceContent}
     </div>
   );
@@ -126,14 +123,12 @@ Exam.propTypes = {
   isTimeLimited: PropTypes.bool.isRequired,
   isGated: PropTypes.bool.isRequired,
   originalUserIsStaff: PropTypes.bool.isRequired,
-  isIntegritySignatureEnabled: PropTypes.bool,
   canAccessProctoredExams: PropTypes.bool,
   children: PropTypes.element.isRequired,
   intl: intlShape.isRequired,
 };
 
 Exam.defaultProps = {
-  isIntegritySignatureEnabled: false,
   canAccessProctoredExams: true,
 };
 

@@ -51,28 +51,6 @@ describe('Data layer integration tests', () => {
     windowSpy.mockRestore();
   });
 
-  describe('Test getVerificationData', () => {
-    const getVerificationDataUrl = `${getConfig().LMS_BASE_URL}/verify_student/status/`;
-
-    it('Should get, and save verification', async () => {
-      axiosMock.onGet(getVerificationDataUrl).reply(200, { status: 'none', can_verify: true });
-
-      await executeThunk(thunks.getVerificationData(), store.dispatch);
-
-      const state = store.getState();
-      expect(state.examState.verification).toMatchSnapshot();
-    });
-
-    it('Should fail to fetch if error occurs', async () => {
-      axiosMock.onGet(getVerificationDataUrl).networkError();
-
-      await executeThunk(thunks.getVerificationData(), store.dispatch);
-
-      const state = store.getState();
-      expect(state.examState.apiErrorMsg).toBe('Network Error');
-    });
-  });
-
   it('Test getAllowProctoringOptOut', async () => {
     await executeThunk(thunks.getAllowProctoringOptOut(true), store.dispatch);
 

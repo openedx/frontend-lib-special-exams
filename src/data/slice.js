@@ -64,11 +64,6 @@ export const examSlice = createSlice({
       },
       type: '',
     },
-    verification: {
-      status: '',
-      can_verify: false,
-      expires: '',
-    },
     apiErrorMsg: '',
   },
   reducers: {
@@ -92,9 +87,6 @@ export const examSlice = createSlice({
     expireExamAttempt: (state) => {
       state.timeIsOver = true;
     },
-    setVerificationData: (state, { payload }) => {
-      state.verification = payload.verification;
-    },
     setReviewPolicy: (state, { payload }) => {
       state.exam.reviewPolicy = payload.policy;
     },
@@ -106,8 +98,8 @@ export const examSlice = createSlice({
 
 export const {
   setIsLoading, setExamState, expireExamAttempt,
-  setActiveAttempt, setProctoringSettings, setVerificationData,
-  setReviewPolicy, setApiError, setAllowProctoringOptOut,
+  setActiveAttempt, setProctoringSettings, setReviewPolicy,
+  setApiError, setAllowProctoringOptOut,
 } = examSlice.actions;
 
 export default examSlice.reducer;

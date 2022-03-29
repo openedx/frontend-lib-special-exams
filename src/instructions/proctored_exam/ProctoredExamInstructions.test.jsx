@@ -10,7 +10,6 @@ import ExamStateProvider from '../../core/ExamStateProvider';
 import {
   ExamType,
   ExamStatus,
-  VerificationStatus,
   ONBOARDING_ERRORS,
 } from '../../constants';
 
@@ -209,48 +208,6 @@ describe('SequenceExamWrapper', () => {
     );
     expect(getByTestId('proctored-exam-instructions-title'))
       .toHaveTextContent('Your proctoring session was reviewed, but did not pass all requirements');
-  });
-
-  it.each(Object.values(VerificationStatus))('Renders correct instructions page when verification status is %s', (status) => {
-    store.getState = () => ({
-      examState: Factory.build('examState', {
-        verification: {
-          status,
-          can_verify: true,
-        },
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.CREATED,
-          }),
-        }),
-      }),
-    });
-
-    const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
-      { store },
-    );
-
-    // if verification status is approved we do not render verification
-    // instructions page, instead download instructions are rendered
-    if (status === VerificationStatus.APPROVED) {
-      expect(getByTestId('exam-instructions-title')).toHaveTextContent('Set up and start your proctored exam');
-    } else {
-      // this checks that we rendered verification instructions page
-      expect(getByTestId('exam-instructions-title')).toHaveTextContent('Complete your verification before starting the proctored exam.');
-      // this checks that we rendered specific instructions for given status
-      expect(getByTestId(`verification-status-${status}`)).toBeInTheDocument();
-      // show button to proceed to verification if it is not pending already
-      if (status !== VerificationStatus.PENDING) {
-        expect(getByTestId('verification-button')).toBeInTheDocument();
-      }
-    }
   });
 
   it.each(ONBOARDING_ERRORS)('Renders correct onboarding error instructions when status is %s ', (status) => {
