@@ -8,7 +8,6 @@ import {
   pollExamAttempt,
   fetchProctoringSettings,
   softwareDownloadAttempt,
-  fetchVerificationStatus,
   fetchExamReviewPolicy,
   resetAttempt,
   declineAttempt,
@@ -21,7 +20,6 @@ import {
   expireExamAttempt,
   setActiveAttempt,
   setProctoringSettings,
-  setVerificationData,
   setReviewPolicy,
   setApiError,
   setAllowProctoringOptOut,
@@ -421,17 +419,6 @@ export function startProctoringSoftwareDownload() {
     await updateAttemptAfter(
       exam.course_id, exam.content_id, softwareDownloadAttempt(attemptId),
     )(dispatch);
-  };
-}
-
-export function getVerificationData() {
-  return async (dispatch) => {
-    try {
-      const data = await fetchVerificationStatus();
-      dispatch(setVerificationData({ verification: data }));
-    } catch (error) {
-      handleAPIError(error, dispatch);
-    }
   };
 }
 

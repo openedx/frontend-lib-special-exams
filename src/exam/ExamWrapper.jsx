@@ -15,7 +15,6 @@ const ExamWrapper = ({ children, ...props }) => {
     courseId,
     isStaff,
     originalUserIsStaff,
-    isIntegritySignatureEnabled,
     canAccessProctoredExams,
   } = props;
   const { getExamAttemptsData, getAllowProctoringOptOut } = state;
@@ -42,7 +41,6 @@ const ExamWrapper = ({ children, ...props }) => {
       isGated={isGated}
       isTimeLimited={sequence.isTimeLimited}
       originalUserIsStaff={originalUserIsStaff}
-      isIntegritySignatureEnabled={isIntegritySignatureEnabled}
       canAccessProctoredExams={canAccessProctoredExams}
     >
       {children}
@@ -63,14 +61,12 @@ ExamWrapper.propTypes = {
   children: PropTypes.element.isRequired,
   isStaff: PropTypes.bool,
   originalUserIsStaff: PropTypes.bool,
-  isIntegritySignatureEnabled: PropTypes.bool,
   canAccessProctoredExams: PropTypes.bool,
 };
 
 ExamWrapper.defaultProps = {
   isStaff: false,
   originalUserIsStaff: false,
-  isIntegritySignatureEnabled: false,
   canAccessProctoredExams: true,
 };
 

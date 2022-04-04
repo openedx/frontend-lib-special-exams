@@ -10,7 +10,7 @@ import { TIMER_REACHED_NULL } from '../timer/events';
 import { render, screen, act } from '../setupTest';
 import ExamStateProvider from '../core/ExamStateProvider';
 import {
-  ExamStatus, ExamType, INCOMPLETE_STATUSES, VerificationStatus,
+  ExamStatus, ExamType, INCOMPLETE_STATUSES,
 } from '../constants';
 
 jest.mock('../data', () => ({
@@ -76,9 +76,6 @@ describe('SequenceExamWrapper', () => {
   ])('Shows onboarding exam entrance instructions when receives onboarding exam with integration email: "%s", learner email: "%s"', (integrationEmail, learnerEmail) => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        verification: {
-          status: 'approved',
-        },
         proctoringSettings: Factory.build('proctoringSettings', {
           learner_notification_from_email: learnerEmail,
           integration_specific_email: integrationEmail,
@@ -118,9 +115,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows practice exam entrance instructions when receives practice exam', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        verification: {
-          status: 'approved',
-        },
         exam: Factory.build('exam', {
           type: ExamType.PRACTICE,
         }),
@@ -764,7 +758,7 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
   });
 
-  it('Shows download software proctored exam instructions if attempt status is created and verification status is approved', () => {
+  it('Shows download software proctored exam instructions if attempt status is created', () => {
     const instructions = [
       'instruction 1',
       'instruction 2',
@@ -781,10 +775,6 @@ describe('SequenceExamWrapper', () => {
             instructions,
           },
         }),
-        verification: {
-          status: VerificationStatus.APPROVED,
-          can_verify: true,
-        },
         exam: Factory.build('exam', {
           is_proctored: true,
           type: ExamType.PROCTORED,
@@ -798,56 +788,6 @@ describe('SequenceExamWrapper', () => {
     render(
       <ExamStateProvider>
         <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
-      { store },
-    );
-
-    expect(screen.getByText(
-      'If you have issues relating to proctoring, you can contact '
-      + 'Provider Name technical support by emailing support@example.com or by calling +123456789.',
-    )).toBeInTheDocument();
-    expect(screen.getByText('Set up and start your proctored exam.')).toBeInTheDocument();
-    instructions.forEach((instruction) => {
-      expect(screen.getByText(instruction)).toBeInTheDocument();
-    });
-  });
-
-  it('Shows download software proctored exam instructions verification is not approved, but integrity signature flag is turned on', () => {
-    const instructions = [
-      'instruction 1',
-      'instruction 2',
-      'instruction 3',
-    ];
-    store.getState = () => ({
-      examState: Factory.build('examState', {
-        activeAttempt: {},
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'Provider Name',
-          provider_tech_support_email: 'support@example.com',
-          provider_tech_support_phone: '+123456789',
-          exam_proctoring_backend: {
-            instructions,
-          },
-        }),
-        verification: {
-          status: VerificationStatus.NONE,
-          can_verify: true,
-        },
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.CREATED,
-          }),
-        }),
-      }),
-    });
-
-    render(
-      <ExamStateProvider>
-        <Instructions isIntegritySignatureEnabled>
           <div>Sequence</div>
         </Instructions>
       </ExamStateProvider>,

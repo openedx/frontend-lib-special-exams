@@ -84,11 +84,6 @@ Object {
       "provider_tech_support_phone": "",
     },
     "timeIsOver": false,
-    "verification": Object {
-      "can_verify": false,
-      "expires": "",
-      "status": "",
-    },
   },
 }
 `;
@@ -133,13 +128,6 @@ Object {
   "provider_name": "",
   "provider_tech_support_email": "",
   "provider_tech_support_phone": "",
-}
-`;
-
-exports[`Data layer integration tests Test getVerificationData Should get, and save verification 1`] = `
-Object {
-  "can_verify": true,
-  "status": "none",
 }
 `;
 
@@ -253,11 +241,6 @@ Object {
       "provider_tech_support_phone": "",
     },
     "timeIsOver": false,
-    "verification": Object {
-      "can_verify": false,
-      "expires": "",
-      "status": "",
-    },
   },
 }
 `;
