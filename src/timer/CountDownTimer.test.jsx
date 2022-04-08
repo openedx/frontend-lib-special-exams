@@ -58,8 +58,8 @@ describe('ExamTimerBlock', () => {
 
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByText(attempt.exam_display_name)).toBeInTheDocument();
-    expect(screen.getAllByRole('button').length).toEqual(2);
-    expect(screen.getByRole('button', { name: 'Show more' })).toBeInTheDocument();
+    expect(screen.getByText('Show more')).toBeInTheDocument();
+    expect(screen.getAllByRole('button').length).toEqual(1);
     expect(screen.getByRole('button', { name: 'End My Exam' })).toBeInTheDocument();
   });
 
@@ -173,13 +173,13 @@ describe('ExamTimerBlock', () => {
     await waitFor(() => expect(screen.getByText('00:00:09')).toBeInTheDocument());
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show more' }));
+    fireEvent.click(screen.getByText('Show more'));
     expect(screen.queryByText(/The timer on the right shows the time remaining in the exam./)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Show less' })).toBeInTheDocument();
+    expect(screen.getByText('Show less')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show less' }));
+    fireEvent.click(screen.getByText('Show less'));
     expect(screen.queryByText(/The timer on the right shows the time remaining in the exam./)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Show more' })).toBeInTheDocument();
+    expect(screen.getByText('Show more')).toBeInTheDocument();
   });
 
   it('submits exam if time reached 00:00 and user clicks end my exam button', async () => {

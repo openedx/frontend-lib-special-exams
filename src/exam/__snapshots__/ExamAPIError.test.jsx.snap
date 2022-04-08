@@ -6,69 +6,91 @@ Object {
   "baseElement": <body>
     <div>
       <div
-        class="fade alert alert-danger show"
+        class="fade alert-content alert alert-danger show"
         data-testid="exam-api-error-component"
         role="alert"
       >
-        <span
-          class="pgn__icon alert-icon"
-        >
-          <svg
-            fill="none"
-            height="24"
-            viewBox="0 0 24 24"
-            width="24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
-              fill="currentColor"
-            />
-          </svg>
-        </span>
         <div
-          class="alert-heading h4"
-          data-testid="error-details"
+          class="pgn__alert-message-wrapper"
         >
-          A system error has occurred with your exam.
+          <div
+            class="alert-message-content"
+          >
+            <span
+              class="pgn__icon alert-icon"
+            >
+              <svg
+                aria-hidden="true"
+                fill="none"
+                focusable="false"
+                height="24"
+                role="img"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
+            <div
+              class="alert-heading h4"
+              data-testid="error-details"
+            >
+              A system error has occurred with your exam.
+            </div>
+            <p>
+              If the issue persists, please reach out to support for assistance, and return to the exam once you receive further instructions.
+            </p>
+          </div>
         </div>
-        <p>
-          If the issue persists, please reach out to support for assistance, and return to the exam once you receive further instructions.
-        </p>
       </div>
     </div>
   </body>,
   "container": <div>
     <div
-      class="fade alert alert-danger show"
+      class="fade alert-content alert alert-danger show"
       data-testid="exam-api-error-component"
       role="alert"
     >
-      <span
-        class="pgn__icon alert-icon"
-      >
-        <svg
-          fill="none"
-          height="24"
-          viewBox="0 0 24 24"
-          width="24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
-            fill="currentColor"
-          />
-        </svg>
-      </span>
       <div
-        class="alert-heading h4"
-        data-testid="error-details"
+        class="pgn__alert-message-wrapper"
       >
-        A system error has occurred with your exam.
+        <div
+          class="alert-message-content"
+        >
+          <span
+            class="pgn__icon alert-icon"
+          >
+            <svg
+              aria-hidden="true"
+              fill="none"
+              focusable="false"
+              height="24"
+              role="img"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+          <div
+            class="alert-heading h4"
+            data-testid="error-details"
+          >
+            A system error has occurred with your exam.
+          </div>
+          <p>
+            If the issue persists, please reach out to support for assistance, and return to the exam once you receive further instructions.
+          </p>
+        </div>
       </div>
-      <p>
-        If the issue persists, please reach out to support for assistance, and return to the exam once you receive further instructions.
-      </p>
     </div>
   </div>,
   "debug": [Function],
