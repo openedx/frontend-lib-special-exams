@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [12, 14, 16]
+        node: [16]
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -39,4 +39,5 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NPM_TOKEN: ${{ secrets.SEMANTIC_RELEASE_NPM_TOKEN }}
-      run: npx semantic-release --dry-run --branches=${{ steps.extract_branch.outputs.branch }}
+      run: npx semantic-release --dry-run --branches=${{ steps.extract_branch.outputs.branch
+        }}
