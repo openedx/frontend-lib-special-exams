@@ -16,7 +16,7 @@ function workerTimeoutPromise(timeoutMilliseconds) {
 }
 
 export function workerPromiseForEventNames(eventNames, workerUrl) {
-  return (timeout) => {
+  return (timeout, attemptExternalId) => {
     const proctoringBackendWorker = createWorker(workerUrl);
     return new Promise((resolve, reject) => {
       const responseHandler = (e) => {
@@ -29,7 +29,7 @@ export function workerPromiseForEventNames(eventNames, workerUrl) {
         }
       };
       proctoringBackendWorker.addEventListener('message', responseHandler);
-      proctoringBackendWorker.postMessage({ type: eventNames.promptEventName, timeout });
+      proctoringBackendWorker.postMessage({ type: eventNames.promptEventName, timeout, attemptExternalId });
     });
   };
 }

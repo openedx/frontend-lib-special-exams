@@ -149,6 +149,7 @@ export function startProctoredExam() {
       const startExamTimeoutMilliseconds = EXAM_START_TIMEOUT_MILLISECONDS;
       workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)(
         startExamTimeoutMilliseconds,
+        attempt.external_id,
       ).then(() => updateAttemptAfter(
         exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
       )(dispatch))

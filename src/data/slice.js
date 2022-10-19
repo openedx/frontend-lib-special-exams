@@ -61,6 +61,7 @@ export const examSlice = createSlice({
         desktop_application_js_url: '',
         ping_interval: null,
         attempt_code: '',
+        external_id: '',
       },
       type: '',
     },
