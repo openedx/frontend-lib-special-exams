@@ -1,5 +1,12 @@
 import actionToMessageTypesMap from './constants';
 
+function makeRedirectHandler(worker) {
+  return function handler(e) {
+    const { data, origin } = e
+    worker.postMessage({ data, origin })
+  }
+}
+
 function createWorker(url) {
   const blob = new Blob([`importScripts('${url}');`], { type: 'application/javascript' });
   const blobUrl = window.URL.createObjectURL(blob);
@@ -18,11 +25,14 @@ function workerTimeoutPromise(timeoutMilliseconds) {
 export function workerPromiseForEventNames(eventNames, workerUrl) {
   return (timeout, attemptExternalId) => {
     const proctoringBackendWorker = createWorker(workerUrl);
+    const redirectHandler = makeRedirectHandler(proctoringBackendWorker)
+    window.addEventListener('message', redirectHandler)
     return new Promise((resolve, reject) => {
       const responseHandler = (e) => {
         if (e.data.type === eventNames.successEventName) {
           proctoringBackendWorker.removeEventListener('message', responseHandler);
           proctoringBackendWorker.terminate();
+          window.removeEventListener('message', redirectHandler)
           resolve();
         } else {
           reject(e.data.error);
