@@ -81,6 +81,29 @@ describe('SequenceExamWrapper', () => {
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
   });
 
+  it('Shows Warning Modal', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.ONBOARDING,
+          reviewPolicy: 'review policy',
+          is_proctored: true,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.DOWNLOAD_SOFTWARE_CLICKED,
+          }),
+        }),
+      }),
+    });
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(screen.queryByTestId('exam-instructions-title')).toHaveTextContent('Set up and start your proctored exam');
+  });
   it('Shows correct instructions when attempt status is ready_to_start', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
