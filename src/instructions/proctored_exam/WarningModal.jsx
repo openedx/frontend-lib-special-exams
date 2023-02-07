@@ -6,7 +6,6 @@ const WarningModal = ({
   isOpen, handleClose, title, body,
 }) => (
   <ModalDialog
-    onClose={() => { }}
     isOpen={isOpen}
     hasCloseButton={false}
   >
