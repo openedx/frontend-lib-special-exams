@@ -96,12 +96,11 @@ describe('SequenceExamWrapper', () => {
     });
     render(
       <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
+        <Instructions />
       </ExamStateProvider>,
       { store },
     );
+    expect(screen.queryByTestId('exam-instructions-title')).toHaveTextContent('Set up and start your proctored exam');
     expect(screen.queryByTestId('exam-instructions-title')).toHaveTextContent('Set up and start your proctored exam');
   });
   it('Shows correct instructions when attempt status is ready_to_start', () => {
