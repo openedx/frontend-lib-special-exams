@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { ActionRow, ModalDialog, ModalCloseButton } from '@edx/paragon';
+import { ActionRow, ModalDialog, Button } from '@edx/paragon';
 
 const WarningModal = ({
   isOpen, handleClose, title, body,
@@ -20,9 +20,9 @@ const WarningModal = ({
     </ModalDialog.Body>
     <ModalDialog.Footer>
       <ActionRow>
-        <ModalCloseButton onClick={handleClose} variant="tertiary">
+        <Button onClick={handleClose} variant="tertiary">
           Ok
-        </ModalCloseButton>
+        </Button>
       </ActionRow>
     </ModalDialog.Footer>
   </ModalDialog>
