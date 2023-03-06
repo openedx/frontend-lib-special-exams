@@ -1,5 +1,4 @@
 export TRANSIFEX_RESOURCE = frontend-lib-special-exams
-transifex_resource = frontend-lib-special-exams
 transifex_langs = "ar,fr,es_419,zh_CN"
 
 transifex_utils = ./node_modules/.bin/transifex-utils.js
