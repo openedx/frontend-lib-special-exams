@@ -2,7 +2,7 @@ import { Factory } from 'rosie';
 import MockAdapter from 'axios-mock-adapter';
 
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import { getConfig } from '@edx/frontend-platform';
+import { getConfig, mergeConfig } from '@edx/frontend-platform';
 
 import * as thunks from './thunks';
 
@@ -641,6 +641,37 @@ describe('Data layer integration tests', () => {
         action: 'error',
         detail: 'test error',
       }));
+    });
+  });
+
+  describe('Test exams IDA url', () => {
+    beforeAll(async () => {
+      mergeConfig({
+        EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
+      });
+    });
+
+    it('Should call the exams service for create attempt', async () => {
+      const createExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/exams/attempt`;
+
+      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: {} });
+      axiosMock.onPost(createExamAttemptURL).reply(200, { exam_attempt_id: 1111111 });
+
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
+
+      expect(axiosMock.history.post[0].url).toEqual(createExamAttemptURL);
+    });
+
+    it('Should call the exams service for update attempt', async () => {
+      const updateExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/attempt/${attempt.attempt_id}`;
+
+      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: {}, active_attempt: attempt });
+      axiosMock.onPut(updateExamAttemptURL).reply(200, { exam_attempt_id: attempt.attempt_id });
+
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
+      expect(axiosMock.history.put[0].url).toEqual(updateExamAttemptURL);
     });
   });
 });
