@@ -302,14 +302,14 @@ export function resetExam() {
 export function submitExam() {
   return async (dispatch, getState) => {
     const { exam, activeAttempt } = getState().examState;
-    const { desktop_application_js_url: workerUrl } = activeAttempt || {};
+    const { desktop_application_js_url: workerUrl, external_id: attemptExternalId } = activeAttempt || {};
     const useWorker = window.Worker && activeAttempt && workerUrl;
 
     const handleBackendProviderSubmission = () => {
       // if a backend provider is being used during the exam
       // send it a message that exam is being submitted
       if (useWorker) {
-        workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)()
+        workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)(0, attemptExternalId)
           .catch(() => handleAPIError(
             { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
             dispatch,
@@ -346,7 +346,11 @@ export function submitExam() {
 export function expireExam() {
   return async (dispatch, getState) => {
     const { exam, activeAttempt } = getState().examState;
-    const { desktop_application_js_url: workerUrl, attempt_id: attemptId } = activeAttempt || {};
+    const {
+      desktop_application_js_url: workerUrl,
+      attempt_id: attemptId,
+      external_id: attemptExternalId,
+    } = activeAttempt || {};
     const useWorker = window.Worker && activeAttempt && workerUrl;
 
     if (!attemptId) {
@@ -364,7 +368,7 @@ export function expireExam() {
     dispatch(expireExamAttempt());
 
     if (useWorker) {
-      workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)()
+      workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)(0, attemptExternalId)
         .catch(() => handleAPIError(
           { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
           dispatch,
@@ -380,9 +384,9 @@ export function expireExam() {
  */
 export function pingAttempt(timeoutInSeconds, workerUrl) {
   return async (dispatch, getState) => {
-    await pingApplication(timeoutInSeconds, workerUrl)
+    const { exam, activeAttempt } = getState().examState;
+    await pingApplication(timeoutInSeconds, activeAttempt.external_id, workerUrl)
       .catch(async (error) => {
-        const { exam, activeAttempt } = getState().examState;
         const message = error?.message || 'Worker failed to respond.';
         /**
          * Note: The exam id logged here represents the current section being rendered.

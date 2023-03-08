@@ -34,11 +34,11 @@ export function workerPromiseForEventNames(eventNames, workerUrl) {
   };
 }
 
-export function pingApplication(timeoutInSeconds, workerUrl) {
+export function pingApplication(timeoutInSeconds, attemptExternalId, workerUrl) {
   const TIMEOUT_BUFFER_SECONDS = 10;
   const workerPingTimeout = timeoutInSeconds - TIMEOUT_BUFFER_SECONDS; // 10s buffer for worker to respond
   return Promise.race([
-    workerPromiseForEventNames(actionToMessageTypesMap.ping, workerUrl)(workerPingTimeout * 1000),
+    workerPromiseForEventNames(actionToMessageTypesMap.ping, workerUrl)(workerPingTimeout * 1000, attemptExternalId),
     workerTimeoutPromise(timeoutInSeconds * 1000),
   ]);
 }
