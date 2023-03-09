@@ -22,7 +22,13 @@ export async function pollExamAttempt(url) {
 }
 
 export async function createExamAttempt(examId, startClock = true, attemptProctored = false) {
-  const url = new URL(`${getConfig().LMS_BASE_URL}${BASE_API_URL}`);
+  let urlString;
+  if (!getConfig().EXAMS_BASE_URL) {
+    urlString = `${getConfig().LMS_BASE_URL}${BASE_API_URL}`;
+  } else {
+    urlString = `${getConfig().EXAMS_BASE_URL}/exams/attempt`;
+  }
+  const url = new URL(urlString);
   const payload = {
     exam_id: examId,
     start_clock: startClock.toString(),
@@ -33,7 +39,13 @@ export async function createExamAttempt(examId, startClock = true, attemptProcto
 }
 
 export async function updateAttemptStatus(attemptId, action, detail = null) {
-  const url = new URL(`${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attemptId}`);
+  let urlString;
+  if (!getConfig().EXAMS_BASE_URL) {
+    urlString = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attemptId}`;
+  } else {
+    urlString = `${getConfig().EXAMS_BASE_URL}/attempt/${attemptId}`;
+  }
+  const url = new URL(urlString);
   const payload = { action };
   if (detail) {
     payload.detail = detail;
