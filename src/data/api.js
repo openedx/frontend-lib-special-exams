@@ -144,3 +144,11 @@ export async function fetchProctoringSettings(examId) {
   const { data } = await getAuthenticatedHttpClient().get(url.href);
   return data;
 }
+
+export async function fetchExamAccessToken(examId) {
+  const url = new URL(
+    `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${examId}/`,
+  );
+  const { data } = await getAuthenticatedHttpClient().get(url.href);
+  return data;
+}

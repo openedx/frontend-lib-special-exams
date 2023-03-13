@@ -1,5 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Data layer integration tests Test examRequiresAccessToken for exams IDA url Should get exam access token 1`] = `
+Object {
+  "exam_access_token": "Z173480948902JK34432",
+  "exam_access_token_expiration": "60",
+}
+`;
+
 exports[`Data layer integration tests Test exams IDA url Should call the exams service to fetch attempt data 1`] = `
 Object {
   "examState": Object {
@@ -62,6 +69,10 @@ Object {
       "total_time": "30 minutes",
       "type": "timed",
     },
+    "examAccessToken": Object {
+      "exam_access_token": "",
+      "exam_access_token_expiration": "",
+    },
     "isLoading": false,
     "proctoringSettings": Object {
       "contact_us": "",
@@ -107,6 +118,10 @@ Object {
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
     "exam": Object {},
+    "examAccessToken": Object {
+      "exam_access_token": "",
+      "exam_access_token_expiration": "",
+    },
     "isLoading": false,
     "proctoringSettings": Object {
       "contact_us": "",
@@ -191,6 +206,10 @@ Object {
       "total_time": "30 minutes",
       "type": "timed",
     },
+    "examAccessToken": Object {
+      "exam_access_token": "",
+      "exam_access_token_expiration": "",
+    },
     "isLoading": false,
     "proctoringSettings": Object {
       "contact_us": "",
@@ -236,6 +255,10 @@ Object {
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
     "exam": Object {},
+    "examAccessToken": Object {
+      "exam_access_token": "",
+      "exam_access_token_expiration": "",
+    },
     "isLoading": false,
     "proctoringSettings": Object {
       "contact_us": "",
@@ -386,6 +409,10 @@ Object {
       "time_limit_mins": 30,
       "total_time": "30 minutes",
       "type": "timed",
+    },
+    "examAccessToken": Object {
+      "exam_access_token": "",
+      "exam_access_token_expiration": "",
     },
     "isLoading": false,
     "proctoringSettings": Object {

@@ -4,6 +4,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { getConfig, mergeConfig } from '@edx/frontend-platform';
 
+import { isExam, fetchExamAccess, getExamAccess } from '../api';
 import * as thunks from './thunks';
 
 import executeThunk from '../utils';
@@ -647,12 +648,85 @@ describe('Data layer integration tests', () => {
   describe('Test getLatestAttemptData', () => {
     it('Should get, and save latest attempt', async () => {
       const attemptDataUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}?is_learning_mfe=true`;
-      axiosMock.onGet(attemptDataUrl).reply(200, { exam: {}, active_attempt: attempt });
+      axiosMock.onGet(attemptDataUrl)
+        .reply(200, {
+          exam: {},
+          active_attempt: attempt,
+        });
 
       await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
 
       const state = store.getState();
-      expect(state).toMatchSnapshot();
+      expect(state)
+        .toMatchSnapshot();
+    });
+  });
+
+  describe('Test examRequiresAccessToken without exams url', () => {
+    it('Should not fetch exam access token', async () => {
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam, active_attempt: attempt });
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
+
+      const state = store.getState();
+      expect(state.examState.exam.id).toBe(exam.id);
+      expect(state.examState.examAccessToken.exam_access_token).toBe('');
+    });
+  });
+
+  describe('Test examRequiresAccessToken for exams IDA url', () => {
+    beforeAll(async () => {
+      mergeConfig({
+        EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
+      });
+    });
+
+    it('Should get exam access token', async () => {
+      const createExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
+      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const fetchExamAccessUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${exam.id}/`;
+      const examAccessToken = Factory.build('examAccessToken');
+
+      axiosMock.onGet(examURL).reply(200, { exam });
+      axiosMock.onGet(activeAttemptURL).reply(200, {});
+      axiosMock.onPost(createExamAttemptURL).reply(200, { exam_attempt_id: 1111111 });
+      axiosMock.onGet(fetchExamAccessUrl).reply(200, examAccessToken);
+
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
+      await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
+
+      const state = store.getState();
+      expect(state.examState.examAccessToken).toMatchSnapshot();
+    });
+
+    it('Should fail to fetch if no exam id', async () => {
+      const fetchExamAccessUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${exam.id}/`;
+      axiosMock.onGet(fetchExamAccessUrl).reply(200, {});
+      await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
+
+      const state = store.getState();
+      expect(state.examState.examAccessToken.exam_access_token).toBe('');
+    });
+
+    it('Should fail to fetch if API error occurs', async () => {
+      const createExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
+      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const fetchExamAccessUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${exam.id}/`;
+
+      axiosMock.onGet(examURL).reply(200, { exam });
+      axiosMock.onGet(activeAttemptURL).reply(200, {});
+      axiosMock.onPost(createExamAttemptURL).reply(200, { exam_attempt_id: 1111111 });
+      axiosMock.onGet(fetchExamAccessUrl).reply(400, { detail: 'Exam access token not granted' });
+
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
+      await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
+
+      const state = store.getState();
+      expect(state.examState.examAccessToken.exam_access_token).toBe('');
     });
   });
 
@@ -668,14 +742,18 @@ describe('Data layer integration tests', () => {
       const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
       const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
-      axiosMock.onGet(examURL).reply(200, { exam });
-      axiosMock.onGet(activeAttemptURL).reply(200, {});
-      axiosMock.onPost(createExamAttemptURL).reply(200, { exam_attempt_id: 1111111 });
+      axiosMock.onGet(examURL)
+        .reply(200, { exam });
+      axiosMock.onGet(activeAttemptURL)
+        .reply(200, {});
+      axiosMock.onPost(createExamAttemptURL)
+        .reply(200, { exam_attempt_id: 1111111 });
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
 
-      expect(axiosMock.history.post[0].url).toEqual(createExamAttemptURL);
+      expect(axiosMock.history.post[0].url)
+        .toEqual(createExamAttemptURL);
     });
 
     it('Should call the exams service for update attempt', async () => {
@@ -689,7 +767,8 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
-      expect(axiosMock.history.put[0].url).toEqual(updateExamAttemptURL);
+      expect(axiosMock.history.put[0].url)
+        .toEqual(updateExamAttemptURL);
     });
 
     it('Should call the exams service to fetch attempt data', async () => {
@@ -701,11 +780,14 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
 
-      expect(axiosMock.history.get[0].url).toEqual(examURL);
-      expect(axiosMock.history.get[1].url).toEqual(activeAttemptURL);
+      expect(axiosMock.history.get[0].url)
+        .toEqual(examURL);
+      expect(axiosMock.history.get[1].url)
+        .toEqual(activeAttemptURL);
 
       const state = store.getState();
-      expect(state).toMatchSnapshot();
+      expect(state)
+        .toMatchSnapshot();
     });
 
     it('Should call the exams service to get latest attempt data', async () => {
@@ -734,6 +816,68 @@ describe('Data layer integration tests', () => {
 
       expect(afterState).toMatchSnapshot();
       expect(beforeState).not.toEqual(afterState); // Test that the state was updated when polled
+    });
+  });
+});
+
+describe('External API integration tests', () => {
+  let store;
+
+  describe('Test isExam', () => {
+    it('Should return false if exam is not set', async () => {
+      expect(isExam()).toBe(false);
+    });
+  });
+
+  describe('Test getExamAccess', () => {
+    it('Should return empty string if no access token', async () => {
+      expect(getExamAccess()).toBe('');
+    });
+  });
+
+  describe('Test fetchExamAccess', () => {
+    beforeAll(async () => {
+      mergeConfig({
+        EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
+      });
+    });
+
+    it('Should dispatch get exam access token', async () => {
+      const mockDispatch = jest.fn(() => store.dispatch);
+      const mockState = jest.fn(() => store.getState);
+      const dispatchReturn = fetchExamAccess(mockDispatch, mockState);
+      expect(dispatchReturn).toBeInstanceOf(Promise);
+    });
+  });
+});
+
+describe('External API integration tests', () => {
+  let store;
+
+  describe('Test isExam', () => {
+    it('Should return false if exam is not set', async () => {
+      expect(isExam()).toBe(false);
+    });
+  });
+
+  describe('Test getExamAccess', () => {
+    it('Should return empty string if no access token', async () => {
+      expect(getExamAccess()).toBe('');
+    });
+  });
+
+  describe('Test fetchExamAccess', () => {
+    beforeAll(async () => {
+      mergeConfig({
+        EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
+      });
+    });
+
+    it('Should dispatch get exam access token', async () => {
+      const mockDispatch = jest.fn(() => store.dispatch);
+      const mockState = jest.fn(() => store.getState);
+      const dispatchReturn = fetchExamAccess(mockDispatch, mockState);
+      expect(dispatchReturn).toBeInstanceOf(Promise);
     });
   });
 });

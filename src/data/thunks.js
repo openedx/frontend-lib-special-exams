@@ -1,4 +1,5 @@
 import { logError } from '@edx/frontend-platform/logging';
+import { getConfig } from '@edx/frontend-platform';
 import {
   fetchExamAttemptsData,
   fetchLatestAttempt,
@@ -13,6 +14,7 @@ import {
   resetAttempt,
   declineAttempt,
   endExamWithFailure,
+  fetchExamAccessToken,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -21,6 +23,7 @@ import {
   expireExamAttempt,
   setActiveAttempt,
   setProctoringSettings,
+  setExamAccessToken,
   setReviewPolicy,
   setApiError,
   setAllowProctoringOptOut,
@@ -60,7 +63,6 @@ function updateAttemptAfter(courseId, sequenceId, promiseToBeResolvedFirst = nul
         if (!noLoading) { dispatch(setIsLoading({ isLoading: false })); }
       }
     }
-
     try {
       const attemptData = await fetchExamAttemptsData(courseId, sequenceId);
       dispatch(setExamState({
@@ -112,6 +114,25 @@ export function getProctoringSettings() {
       dispatch(setProctoringSettings({ proctoringSettings }));
     } catch (error) {
       handleAPIError(error, dispatch);
+    }
+  };
+}
+
+export function examRequiresAccessToken() {
+  return async (dispatch, getState) => {
+    if (!getConfig().EXAMS_BASE_URL) {
+      return;
+    }
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to get exam access token. No exam id.');
+      return;
+    }
+    try {
+      const examAccessToken = await fetchExamAccessToken(exam.id);
+      dispatch(setExamAccessToken({ examAccessToken }));
+    } catch (error) {
+      logError('Exam access token was not granted.');
     }
   };
 }
