@@ -31,7 +31,6 @@ export async function fetchExamAttemptsData(courseId, sequenceId) {
   return data;
 }
 
-//
 export async function fetchLatestAttempt(courseId) {
   let data;
   if (!getConfig().EXAMS_BASE_URL) {
@@ -52,7 +51,18 @@ export async function fetchLatestAttempt(courseId) {
 }
 
 export async function pollExamAttempt(url) {
-  const { data } = await getAuthenticatedHttpClient().get(`${getConfig().LMS_BASE_URL}${url}`);
+  let data;
+  if (!getConfig().EXAMS_BASE_URL) {
+    const edxProctoringURL = new URL(
+      `${getConfig().LMS_BASE_URL}${url}`,
+    );
+    const urlResponse = await getAuthenticatedHttpClient().get(edxProctoringURL.href);
+    data = urlResponse.data;
+  } else {
+    const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
+    const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
+    data.active_attempt = activeAttemptResponse.data.attempt;
+  }
   return data;
 }
 

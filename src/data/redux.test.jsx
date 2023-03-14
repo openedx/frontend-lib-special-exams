@@ -708,16 +708,32 @@ describe('Data layer integration tests', () => {
       expect(state).toMatchSnapshot();
     });
 
-    it('Should call the exams service to get latest attempt data', async () => {
-      const attemptDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-      axiosMock.onGet(attemptDataUrl).reply(200, { attempt });
+    it('Should call the exams service to poll/refresh latest attempt data', async () => {
+      // Mock the endpoints that will be called on edx-exams
+      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
-      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      axiosMock.onGet(examURL).reply(200, { exam });
+      axiosMock.onGet(activeAttemptURL).reply(200, { attempt });
 
-      expect(axiosMock.history.get[0].url).toEqual(attemptDataUrl);
+      // make sure that the state is initialized by calling "getExamAttemptsData" first
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
 
+      // Execute the pollAttempt thunk on the edx-exams endpoint
+      await executeThunk(thunks.pollAttempt(), store.dispatch, store.getState);
+
+      // expect history to have the URL
+      expect(axiosMock.history.get[0].url).toEqual(examURL);
+      expect(axiosMock.history.get[1].url).toEqual(activeAttemptURL);
+
+      // make sure that the state matches whatever should be updated
       const state = store.getState();
+
+      // check it against an auto-generated snapshot
+      // btw, test data is auto-generated, manually verify it.
       expect(state).toMatchSnapshot();
+
+      // run "npm run test [testfile name]"
     });
   });
 });

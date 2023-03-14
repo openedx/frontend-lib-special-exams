@@ -84,7 +84,7 @@ Object {
 }
 `;
 
-exports[`Data layer integration tests Test exams IDA url Should call the exams service to get latest attempt data 1`] = `
+exports[`Data layer integration tests Test exams IDA url Should call the exams service to poll/refresh latest attempt data 1`] = `
 Object {
   "examState": Object {
     "activeAttempt": Object {
@@ -105,8 +105,49 @@ Object {
       "total_time": "30 minutes",
     },
     "allowProctoringOptOut": false,
-    "apiErrorMsg": "",
-    "exam": Object {},
+    "apiErrorMsg": "Cannot set properties of undefined (setting 'active_attempt')",
+    "exam": Object {
+      "attempt": Object {
+        "accessibility_time_string": "you have 30 minutes remaining",
+        "attempt_code": "",
+        "attempt_id": 1,
+        "attempt_status": "started",
+        "course_id": "course-v1:test+special+exam",
+        "critically_low_threshold_sec": 90,
+        "desktop_application_js_url": "",
+        "exam_display_name": "timed",
+        "exam_started_poll_url": "/api/edx_proctoring/v1/proctored_exam/attempt/1",
+        "exam_type": "a timed exam",
+        "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
+        "in_timed_exam": true,
+        "low_threshold_sec": 360,
+        "software_download_url": "",
+        "taking_as_proctored": false,
+        "time_remaining_seconds": 1799.9,
+        "total_time": "30 minutes",
+      },
+      "backend": "test",
+      "content_id": "block-v1:test+special+exam+type@sequential+block@abc123",
+      "course_id": "course-v1:test+special+exam",
+      "due_date": null,
+      "exam_name": "prock exam",
+      "external_id": null,
+      "hide_after_due": false,
+      "id": 1,
+      "is_active": true,
+      "is_practice_exam": false,
+      "is_proctored": false,
+      "prerequisite_status": Object {
+        "are_prerequisites_satisifed": true,
+        "declined_prerequisites": Array [],
+        "failed_prerequisites": Array [],
+        "pending_prerequisites": Array [],
+        "satisfied_prerequisites": Array [],
+      },
+      "time_limit_mins": 30,
+      "total_time": "30 minutes",
+      "type": "timed",
+    },
     "isLoading": false,
     "proctoringSettings": Object {
       "contact_us": "",
