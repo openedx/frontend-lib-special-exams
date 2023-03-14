@@ -2,13 +2,13 @@ import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
 import OuterExamTimer from './OuterExamTimer';
-import { store, getExamAttemptsData } from '../data';
+import { store, getLatestAttemptData } from '../data';
 import { render } from '../setupTest';
 import { ExamStatus } from '../constants';
 
 jest.mock('../data', () => ({
   store: {},
-  getExamAttemptsData: jest.fn(),
+  getLatestAttemptData: jest.fn(),
   Emitter: {
     on: () => jest.fn(),
     once: () => jest.fn(),
@@ -16,7 +16,7 @@ jest.mock('../data', () => ({
     emit: () => jest.fn(),
   },
 }));
-getExamAttemptsData.mockReturnValue(jest.fn());
+getLatestAttemptData.mockReturnValue(jest.fn());
 store.subscribe = jest.fn();
 store.dispatch = jest.fn();
 
