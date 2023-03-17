@@ -4,15 +4,50 @@ import { ExamAction } from '../constants';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 
+async function fetchActiveAttempt() {
+  const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
+  const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
+  return activeAttemptResponse.data.attempt;
+}
+
 export async function fetchExamAttemptsData(courseId, sequenceId) {
-  const url = new URL(
-    `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`,
-  );
-  if (sequenceId) {
+  let data;
+  if (!getConfig().EXAMS_BASE_URL) {
+    const url = new URL(
+      `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`,
+    );
     url.searchParams.append('content_id', sequenceId);
+    url.searchParams.append('is_learning_mfe', true);
+    const urlResponse = await getAuthenticatedHttpClient().get(url.href);
+    data = urlResponse.data;
+  } else {
+    const examUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${sequenceId}`);
+    const examResponse = await getAuthenticatedHttpClient().get(examUrl.href);
+    data = examResponse.data;
+
+    const attemptData = await fetchActiveAttempt();
+    data.active_attempt = attemptData;
   }
-  url.searchParams.append('is_learning_mfe', true);
-  const { data } = await getAuthenticatedHttpClient().get(url.href);
+  return data;
+}
+
+//
+export async function fetchLatestAttempt(courseId) {
+  let data;
+  if (!getConfig().EXAMS_BASE_URL) {
+    const url = new URL(
+      `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`,
+    );
+    url.searchParams.append('is_learning_mfe', true);
+    const urlResponse = await getAuthenticatedHttpClient().get(url.href);
+    data = urlResponse.data;
+  } else {
+    // initialize data dictionary to be similar to what edx-proctoring returns
+    data = { exam: {} };
+
+    const attemptData = await fetchActiveAttempt();
+    data.active_attempt = attemptData;
+  }
   return data;
 }
 
@@ -26,7 +61,7 @@ export async function createExamAttempt(examId, startClock = true, attemptProcto
   if (!getConfig().EXAMS_BASE_URL) {
     urlString = `${getConfig().LMS_BASE_URL}${BASE_API_URL}`;
   } else {
-    urlString = `${getConfig().EXAMS_BASE_URL}/exams/attempt`;
+    urlString = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
   }
   const url = new URL(urlString);
   const payload = {
@@ -43,7 +78,7 @@ export async function updateAttemptStatus(attemptId, action, detail = null) {
   if (!getConfig().EXAMS_BASE_URL) {
     urlString = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attemptId}`;
   } else {
-    urlString = `${getConfig().EXAMS_BASE_URL}/attempt/${attemptId}`;
+    urlString = `${getConfig().EXAMS_BASE_URL}/api/v1/attempt/${attemptId}`;
   }
   const url = new URL(urlString);
   const payload = { action };

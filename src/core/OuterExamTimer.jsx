@@ -12,7 +12,7 @@ const ExamTimer = ({ courseId }) => {
   const {
     activeAttempt, showTimer, stopExam, submitExam,
     expireExam, pollAttempt, apiErrorMsg, pingAttempt,
-    getExamAttemptsData,
+    getLatestAttemptData,
   } = state;
 
   // if user is not authenticated they cannot have active exam, so no need for timer
@@ -22,7 +22,7 @@ const ExamTimer = ({ courseId }) => {
   }
 
   useEffect(() => {
-    getExamAttemptsData(courseId);
+    getLatestAttemptData(courseId);
   }, [courseId]);
 
   return (

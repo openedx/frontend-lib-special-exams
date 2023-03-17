@@ -644,6 +644,18 @@ describe('Data layer integration tests', () => {
     });
   });
 
+  describe('Test getLatestAttemptData', () => {
+    it('Should get, and save latest attempt', async () => {
+      const attemptDataUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}?is_learning_mfe=true`;
+      axiosMock.onGet(attemptDataUrl).reply(200, { exam: {}, active_attempt: attempt });
+
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+
+      const state = store.getState();
+      expect(state).toMatchSnapshot();
+    });
+  });
+
   describe('Test exams IDA url', () => {
     beforeAll(async () => {
       mergeConfig({
@@ -652,9 +664,12 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should call the exams service for create attempt', async () => {
-      const createExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/exams/attempt`;
+      const createExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
+      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: {} });
+      axiosMock.onGet(examURL).reply(200, { exam });
+      axiosMock.onGet(activeAttemptURL).reply(200, {});
       axiosMock.onPost(createExamAttemptURL).reply(200, { exam_attempt_id: 1111111 });
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
@@ -664,14 +679,45 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should call the exams service for update attempt', async () => {
-      const updateExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/attempt/${attempt.attempt_id}`;
+      const updateExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/attempt/${attempt.attempt_id}`;
+      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: {}, active_attempt: attempt });
+      axiosMock.onGet(examURL).reply(200, { exam });
+      axiosMock.onGet(activeAttemptURL).reply(200, { attempt });
       axiosMock.onPut(updateExamAttemptURL).reply(200, { exam_attempt_id: attempt.attempt_id });
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
       expect(axiosMock.history.put[0].url).toEqual(updateExamAttemptURL);
+    });
+
+    it('Should call the exams service to fetch attempt data', async () => {
+      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+
+      axiosMock.onGet(examURL).reply(200, { exam });
+      axiosMock.onGet(activeAttemptURL).reply(200, { attempt });
+
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+
+      expect(axiosMock.history.get[0].url).toEqual(examURL);
+      expect(axiosMock.history.get[1].url).toEqual(activeAttemptURL);
+
+      const state = store.getState();
+      expect(state).toMatchSnapshot();
+    });
+
+    it('Should call the exams service to get latest attempt data', async () => {
+      const attemptDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      axiosMock.onGet(attemptDataUrl).reply(200, { attempt });
+
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+
+      expect(axiosMock.history.get[0].url).toEqual(attemptDataUrl);
+
+      const state = store.getState();
+      expect(state).toMatchSnapshot();
     });
   });
 });
