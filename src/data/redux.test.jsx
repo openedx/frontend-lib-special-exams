@@ -708,32 +708,33 @@ describe('Data layer integration tests', () => {
       expect(state).toMatchSnapshot();
     });
 
-    it('Should call the exams service to poll/refresh latest attempt data', async () => {
-      // Mock the endpoints that will be called on edx-exams
+    it('Should call the exams service to get latest attempt data', async () => {
       const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
       const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
       axiosMock.onGet(examURL).reply(200, { exam });
       axiosMock.onGet(activeAttemptURL).reply(200, { attempt });
 
-      // make sure that the state is initialized by calling "getExamAttemptsData" first
+      const dummyURL = `${getConfig().EXAMS_BASE_URL}/edx-proctoring/dummy-url`;
+
+      // Poll once with un-initialized state
+      await executeThunk(thunks.pollAttempt(dummyURL), store.dispatch, store.getState);
+      const beforeState = store.getState();
+
+      // Get data, initialize state
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
 
-      // Execute the pollAttempt thunk on the edx-exams endpoint
-      await executeThunk(thunks.pollAttempt(), store.dispatch, store.getState);
+      // Poll with initialized state
+      await executeThunk(thunks.pollAttempt(dummyURL), store.dispatch, store.getState);
+      const afterState = store.getState();
 
-      // expect history to have the URL
-      expect(axiosMock.history.get[0].url).toEqual(examURL);
-      expect(axiosMock.history.get[1].url).toEqual(activeAttemptURL);
+      expect(axiosMock.history.get[0].url).toEqual(activeAttemptURL);
+      expect(axiosMock.history.get[1].url).toEqual(examURL);
+      expect(axiosMock.history.get[2].url).toEqual(activeAttemptURL);
+      expect(axiosMock.history.get[3].url).toEqual(activeAttemptURL);
 
-      // make sure that the state matches whatever should be updated
-      const state = store.getState();
-
-      // check it against an auto-generated snapshot
-      // btw, test data is auto-generated, manually verify it.
-      expect(state).toMatchSnapshot();
-
-      // run "npm run test [testfile name]"
+      expect(afterState).toMatchSnapshot();
+      expect(beforeState).not.toEqual(afterState); // Test that the state was updated when polled
     });
   });
 });
