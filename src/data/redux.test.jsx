@@ -712,7 +712,7 @@ describe('Data layer integration tests', () => {
       const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
       // Updated attempt with changed status
-      const updatedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.SUBMITTED });
+      const updatedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_SUBMIT });
 
       // Get initial data first, then updated data when calling pollAttempt
       axiosMock.onGet(activeAttemptURL).replyOnce(200, { attempt });

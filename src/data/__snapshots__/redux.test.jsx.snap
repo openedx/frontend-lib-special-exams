@@ -91,7 +91,7 @@ Object {
       "accessibility_time_string": "you have 30 minutes remaining",
       "attempt_code": "",
       "attempt_id": 1,
-      "attempt_status": "submitted",
+      "attempt_status": "ready_to_submit",
       "course_id": "course-v1:test+special+exam",
       "desktop_application_js_url": "",
       "exam_display_name": "timed",

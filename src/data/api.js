@@ -60,6 +60,10 @@ export async function pollExamAttempt(url) {
     data = urlResponse.data;
   } else {
     data = await fetchActiveAttempt();
+
+    // Update dictionary to have correct status key for legacy compatibility
+    Object.defineProperty(data, 'status', Object.getOwnPropertyDescriptor(data, 'attempt_status'));
+    delete data.attempt_status;
   }
   return data;
 }
