@@ -7,7 +7,6 @@ const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 async function fetchActiveAttempt() {
   const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
-  // console.log("activeAttemptResponse",activeAttemptResponse)
   return activeAttemptResponse.data.attempt;
 }
 
@@ -47,7 +46,6 @@ export async function fetchLatestAttempt(courseId) {
 
     const attemptData = await fetchActiveAttempt();
     data.active_attempt = attemptData;
-    // console.log("fetchLatestAttempt DATA FETCHED:", data)
   }
   return data;
 }
@@ -62,7 +60,6 @@ export async function pollExamAttempt(url) {
     data = urlResponse.data;
   } else {
     data = await fetchActiveAttempt();
-    // console.log("pollExamAttempt DATA FETCHED:", data)
   }
   return data;
 }

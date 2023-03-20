@@ -233,15 +233,12 @@ export function pollAttempt(url) {
 
     try {
       const data = await pollExamAttempt(url);
-      // console.log("THUNKS DATA:", data)
-      // console.log("CURRENT ATTEMPT DATA:", currentAttempt)
       const updatedAttempt = {
         ...currentAttempt,
         time_remaining_seconds: data.time_remaining_seconds,
         accessibility_time_string: data.accessibility_time_string,
         attempt_status: data.attempt_status,
       };
-      // console.log("NEW ATTEMPT DATA:", updatedAttempt)
       dispatch(setActiveAttempt({
         activeAttempt: updatedAttempt,
       }));

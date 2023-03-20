@@ -719,18 +719,14 @@ describe('Data layer integration tests', () => {
       axiosMock.onGet(activeAttemptURL).reply(200, { attempt: updatedAttempt });
 
       // Get data, initialize state
-      // console.log("ATTEMPT:",attempt)
       await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
       const beforeState = store.getState();
-      // console.log("BEFORE:",beforeState);
       expect(beforeState.examState.activeAttempt).toEqual(attempt);
 
       // Poll with initialized state
-      // console.log("UPDATED ATTEMPT:",updatedAttempt)
       const dummyURL = `${getConfig().EXAMS_BASE_URL}/edx-proctoring/dummy-url`;
       await executeThunk(thunks.pollAttempt(dummyURL), store.dispatch, store.getState);
       const afterState = store.getState();
-      // console.log("AFTER:",afterState);
       expect(afterState.examState.activeAttempt).toEqual(updatedAttempt);
 
       expect(axiosMock.history.get[0].url).toEqual(activeAttemptURL);
