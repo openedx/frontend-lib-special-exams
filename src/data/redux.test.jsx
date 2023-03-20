@@ -722,16 +722,15 @@ describe('Data layer integration tests', () => {
       const beforeState = store.getState();
 
       // Get data, initialize state
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
 
       // Poll with initialized state
       await executeThunk(thunks.pollAttempt(dummyURL), store.dispatch, store.getState);
       const afterState = store.getState();
 
       expect(axiosMock.history.get[0].url).toEqual(activeAttemptURL);
-      expect(axiosMock.history.get[1].url).toEqual(examURL);
+      expect(axiosMock.history.get[1].url).toEqual(activeAttemptURL);
       expect(axiosMock.history.get[2].url).toEqual(activeAttemptURL);
-      expect(axiosMock.history.get[3].url).toEqual(activeAttemptURL);
 
       expect(afterState).toMatchSnapshot();
       expect(beforeState).not.toEqual(afterState); // Test that the state was updated when polled
