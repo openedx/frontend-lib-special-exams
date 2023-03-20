@@ -709,28 +709,32 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should call the exams service to get latest attempt data', async () => {
-      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
       const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
-      axiosMock.onGet(examURL).reply(200, { exam });
-      axiosMock.onGet(activeAttemptURL).reply(200, { attempt });
+      // Updated attempt with changed status
+      const updatedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.SUBMITTED });
 
-      const dummyURL = `${getConfig().EXAMS_BASE_URL}/edx-proctoring/dummy-url`;
-
-      // Poll once with un-initialized state
-      await executeThunk(thunks.pollAttempt(dummyURL), store.dispatch, store.getState);
-      const beforeState = store.getState();
+      // Get initial data first, then updated data when calling pollAttempt
+      axiosMock.onGet(activeAttemptURL).replyOnce(200, { attempt });
+      axiosMock.onGet(activeAttemptURL).reply(200, { attempt: updatedAttempt });
 
       // Get data, initialize state
+      // console.log("ATTEMPT:",attempt)
       await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      const beforeState = store.getState();
+      // console.log("BEFORE:",beforeState);
+      expect(beforeState.examState.activeAttempt).toEqual(attempt);
 
       // Poll with initialized state
+      // console.log("UPDATED ATTEMPT:",updatedAttempt)
+      const dummyURL = `${getConfig().EXAMS_BASE_URL}/edx-proctoring/dummy-url`;
       await executeThunk(thunks.pollAttempt(dummyURL), store.dispatch, store.getState);
       const afterState = store.getState();
+      // console.log("AFTER:",afterState);
+      expect(afterState.examState.activeAttempt).toEqual(updatedAttempt);
 
       expect(axiosMock.history.get[0].url).toEqual(activeAttemptURL);
       expect(axiosMock.history.get[1].url).toEqual(activeAttemptURL);
-      expect(axiosMock.history.get[2].url).toEqual(activeAttemptURL);
 
       expect(afterState).toMatchSnapshot();
       expect(beforeState).not.toEqual(afterState); // Test that the state was updated when polled
