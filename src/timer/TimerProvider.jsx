@@ -13,12 +13,14 @@ import { withExamStore } from '../hocs';
 /* give an extra 5 seconds where the timer holds at 00:00 before page refreshes */
 const GRACE_PERIOD_SECS = 5;
 const POLL_INTERVAL = 60;
+const TIME_LIMIT_CRITICAL_PCT = 0.05;
+const TIME_LIMIT_LOW_PCT = 0.2;
 
 export const TimerContext = React.createContext({});
 
 const mapStateToProps = (state) => {
-  const { activeAttempt } = state.examState;
-  return { attempt: activeAttempt };
+  const { activeAttempt, exam } = state.examState;
+  return { attempt: activeAttempt, timeLimitMins: exam.time_limit_mins };
 };
 
 const getFormattedRemainingTime = (timeLeft) => ({
@@ -28,7 +30,7 @@ const getFormattedRemainingTime = (timeLeft) => ({
 });
 
 const TimerServiceProvider = ({
-  children, attempt, pollHandler, pingHandler,
+  children, attempt, timeLimitMins, pollHandler, pingHandler,
 }) => {
   const [timeState, setTimeState] = useState({});
   const [limitReached, setLimitReached] = useToggle(false);
@@ -36,10 +38,10 @@ const TimerServiceProvider = ({
     desktop_application_js_url: workerUrl,
     ping_interval: pingInterval,
     time_remaining_seconds: timeRemaining,
-    critically_low_threshold_sec: criticalLowTime,
-    low_threshold_sec: lowTime,
   } = attempt;
   const LIMIT = GRACE_PERIOD_SECS ? 0 - GRACE_PERIOD_SECS : 0;
+  const CRITICAL_LOW_TIME = timeLimitMins * 60 * TIME_LIMIT_CRITICAL_PCT;
+  const LOW_TIME = timeLimitMins * 60 * TIME_LIMIT_LOW_PCT;
   let liveInterval = null;
 
   const getTimeString = () => Object.values(timeState).map(
@@ -58,9 +60,9 @@ const TimerServiceProvider = ({
   };
 
   const processTimeLeft = (timer, secondsLeft) => {
-    if (secondsLeft <= criticalLowTime) {
+    if (secondsLeft <= CRITICAL_LOW_TIME) {
       Emitter.emit(TIMER_IS_CRITICALLY_LOW);
-    } else if (secondsLeft <= lowTime) {
+    } else if (secondsLeft <= LOW_TIME) {
       Emitter.emit(TIMER_IS_LOW);
     }
     // Used to hide continue exam button on submit exam pages.
@@ -115,14 +117,13 @@ const TimerServiceProvider = ({
 TimerServiceProvider.propTypes = {
   attempt: PropTypes.shape({
     time_remaining_seconds: PropTypes.number.isRequired,
-    critically_low_threshold_sec: PropTypes.number.isRequired,
-    low_threshold_sec: PropTypes.number.isRequired,
     exam_started_poll_url: PropTypes.string,
     desktop_application_js_url: PropTypes.string,
     ping_interval: PropTypes.number,
     taking_as_proctored: PropTypes.bool,
     attempt_status: PropTypes.string.isRequired,
   }).isRequired,
+  timeLimitMins: PropTypes.number.isRequired,
   children: PropTypes.element.isRequired,
   pollHandler: PropTypes.func,
   pingHandler: PropTypes.func,
