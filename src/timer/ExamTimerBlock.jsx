@@ -136,8 +136,6 @@ ExamTimerBlock.propTypes = {
     exam_url_path: PropTypes.string.isRequired,
     exam_display_name: PropTypes.string.isRequired,
     time_remaining_seconds: PropTypes.number.isRequired,
-    low_threshold_sec: PropTypes.number.isRequired,
-    critically_low_threshold_sec: PropTypes.number.isRequired,
   }),
   stopExamAttempt: PropTypes.func.isRequired,
   expireExamAttempt: PropTypes.func.isRequired,

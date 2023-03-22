@@ -30,7 +30,9 @@ describe('OuterExamTimer', () => {
     store.getState = () => ({
       examState: {
         activeAttempt: attempt,
-        exam: {},
+        exam: {
+          time_limit_mins: 60,
+        },
       },
     });
 
