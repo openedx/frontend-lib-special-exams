@@ -236,6 +236,63 @@ export function skipProctoringExam() {
   };
 }
 
+/*
+Converts the given value in minutes to a more human readable format
+1 -> 1 Minute
+2 -> 2 Minutes
+60 -> 1 hour
+90 -> 1 hour and 30 Minutes
+120 -> 2 hours
+*/
+function humanizedTime(timeInMinutes) {
+  const hours = Number.parseInt(timeInMinutes / 60, 10);
+  const minutes = timeInMinutes % 60;
+  let hoursPresent = false;
+  let template;
+
+  if (hours === 0) {
+    hoursPresent = false;
+    template = '';
+  } else if (hours === 1) {
+    template = ('{numOfHours} hour');
+    hoursPresent = true;
+  } else if (hours >= 2) {
+    template = ('{numOfHours} hours');
+    hoursPresent = true;
+  } else {
+    template = 'error';
+  }
+
+  if (template !== 'error') {
+    if (minutes === 0) {
+      if (!hoursPresent) {
+        template = ('{numOfMinutes} minutes');
+      }
+    } else if (minutes === 1) {
+      if (hoursPresent) {
+        template += (' and {numOfMinutes} minute');
+      } else {
+        template += ('{numOfMinutes} minute');
+      }
+    } else if (hoursPresent) {
+      template += (' and {numOfMinutes} minutes');
+    } else {
+      template += ('{numOfMinutes} minutes');
+    }
+  }
+
+  const humanTime = template.format({
+    numOfHours: hours,
+    numOfMinutes: minutes,
+  });
+  return humanTime;
+}
+
+function generateAccessibilityString(timeRemainingSeconds) {
+  const remainingTime = humanizedTime(parseInt(Math.round(timeRemainingSeconds / 60.0, 0), 10));
+  return `you have ${remainingTime} remaining`;
+}
+
 /**
  * Poll exam active attempt status.
  * @param url - poll attempt url
@@ -256,8 +313,8 @@ export function pollAttempt(url) {
       const data = await pollExamAttempt(url);
       const updatedAttempt = {
         ...currentAttempt,
-        time_remaining_seconds: data.time_remaining_seconds,
-        accessibility_time_string: data.accessibility_time_string,
+        timeRemainingSeconds: data.timeRemainingSeconds,
+        accessibility_time_string: generateAccessibilityString(data.timeRemainingSeconds),
         attempt_status: data.status,
       };
       dispatch(setActiveAttempt({
