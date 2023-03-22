@@ -1,6 +1,7 @@
 import { logError } from '@edx/frontend-platform/logging';
 import {
   fetchExamAttemptsData,
+  fetchLatestAttempt,
   createExamAttempt,
   stopAttempt,
   continueAttempt,
@@ -76,6 +77,23 @@ function updateAttemptAfter(courseId, sequenceId, promiseToBeResolvedFirst = nul
 
 export function getExamAttemptsData(courseId, sequenceId) {
   return updateAttemptAfter(courseId, sequenceId);
+}
+
+export function getLatestAttemptData(courseId) {
+  return async (dispatch) => {
+    dispatch(setIsLoading({ isLoading: true }));
+    try {
+      const attemptData = await fetchLatestAttempt(courseId);
+      dispatch(setExamState({
+        exam: attemptData.exam,
+        activeAttempt: !isEmpty(attemptData.active_attempt) ? attemptData.active_attempt : null,
+      }));
+    } catch (error) {
+      handleAPIError(error, dispatch);
+    } finally {
+      dispatch(setIsLoading({ isLoading: false }));
+    }
+  };
 }
 
 export function getProctoringSettings() {

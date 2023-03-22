@@ -1,5 +1,6 @@
 export {
   getExamAttemptsData,
+  getLatestAttemptData,
   getProctoringSettings,
   startTimedExam,
   startProctoredExam,
