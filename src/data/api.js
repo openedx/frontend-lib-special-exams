@@ -90,7 +90,7 @@ export async function updateAttemptStatus(attemptId, action, detail = null) {
   if (!getConfig().EXAMS_BASE_URL) {
     urlString = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attemptId}`;
   } else {
-    urlString = `${getConfig().EXAMS_BASE_URL}/api/v1/attempt/${attemptId}`;
+    urlString = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/${attemptId}`;
   }
   const url = new URL(urlString);
   const payload = { action };
