@@ -818,6 +818,8 @@ describe('Data layer integration tests', () => {
       expect(beforeState).not.toEqual(afterState); // Test that the state was updated when polled
     });
   });
+  // TODO: Insert tests somewhere in here that just test `generateAccessibilityString()` to make sure it works right.
+  // TODO: Also, move that function to the api.js? maybe??? idk.
 });
 
 describe('External API integration tests', () => {

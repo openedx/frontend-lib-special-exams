@@ -236,58 +236,41 @@ export function skipProctoringExam() {
   };
 }
 
-/*
-Converts the given value in minutes to a more human readable format
-1 -> 1 Minute
-2 -> 2 Minutes
-60 -> 1 hour
-90 -> 1 hour and 30 Minutes
-120 -> 2 hours
-*/
+/**
+ * Converts the given value in minutes to a more human readable format
+ * 1 -> 1 Minute
+ * 2 -> 2 Minutes
+ * 60 -> 1 hour
+ * 90 -> 1 hour and 30 Minutes
+ * 120 -> 2 hours
+ * @param timeInMinutes - The exam time remaining as an integer of minutes
+ * @returns - The time remaining as a human-readable string
+ */
 function humanizedTime(timeInMinutes) {
   const hours = Number.parseInt(timeInMinutes / 60, 10);
   const minutes = timeInMinutes % 60;
-  let hoursPresent = false;
-  let template;
+  let remainingTime = '';
 
-  if (hours === 0) {
-    hoursPresent = false;
-    template = '';
-  } else if (hours === 1) {
-    template = ('{numOfHours} hour');
-    hoursPresent = true;
-  } else if (hours >= 2) {
-    template = ('{numOfHours} hours');
-    hoursPresent = true;
-  } else {
-    template = 'error';
-  }
-
-  if (template !== 'error') {
-    if (minutes === 0) {
-      if (!hoursPresent) {
-        template = ('{numOfMinutes} minutes');
-      }
-    } else if (minutes === 1) {
-      if (hoursPresent) {
-        template += (' and {numOfMinutes} minute');
-      } else {
-        template += ('{numOfMinutes} minute');
-      }
-    } else if (hoursPresent) {
-      template += (' and {numOfMinutes} minutes');
-    } else {
-      template += ('{numOfMinutes} minutes');
+  if (hours !== 0) {
+    remainingTime += `${hours} hour`;
+    if (hours >= 2) {
+      remainingTime += 's';
     }
+    remainingTime += ' and ';
+  }
+  remainingTime += `${minutes} minute`;
+  if (minutes !== 1) {
+    remainingTime += 's';
   }
 
-  const humanTime = template.format({
-    numOfHours: hours,
-    numOfMinutes: minutes,
-  });
-  return humanTime;
+  return remainingTime;
 }
 
+/**
+ * Generates an accessibility_time_string.
+ * @param timeRemainingSeconds -  The exam time remaining as an integer of minutes
+ * @returns - An accessibility string for knowing how much time emains in the exam
+ */
 function generateAccessibilityString(timeRemainingSeconds) {
   const remainingTime = humanizedTime(parseInt(Math.round(timeRemainingSeconds / 60.0, 0), 10));
   return `you have ${remainingTime} remaining`;
@@ -313,8 +296,8 @@ export function pollAttempt(url) {
       const data = await pollExamAttempt(url);
       const updatedAttempt = {
         ...currentAttempt,
-        timeRemainingSeconds: data.timeRemainingSeconds,
-        accessibility_time_string: generateAccessibilityString(data.timeRemainingSeconds),
+        time_remaining_seconds: data.time_remaining_seconds,
+        accessibility_time_string: generateAccessibilityString(data.time_remaining_seconds),
         attempt_status: data.status,
       };
       dispatch(setActiveAttempt({
