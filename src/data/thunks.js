@@ -233,11 +233,15 @@ export function pollAttempt(url) {
 
     try {
       const data = await pollExamAttempt(url);
-      const updatedAttempt = {
-        ...currentAttempt,
+      const updatedAttemptInner = {
+        ...currentAttempt.attempt,
         time_remaining_seconds: data.time_remaining_seconds,
         accessibility_time_string: data.accessibility_time_string,
         attempt_status: data.status,
+      };
+      // Re-form data to correct shape
+      const updatedAttempt = {
+        attempt: updatedAttemptInner,
       };
       dispatch(setActiveAttempt({
         activeAttempt: updatedAttempt,

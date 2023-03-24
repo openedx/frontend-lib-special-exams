@@ -679,13 +679,13 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should call the exams service for update attempt', async () => {
-      const updateExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/attempt/${attempt.attempt_id}`;
+      const updateExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/${attempt.id}`;
       const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
       const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
       axiosMock.onGet(examURL).reply(200, { exam });
       axiosMock.onGet(activeAttemptURL).reply(200, { attempt });
-      axiosMock.onPut(updateExamAttemptURL).reply(200, { exam_attempt_id: attempt.attempt_id });
+      axiosMock.onPut(updateExamAttemptURL).reply(200, { exam_attempt_id: attempt.id });
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
@@ -721,13 +721,13 @@ describe('Data layer integration tests', () => {
       // Get data, initialize state
       await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
       const beforeState = store.getState();
-      expect(beforeState.examState.activeAttempt).toEqual(attempt);
+      expect(beforeState.examState.activeAttempt.attempt).toEqual(attempt);
 
       // Poll with initialized state
       const dummyURL = `${getConfig().EXAMS_BASE_URL}/edx-proctoring/dummy-url`;
       await executeThunk(thunks.pollAttempt(dummyURL), store.dispatch, store.getState);
       const afterState = store.getState();
-      expect(afterState.examState.activeAttempt).toEqual(updatedAttempt);
+      expect(afterState.examState.activeAttempt.attempt).toEqual(updatedAttempt);
 
       expect(axiosMock.history.get[0].url).toEqual(activeAttemptURL);
       expect(axiosMock.history.get[1].url).toEqual(activeAttemptURL);
