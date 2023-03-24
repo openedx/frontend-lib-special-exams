@@ -7,7 +7,7 @@ const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 async function fetchActiveAttempt() {
   const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
-  return activeAttemptResponse.data.attempt;
+  return activeAttemptResponse.data;
 }
 
 export async function fetchExamAttemptsData(courseId, sequenceId) {
