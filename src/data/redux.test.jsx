@@ -679,13 +679,13 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should call the exams service for update attempt', async () => {
-      const updateExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/attempt/${attempt.attempt_id}`;
+      const updateExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/${attempt.id}`;
       const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
       const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
       axiosMock.onGet(examURL).reply(200, { exam });
       axiosMock.onGet(activeAttemptURL).reply(200, { attempt });
-      axiosMock.onPut(updateExamAttemptURL).reply(200, { exam_attempt_id: attempt.attempt_id });
+      axiosMock.onPut(updateExamAttemptURL).reply(200, { exam_attempt_id: attempt.id });
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
@@ -697,7 +697,7 @@ describe('Data layer integration tests', () => {
       const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
       axiosMock.onGet(examURL).reply(200, { exam });
-      axiosMock.onGet(activeAttemptURL).reply(200, { attempt });
+      axiosMock.onGet(activeAttemptURL).reply(200, attempt);
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
 
@@ -709,15 +709,31 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should call the exams service to get latest attempt data', async () => {
-      const attemptDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-      axiosMock.onGet(attemptDataUrl).reply(200, { attempt });
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
 
+      // Updated attempt with changed status
+      const updatedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_SUBMIT });
+
+      // Get initial data first, then updated data when calling pollAttempt
+      axiosMock.onGet(activeAttemptURL).replyOnce(200, attempt);
+      axiosMock.onGet(activeAttemptURL).reply(200, updatedAttempt);
+
+      // Get data, initialize state
       await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      const beforeState = store.getState();
+      expect(beforeState.examState.activeAttempt).toEqual(attempt);
 
-      expect(axiosMock.history.get[0].url).toEqual(attemptDataUrl);
+      // Poll with initialized state
+      const dummyURL = `${getConfig().EXAMS_BASE_URL}/edx-proctoring/dummy-url`;
+      await executeThunk(thunks.pollAttempt(dummyURL), store.dispatch, store.getState);
+      const afterState = store.getState();
+      expect(afterState.examState.activeAttempt).toEqual(updatedAttempt);
 
-      const state = store.getState();
-      expect(state).toMatchSnapshot();
+      expect(axiosMock.history.get[0].url).toEqual(activeAttemptURL);
+      expect(axiosMock.history.get[1].url).toEqual(activeAttemptURL);
+
+      expect(afterState).toMatchSnapshot();
+      expect(beforeState).not.toEqual(afterState); // Test that the state was updated when polled
     });
   });
 });
