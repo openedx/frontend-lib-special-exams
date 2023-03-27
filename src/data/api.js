@@ -7,7 +7,7 @@ const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 async function fetchActiveAttempt() {
   const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
-  return activeAttemptResponse.data.attempt;
+  return activeAttemptResponse.data;
 }
 
 export async function fetchExamAttemptsData(courseId, sequenceId) {
@@ -31,7 +31,6 @@ export async function fetchExamAttemptsData(courseId, sequenceId) {
   return data;
 }
 
-//
 export async function fetchLatestAttempt(courseId) {
   let data;
   if (!getConfig().EXAMS_BASE_URL) {
@@ -52,7 +51,22 @@ export async function fetchLatestAttempt(courseId) {
 }
 
 export async function pollExamAttempt(url) {
-  const { data } = await getAuthenticatedHttpClient().get(`${getConfig().LMS_BASE_URL}${url}`);
+  let data;
+  if (!getConfig().EXAMS_BASE_URL) {
+    const edxProctoringURL = new URL(
+      `${getConfig().LMS_BASE_URL}${url}`,
+    );
+    const urlResponse = await getAuthenticatedHttpClient().get(edxProctoringURL.href);
+    data = urlResponse.data;
+  } else {
+    data = await fetchActiveAttempt();
+
+    // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
+    if (data.attempt_status) {
+      data.status = data.attempt_status;
+      delete data.attempt_status;
+    }
+  }
   return data;
 }
 
@@ -78,7 +92,7 @@ export async function updateAttemptStatus(attemptId, action, detail = null) {
   if (!getConfig().EXAMS_BASE_URL) {
     urlString = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attemptId}`;
   } else {
-    urlString = `${getConfig().EXAMS_BASE_URL}/api/v1/attempt/${attemptId}`;
+    urlString = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/${attemptId}`;
   }
   const url = new URL(urlString);
   const payload = { action };
