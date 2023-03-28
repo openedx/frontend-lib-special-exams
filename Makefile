@@ -32,6 +32,7 @@ i18n.extract:
 
 i18n.concat:
 	# Gathering JSON messages into one file...
+	mkdir -p $(i18n)
 	$(transifex_utils) $(transifex_temp) $(transifex_input)
 
 extract_translations: | requirements i18n.extract i18n.concat
