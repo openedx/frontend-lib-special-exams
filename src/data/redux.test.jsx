@@ -819,7 +819,74 @@ describe('Data layer integration tests', () => {
     });
   });
   // TODO: Insert tests somewhere in here that just test `generateAccessibilityString()` to make sure it works right.
-  // TODO: Also, move that function to the api.js? maybe??? idk.
+  describe('Test generateAccessibilityString helper function', () => {
+    // Test w/ edx-exams IDA since it does not generate a11y strings
+    beforeAll(async () => {
+      mergeConfig({
+        EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
+      });
+    });
+
+    // possible values:
+    // hour: X hours and, 1 hour and, None
+    // minutes: X minutes, 1 minute
+
+    it('All zero', async () => {
+      // Excepted: "0 minutes"
+      // Make an attempt object w/ time remaining respective to test
+      // Create a mock response from the API
+      
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const timed_attempt = Factory.build('attempt', { time_remaining_seconds: 0 });
+      // console.log("inital:", timed_attempt);
+      
+      axiosMock.onGet(activeAttemptURL).reply(200, timed_attempt);
+      
+      // Get data
+      // console.log("ALL ZERO")
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      const state = store.getState();
+      
+      // Make sure the a11y string saved to the state is what's expected
+      const a11y = state.examState.activeAttempt.accessibility_time_string
+      // console.log("state:", state.examState.activeAttempt);
+      // console.log("a11y:", a11y);
+      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 0 minutes remaining')
+    });
+    it('1 hour and 1 minute', async () => {
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const timed_attempt = Factory.build('attempt', { time_remaining_seconds: 3660 });
+      
+      axiosMock.onGet(activeAttemptURL).reply(200, timed_attempt);
+      
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      const state = store.getState();
+      
+      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 1 hour and 1 minute remaining')
+      
+    });
+    it('All more than 1', async () => {
+      // Excepted: "2 hours and 2 minutes"
+      // Make an attempt object w/ time remaining respective to test
+      // Create a mock response from the API
+      // Make sure the a11y string saved to the state is what's expected
+      
+    });
+    it('Zero hours, multiple minutes', async () => {
+      // Excepted: "50 minutes"
+      // Make an attempt object w/ time remaining respective to test
+      // Create a mock response from the API
+      // Make sure the a11y string saved to the state is what's expected
+      
+    });
+    it('Multiple hours, zero minutes', async () => {
+      // Excepted: "2 hours and 0 minutes"
+      // Make an attempt object w/ time remaining respective to test
+      // Create a mock response from the API
+      // Make sure the a11y string saved to the state is what's expected
+      
+    });
+  });
 });
 
 describe('External API integration tests', () => {
