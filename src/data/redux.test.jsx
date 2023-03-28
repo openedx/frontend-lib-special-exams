@@ -818,7 +818,6 @@ describe('Data layer integration tests', () => {
       expect(beforeState).not.toEqual(afterState); // Test that the state was updated when polled
     });
   });
-  // TODO: Insert tests somewhere in here that just test `generateAccessibilityString()` to make sure it works right.
   describe('Test generateAccessibilityString helper function', () => {
     // Test w/ edx-exams IDA since it does not generate a11y strings
     beforeAll(async () => {
@@ -827,64 +826,76 @@ describe('Data layer integration tests', () => {
       });
     });
 
-    // possible values:
-    // hour: X hours and, 1 hour and, None
-    // minutes: X minutes, 1 minute
+    it('Should only say 0 minutes with 0 seconds remaining', async () => {
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const timedAttempt = Factory.build('attempt', { time_remaining_seconds: 0 });
 
-    it('All zero', async () => {
-      // Excepted: "0 minutes"
-      // Make an attempt object w/ time remaining respective to test
-      // Create a mock response from the API
-      
-      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-      const timed_attempt = Factory.build('attempt', { time_remaining_seconds: 0 });
-      // console.log("inital:", timed_attempt);
-      
-      axiosMock.onGet(activeAttemptURL).reply(200, timed_attempt);
-      
-      // Get data
-      // console.log("ALL ZERO")
+      axiosMock.onGet(activeAttemptURL).reply(200, timedAttempt);
+
       await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
       const state = store.getState();
-      
-      // Make sure the a11y string saved to the state is what's expected
-      const a11y = state.examState.activeAttempt.accessibility_time_string
-      // console.log("state:", state.examState.activeAttempt);
-      // console.log("a11y:", a11y);
-      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 0 minutes remaining')
+
+      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 0 minutes remaining');
     });
-    it('1 hour and 1 minute', async () => {
+
+    it('Should have no plural words with 1 hour and 1 minute', async () => {
       const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-      const timed_attempt = Factory.build('attempt', { time_remaining_seconds: 3660 });
-      
-      axiosMock.onGet(activeAttemptURL).reply(200, timed_attempt);
-      
+      const timedAttempt = Factory.build('attempt', { time_remaining_seconds: 3660 });
+
+      axiosMock.onGet(activeAttemptURL).reply(200, timedAttempt);
+
       await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
       const state = store.getState();
-      
-      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 1 hour and 1 minute remaining')
-      
+
+      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 1 hour and 1 minute remaining');
     });
-    it('All more than 1', async () => {
-      // Excepted: "2 hours and 2 minutes"
-      // Make an attempt object w/ time remaining respective to test
-      // Create a mock response from the API
-      // Make sure the a11y string saved to the state is what's expected
-      
+
+    it('Should only have plural words with 2 hours and 30 minutes', async () => {
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const timedAttempt = Factory.build('attempt', { time_remaining_seconds: 9000 });
+
+      axiosMock.onGet(activeAttemptURL).reply(200, timedAttempt);
+
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      const state = store.getState();
+
+      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 2 hours and 30 minutes remaining');
     });
-    it('Zero hours, multiple minutes', async () => {
-      // Excepted: "50 minutes"
-      // Make an attempt object w/ time remaining respective to test
-      // Create a mock response from the API
-      // Make sure the a11y string saved to the state is what's expected
-      
+
+    it('Should properly handle 1 hour and 30 minutes', async () => {
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const timedAttempt = Factory.build('attempt', { time_remaining_seconds: 5400 });
+
+      axiosMock.onGet(activeAttemptURL).reply(200, timedAttempt);
+
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      const state = store.getState();
+
+      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 1 hour and 30 minutes remaining');
     });
-    it('Multiple hours, zero minutes', async () => {
-      // Excepted: "2 hours and 0 minutes"
-      // Make an attempt object w/ time remaining respective to test
-      // Create a mock response from the API
-      // Make sure the a11y string saved to the state is what's expected
-      
+
+    it('Should only display minutes when hours = 0', async () => {
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const timedAttempt = Factory.build('attempt', { time_remaining_seconds: 3540 });
+
+      axiosMock.onGet(activeAttemptURL).reply(200, timedAttempt);
+
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      const state = store.getState();
+
+      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 59 minutes remaining');
+    });
+
+    it('Should properly handle multiple hours and zero minutes', async () => {
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const timedAttempt = Factory.build('attempt', { time_remaining_seconds: 10800 });
+
+      axiosMock.onGet(activeAttemptURL).reply(200, timedAttempt);
+
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      const state = store.getState();
+
+      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 3 hours and 0 minutes remaining');
     });
   });
 });

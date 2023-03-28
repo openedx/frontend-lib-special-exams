@@ -7,7 +7,6 @@ const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 async function fetchActiveAttempt() {
   const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
-  console.log("Backend data received:",activeAttemptResponse.data)
   return activeAttemptResponse.data;
 }
 
@@ -22,7 +21,6 @@ async function fetchActiveAttempt() {
  * @returns - The time remaining as a human-readable string
  */
 function humanizedTime(timeInMinutes) {
-  // console.log("Minutes going in:",timeInMinutes);
   const hours = Number.parseInt(timeInMinutes / 60, 10);
   const minutes = timeInMinutes % 60;
   let remainingTime = '';
@@ -46,13 +44,12 @@ function humanizedTime(timeInMinutes) {
  * Generates an accessibility_time_string.
  * @param timeRemainingSeconds -  The exam time remaining as an integer of minutes
  * @returns - An accessibility string for knowing how much time emains in the exam
- * 
+ *
  * NOTE: These strings are NOT internationalized/translated at the moment
- * 
+ *
  */
 function generateAccessibilityString(timeRemainingSeconds) {
   const remainingTime = humanizedTime(parseInt(Math.round(timeRemainingSeconds / 60.0, 0), 10));
-  console.log("remainingTime",remainingTime);
   return `you have ${remainingTime} remaining`;
 }
 
@@ -76,8 +73,9 @@ export async function fetchExamAttemptsData(courseId, sequenceId) {
   }
 
   // Only add a11y string if data was received from backend
-  if (!!Object.keys(data.active_attempt).length) {
-    data.active_attempt.accessibility_time_string = generateAccessibilityString(data.active_attempt.time_remaining_seconds);
+  if (Object.keys(data.active_attempt).length) {
+    const timeRemainingSeconds = data.active_attempt.time_remaining_seconds;
+    data.active_attempt.accessibility_time_string = generateAccessibilityString(timeRemainingSeconds);
   }
   return data;
 }
@@ -87,22 +85,22 @@ export async function fetchLatestAttempt(courseId) {
   if (!getConfig().EXAMS_BASE_URL) {
     const url = new URL(
       `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`,
-      );
-      url.searchParams.append('is_learning_mfe', true);
-      const urlResponse = await getAuthenticatedHttpClient().get(url.href);
-      data = urlResponse.data;
-    } else {
-      // initialize data dictionary to be similar to what edx-proctoring returns
-      data = { exam: {} };
-      
-      const attemptData = await fetchActiveAttempt();
-      data.active_attempt = attemptData;
-    }
+    );
+    url.searchParams.append('is_learning_mfe', true);
+    const urlResponse = await getAuthenticatedHttpClient().get(url.href);
+    data = urlResponse.data;
+  } else {
+    // initialize data dictionary to be similar to what edx-proctoring returns
+    data = { exam: {} };
 
-    console.log("Data received:",data)
-    if (!!Object.keys(data.active_attempt).length) {
-      data.active_attempt.accessibility_time_string = generateAccessibilityString(data.active_attempt.time_remaining_seconds);
-    }
+    const attemptData = await fetchActiveAttempt();
+    data.active_attempt = attemptData;
+  }
+
+  if (Object.keys(data.active_attempt).length) {
+    const timeRemainingSeconds = data.active_attempt.time_remaining_seconds;
+    data.active_attempt.accessibility_time_string = generateAccessibilityString(timeRemainingSeconds);
+  }
   return data;
 }
 
@@ -116,15 +114,16 @@ export async function pollExamAttempt(url) {
     activeAttemptData = urlResponse.activeAttemptData;
   } else {
     activeAttemptData = await fetchActiveAttempt();
-    
+
     // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
     if (activeAttemptData.attempt_status) {
       activeAttemptData.status = activeAttemptData.attempt_status;
       delete activeAttemptData.attempt_status;
     }
   }
-  if (!!Object.keys(activeAttemptData).length) {
-    activeAttemptData.accessibility_time_string = generateAccessibilityString(activeAttemptData.time_remaining_seconds);
+  if (Object.keys(activeAttemptData).length) {
+    const timeRemainingSeconds = activeAttemptData.time_remaining_seconds;
+    activeAttemptData.accessibility_time_string = generateAccessibilityString(timeRemainingSeconds);
   }
   return activeAttemptData;
 }

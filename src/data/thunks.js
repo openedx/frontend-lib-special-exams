@@ -243,7 +243,7 @@ export function skipProctoringExam() {
 export function pollAttempt(url) {
   return async (dispatch, getState) => {
     const currentAttempt = getState().examState.activeAttempt;
-    
+
     // If the learner is in a state where they've finished the exam
     // and the attempt can be submitted (i.e. they are "ready_to_submit"),
     // don't ping the proctoring app (which action could move
@@ -251,7 +251,7 @@ export function pollAttempt(url) {
     if (currentAttempt && currentAttempt.attempt_status === ExamStatus.READY_TO_SUBMIT) {
       return;
     }
-    
+
     try {
       const data = await pollExamAttempt(url);
       const updatedAttempt = {
