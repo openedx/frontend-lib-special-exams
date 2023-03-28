@@ -105,27 +105,27 @@ export async function fetchLatestAttempt(courseId) {
 }
 
 export async function pollExamAttempt(url) {
-  let activeAttemptData;
+  let activeAttemptResponse;
   if (!getConfig().EXAMS_BASE_URL) {
     const edxProctoringURL = new URL(
       `${getConfig().LMS_BASE_URL}${url}`,
     );
     const urlResponse = await getAuthenticatedHttpClient().get(edxProctoringURL.href);
-    activeAttemptData = urlResponse.activeAttemptData;
+    activeAttemptResponse = urlResponse.activeAttemptResponse;
   } else {
-    activeAttemptData = await fetchActiveAttempt();
+    activeAttemptResponse = await fetchActiveAttempt();
 
     // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
-    if (activeAttemptData.attempt_status) {
-      activeAttemptData.status = activeAttemptData.attempt_status;
-      delete activeAttemptData.attempt_status;
+    if (activeAttemptResponse.attempt_status) {
+      activeAttemptResponse.status = activeAttemptResponse.attempt_status;
+      delete activeAttemptResponse.attempt_status;
     }
   }
-  if (Object.keys(activeAttemptData).length) {
-    const timeRemainingSeconds = activeAttemptData.time_remaining_seconds;
-    activeAttemptData.accessibility_time_string = generateAccessibilityString(timeRemainingSeconds);
+  if (Object.keys(activeAttemptResponse).length) {
+    const timeRemainingSeconds = activeAttemptResponse.time_remaining_seconds;
+    activeAttemptResponse.accessibility_time_string = generateAccessibilityString(timeRemainingSeconds);
   }
-  return activeAttemptData;
+  return activeAttemptResponse;
 }
 
 export async function createExamAttempt(examId, startClock = true, attemptProctored = false) {
