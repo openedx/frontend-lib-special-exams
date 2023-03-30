@@ -14,6 +14,7 @@ export {
   pingAttempt,
   resetExam,
   getAllowProctoringOptOut,
+  examRequiresAccessToken,
 } from './thunks';
 
 export { default as store } from './store';
