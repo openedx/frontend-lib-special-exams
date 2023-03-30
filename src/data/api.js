@@ -46,7 +46,7 @@ function humanizedTime(timeInMinutes) {
  * @returns - An accessibility string for knowing how much time emains in the exam
  */
 function generateAccessibilityString(timeRemainingSeconds) {
-  const remainingTime = humanizedTime(parseInt(Math.round(timeRemainingSeconds / 60.0, 0), 10));
+  const remainingTime = humanizedTime(parseInt(Math.floor(timeRemainingSeconds / 60.0, 0), 10));
 
   /**
   * INTL NOTE: At the moment, these strings are NOT internationalized/translated.

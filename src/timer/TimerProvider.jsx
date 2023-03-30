@@ -12,7 +12,7 @@ import { withExamStore } from '../hocs';
 
 /* give an extra 5 seconds where the timer holds at 00:00 before page refreshes */
 const GRACE_PERIOD_SECS = 5;
-const POLL_INTERVAL = 60;
+const POLL_INTERVAL = 30;
 const TIME_LIMIT_CRITICAL_PCT = 0.05;
 const TIME_LIMIT_LOW_PCT = 0.2;
 

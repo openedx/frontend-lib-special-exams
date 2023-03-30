@@ -11,7 +11,7 @@ exports[`Data layer integration tests Test exams IDA url Should call the exams s
 Object {
   "examState": Object {
     "activeAttempt": Object {
-      "accessibility_time_string": "you have 30 minutes remaining",
+      "accessibility_time_string": "you have 29 minutes remaining",
       "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "started",
@@ -31,7 +31,7 @@ Object {
     "apiErrorMsg": "",
     "exam": Object {
       "attempt": Object {
-        "accessibility_time_string": "you have 30 minutes remaining",
+        "accessibility_time_string": "you have 29 minutes remaining",
         "attempt_code": "",
         "attempt_id": 1,
         "attempt_status": "started",
@@ -96,7 +96,7 @@ exports[`Data layer integration tests Test exams IDA url Should call the exams s
 Object {
   "examState": Object {
     "activeAttempt": Object {
-      "accessibility_time_string": "you have 30 minutes remaining",
+      "accessibility_time_string": "you have 29 minutes remaining",
       "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "ready_to_submit",
@@ -142,7 +142,7 @@ exports[`Data layer integration tests Test getExamAttemptsData Should get, and s
 Object {
   "examState": Object {
     "activeAttempt": Object {
-      "accessibility_time_string": "you have 30 minutes remaining",
+      "accessibility_time_string": "you have 29 minutes remaining",
       "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "started",
@@ -162,7 +162,7 @@ Object {
     "apiErrorMsg": "",
     "exam": Object {
       "attempt": Object {
-        "accessibility_time_string": "you have 30 minutes remaining",
+        "accessibility_time_string": "you have 29 minutes remaining",
         "attempt_code": "",
         "attempt_id": 1,
         "attempt_status": "started",
@@ -227,7 +227,7 @@ exports[`Data layer integration tests Test getLatestAttemptData Should get, and 
 Object {
   "examState": Object {
     "activeAttempt": Object {
-      "accessibility_time_string": "you have 30 minutes remaining",
+      "accessibility_time_string": "you have 29 minutes remaining",
       "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "started",
@@ -303,7 +303,7 @@ Object {
 
 exports[`Data layer integration tests Test pollAttempt Should poll exam attempt, and update attempt and exam 1`] = `
 Object {
-  "accessibility_time_string": "you have 30 minutes remaining",
+  "accessibility_time_string": "you have 29 minutes remaining",
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -323,7 +323,7 @@ Object {
 
 exports[`Data layer integration tests Test pollAttempt Should poll exam attempt, and update attempt and exam 2`] = `
 Object {
-  "accessibility_time_string": "you have 30 minutes remaining",
+  "accessibility_time_string": "you have 29 minutes remaining",
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -349,7 +349,7 @@ Object {
     "apiErrorMsg": "Request failed with status code 404",
     "exam": Object {
       "attempt": Object {
-        "accessibility_time_string": "you have 30 minutes remaining",
+        "accessibility_time_string": "you have 29 minutes remaining",
         "attempt_code": "",
         "attempt_id": 2,
         "attempt_status": "created",
@@ -412,7 +412,7 @@ Object {
 
 exports[`Data layer integration tests Test startProctoredExam Should start exam, and update attempt and exam 1`] = `
 Object {
-  "accessibility_time_string": "you have 30 minutes remaining",
+  "accessibility_time_string": "you have 29 minutes remaining",
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -432,7 +432,7 @@ Object {
 
 exports[`Data layer integration tests Test startTimedExam Should start exam, and update attempt and exam 1`] = `
 Object {
-  "accessibility_time_string": "you have 30 minutes remaining",
+  "accessibility_time_string": "you have 29 minutes remaining",
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
