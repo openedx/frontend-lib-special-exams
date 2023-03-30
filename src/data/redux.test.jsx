@@ -897,6 +897,18 @@ describe('Data layer integration tests', () => {
 
       expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 3 hours and 0 minutes remaining');
     });
+
+    it('Should round down time values correctly', async () => {
+      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+      const timedAttempt = Factory.build('attempt', { time_remaining_seconds: 10799 });
+
+      axiosMock.onGet(activeAttemptURL).reply(200, timedAttempt);
+
+      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+      const state = store.getState();
+
+      expect(state.examState.activeAttempt.accessibility_time_string).toEqual('you have 2 hours and 59 minutes remaining');
+    });
   });
 });
 
