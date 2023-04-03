@@ -1,6 +1,8 @@
 import { logError } from '@edx/frontend-platform/logging';
+import { getConfig } from '@edx/frontend-platform';
 import {
   fetchExamAttemptsData,
+  fetchLatestAttempt,
   createExamAttempt,
   stopAttempt,
   continueAttempt,
@@ -12,6 +14,7 @@ import {
   resetAttempt,
   declineAttempt,
   endExamWithFailure,
+  fetchExamAccessToken,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -20,6 +23,7 @@ import {
   expireExamAttempt,
   setActiveAttempt,
   setProctoringSettings,
+  setExamAccessToken,
   setReviewPolicy,
   setApiError,
   setAllowProctoringOptOut,
@@ -59,7 +63,6 @@ function updateAttemptAfter(courseId, sequenceId, promiseToBeResolvedFirst = nul
         if (!noLoading) { dispatch(setIsLoading({ isLoading: false })); }
       }
     }
-
     try {
       const attemptData = await fetchExamAttemptsData(courseId, sequenceId);
       dispatch(setExamState({
@@ -78,6 +81,23 @@ export function getExamAttemptsData(courseId, sequenceId) {
   return updateAttemptAfter(courseId, sequenceId);
 }
 
+export function getLatestAttemptData(courseId) {
+  return async (dispatch) => {
+    dispatch(setIsLoading({ isLoading: true }));
+    try {
+      const attemptData = await fetchLatestAttempt(courseId);
+      dispatch(setExamState({
+        exam: attemptData.exam,
+        activeAttempt: !isEmpty(attemptData.active_attempt) ? attemptData.active_attempt : null,
+      }));
+    } catch (error) {
+      handleAPIError(error, dispatch);
+    } finally {
+      dispatch(setIsLoading({ isLoading: false }));
+    }
+  };
+}
+
 export function getProctoringSettings() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
@@ -94,6 +114,25 @@ export function getProctoringSettings() {
       dispatch(setProctoringSettings({ proctoringSettings }));
     } catch (error) {
       handleAPIError(error, dispatch);
+    }
+  };
+}
+
+export function examRequiresAccessToken() {
+  return async (dispatch, getState) => {
+    if (!getConfig().EXAMS_BASE_URL) {
+      return;
+    }
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to get exam access token. No exam id.');
+      return;
+    }
+    try {
+      const examAccessToken = await fetchExamAccessToken(exam.id);
+      dispatch(setExamAccessToken({ examAccessToken }));
+    } catch (error) {
+      logError('Exam access token was not granted.');
     }
   };
 }

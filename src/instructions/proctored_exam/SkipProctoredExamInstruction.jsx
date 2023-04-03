@@ -20,7 +20,7 @@ const SkipProctoredExamInstruction = ({ cancelSkipProctoredExam }) => {
         </p>
         <p>
           <FormattedMessage
-            id="exam.skipProctoredExamInstructions.text1"
+            id="exam.skipProctoredExamInstructions.text2"
             defaultMessage={'If you take this exam without proctoring, you will not be eligible for '
             + 'course credit or the MicroMasters credential if either applies to this course.'}
           />

@@ -29,15 +29,15 @@ describe('ExamTimerBlock', () => {
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
-          time_remaining_seconds: 10,
-          low_threshold_sec: 15,
-          critically_low_threshold_sec: 5,
+          time_remaining_seconds: 24,
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
         },
         proctoringSettings: {},
-        exam: {},
+        exam: {
+          time_limit_mins: 2,
+        },
       },
     };
     store = await initializeTestStore(preloadedState);
@@ -97,7 +97,7 @@ describe('ExamTimerBlock', () => {
         submitExam={submitAttempt}
       />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:09')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
     expect(screen.getByRole('alert')).toHaveClass('alert-warning');
   });
 
@@ -110,15 +110,15 @@ describe('ExamTimerBlock', () => {
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
-          time_remaining_seconds: 5,
-          low_threshold_sec: 15,
-          critically_low_threshold_sec: 5,
+          time_remaining_seconds: 6,
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
         },
         proctoringSettings: {},
-        exam: {},
+        exam: {
+          time_limit_mins: 2,
+        },
       },
     };
     const testStore = await initializeTestStore(preloadedState);
@@ -133,7 +133,7 @@ describe('ExamTimerBlock', () => {
         submitExam={submitAttempt}
       />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:04')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('00:00:05')).toBeInTheDocument());
     expect(screen.getByRole('alert')).toHaveClass('alert-danger');
   });
 
@@ -147,17 +147,17 @@ describe('ExamTimerBlock', () => {
         submitExam={submitAttempt}
       />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:09')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByLabelText('Hide Timer')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('hide-timer'));
     expect(screen.getByLabelText('Show Timer')).toBeInTheDocument();
-    expect(screen.queryByText(/00:00:0/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/00:00:2/)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('show-timer'));
     expect(screen.getByLabelText('Hide Timer')).toBeInTheDocument();
-    expect(screen.queryByText(/00:00:0/)).toBeInTheDocument();
+    expect(screen.queryByText(/00:00:2/)).toBeInTheDocument();
   });
 
   it('toggles long text visibility on show more/less', async () => {
@@ -170,7 +170,7 @@ describe('ExamTimerBlock', () => {
         submitExam={submitAttempt}
       />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:09')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Show more'));
@@ -192,14 +192,14 @@ describe('ExamTimerBlock', () => {
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
           time_remaining_seconds: 1,
-          low_threshold_sec: 15,
-          critically_low_threshold_sec: 5,
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
         },
         proctoringSettings: {},
-        exam: {},
+        exam: {
+          time_limit_mins: 30,
+        },
       },
     };
     const testStore = await initializeTestStore(preloadedState);
@@ -231,7 +231,7 @@ describe('ExamTimerBlock', () => {
         submitExam={submitAttempt}
       />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:09')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
 
     fireEvent.click(screen.getByTestId('end-button'));
     expect(stopExamAttempt).toHaveBeenCalledTimes(1);
@@ -247,14 +247,14 @@ describe('ExamTimerBlock', () => {
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
           time_remaining_seconds: 240,
-          low_threshold_sec: 15,
-          critically_low_threshold_sec: 5,
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
         },
         proctoringSettings: {},
-        exam: {},
+        exam: {
+          time_limit_mins: 30,
+        },
       },
     };
     let testStore = await initializeTestStore(preloadedState);
