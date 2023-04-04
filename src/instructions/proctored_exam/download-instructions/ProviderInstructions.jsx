@@ -17,7 +17,7 @@ const ProviderProctoredExamInstructions = ({
     </p>
     <ol>
       {instructions.map((item, index) => (
-        <li key={index.toString()}>
+        <li key={`${index.toString()}`}>
           {item}
         </li>
       ))}

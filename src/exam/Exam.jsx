@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { injectIntl, intlShape, FormattedMessage } from '@edx/frontend-platform/i18n';
@@ -87,6 +88,7 @@ const Exam = ({
     );
   }
 
+  // eslint-disable-next-line react/jsx-no-useless-fragment
   const sequenceContent = <>{children}</>;
 
   return (

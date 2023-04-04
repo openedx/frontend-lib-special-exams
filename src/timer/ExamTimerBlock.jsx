@@ -54,6 +54,7 @@ const ExamTimerBlock = injectIntl(({
       Emitter.off(TIMER_LIMIT_REACHED, expireExamAttempt);
       Emitter.off(TIMER_REACHED_NULL, onTimeReachedNull);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

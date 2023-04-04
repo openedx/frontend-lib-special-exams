@@ -5,7 +5,7 @@ import { getConfig } from '@edx/frontend-platform';
 import { configure as configureLogging } from '@edx/frontend-platform/logging';
 import { configure as configureAuth, MockAuthService } from '@edx/frontend-platform/auth';
 import { AppContext } from '@edx/frontend-platform/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
 import { render as rtlRender } from '@testing-library/react';
@@ -66,15 +66,15 @@ function render(
     ...renderOptions
   } = {},
 ) {
-  function Wrapper({ children }) {
-    const defaultAppContext = {
+  const Wrapper = ({ children }) => {
+    const defaultAppContext = useMemo(() => ({
       authenticatedUser: {
         userId: 'abc123',
         username: 'Mock User',
         roles: [],
         administrator: false,
       },
-    };
+    }), []);
     return (
       // eslint-disable-next-line react/jsx-filename-extension
       <AppContext.Provider value={appContext || defaultAppContext}>
@@ -85,7 +85,7 @@ function render(
         </IntlProvider>
       </AppContext.Provider>
     );
-  }
+  };
 
   Wrapper.propTypes = {
     children: PropTypes.node.isRequired,

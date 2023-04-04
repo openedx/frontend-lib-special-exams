@@ -81,6 +81,7 @@ const TimerServiceProvider = ({
   useEffect(() => {
     let timerTick = 0;
     let secondsLeft = Math.floor(timeRemaining);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     liveInterval = setInterval(() => {
       secondsLeft -= 1;
       timerTick += 1;
@@ -104,6 +105,7 @@ const TimerServiceProvider = ({
   }, [timeRemaining]);
 
   return (
+    // eslint-disable-next-line react/jsx-no-constructed-context-values
     <TimerContext.Provider value={{
       timeState,
       getTimeString,

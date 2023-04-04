@@ -278,11 +278,13 @@ describe('Data layer integration tests', () => {
   });
 
   describe('Test resetExam', () => {
-    const createdAttempt = Factory.build('attempt',
+    const createdAttempt = Factory.build(
+      'attempt',
       {
         attempt_status: ExamStatus.CREATED,
         attempt_id: 2,
-      });
+      },
+    );
     const examWithCreatedAttempt = Factory.build('exam', { attempt: createdAttempt });
 
     it('Should reset exam, and update attempt and exam', async () => {
@@ -506,42 +508,38 @@ describe('Data layer integration tests', () => {
         URL: { createObjectURL: jest.fn() },
       }));
 
-      const createdWorkerAttempt = Factory.build(
-        'attempt', { attempt_status: ExamStatus.CREATED, desktop_application_js_url: 'http://proctortest.com' },
-      );
-      const startedWorkerAttempt = Factory.build(
-        'attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' },
-      );
+      const createdWorkerAttempt = Factory.build('attempt', { attempt_status: ExamStatus.CREATED, desktop_application_js_url: 'http://proctortest.com' });
+      const startedWorkerAttempt = Factory.build('attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' });
       const createdWorkerExam = Factory.build('exam', { attempt: createdWorkerAttempt });
       const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
       const continueWorkerAttemptUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${createdWorkerAttempt.attempt_id}`;
 
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(
-        200, { exam: createdWorkerExam, active_attempt: createdWorkerAttempt },
-      );
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(
-        200, { exam: startedWorkerExam, active_attempt: startedWorkerAttempt },
-      );
+      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, {
+        exam: createdWorkerExam, active_attempt: createdWorkerAttempt,
+      });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, {
+        exam: startedWorkerExam, active_attempt: startedWorkerAttempt,
+      });
       axiosMock.onPost(continueWorkerAttemptUrl).reply(200, { exam_attempt_id: startedWorkerAttempt.attempt_id });
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
-      expect(loggingService.logError).toHaveBeenCalledWith(
-        'test error', {
-          attemptId: createdWorkerAttempt.attempt_id,
-          attemptStatus: createdWorkerAttempt.attempt_status,
-          courseId: createdWorkerAttempt.course_id,
-          examId: createdWorkerExam.id,
-        },
-      );
+      expect(loggingService.logError).toHaveBeenCalledWith('test error', {
+        attemptId: createdWorkerAttempt.attempt_id,
+        attemptStatus: createdWorkerAttempt.attempt_status,
+        courseId: createdWorkerAttempt.course_id,
+        examId: createdWorkerExam.id,
+      });
     });
   });
 
   describe('Test skipProctoringExam', () => {
-    const createdAttempt = Factory.build('attempt',
+    const createdAttempt = Factory.build(
+      'attempt',
       {
         attempt_status: ExamStatus.CREATED,
-      });
+      },
+    );
     const createdExam = Factory.build('exam', { attempt: createdAttempt });
     const declinedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.DECLINED });
     const declinedExam = Factory.build('exam', { attempt: declinedAttempt });
@@ -616,26 +614,22 @@ describe('Data layer integration tests', () => {
 
   describe('Test pingAttempt', () => {
     it('Should send attempt to error state on ping failure', async () => {
-      const startedWorkerAttempt = Factory.build(
-        'attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' },
-      );
+      const startedWorkerAttempt = Factory.build('attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' });
       const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(
-        200, { exam: startedWorkerExam, active_attempt: startedWorkerAttempt },
-      );
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, {
+        exam: startedWorkerExam, active_attempt: startedWorkerAttempt,
+      });
       axiosMock.onPut(updateAttemptStatusUrl).reply(200, { exam_attempt_id: startedWorkerAttempt.attempt_id });
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.pingAttempt(), store.dispatch, store.getState);
 
-      expect(loggingService.logError).toHaveBeenCalledWith(
-        'test error', {
-          attemptId: startedWorkerAttempt.attempt_id,
-          attemptStatus: startedWorkerAttempt.attempt_status,
-          courseId: startedWorkerAttempt.course_id,
-          examId: startedWorkerExam.id,
-        },
-      );
+      expect(loggingService.logError).toHaveBeenCalledWith('test error', {
+        attemptId: startedWorkerAttempt.attempt_id,
+        attemptStatus: startedWorkerAttempt.attempt_status,
+        courseId: startedWorkerAttempt.course_id,
+        examId: startedWorkerExam.id,
+      });
       const request = axiosMock.history.put[0];
       expect(request.url).toEqual(updateAttemptStatusUrl);
       expect(request.data).toEqual(JSON.stringify({
