@@ -70,9 +70,9 @@ export async function pollExamAttempt(url) {
   return data;
 }
 
-export async function createExamAttempt(examId, startClock = true, attemptProctored = false) {
+export async function createExamAttempt(examId, legacyAttempt, startClock = true, attemptProctored = false) {
   let urlString;
-  if (!getConfig().EXAMS_BASE_URL) {
+  if (!getConfig().EXAMS_BASE_URL || legacyAttempt) {
     urlString = `${getConfig().LMS_BASE_URL}${BASE_API_URL}`;
   } else {
     urlString = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
@@ -87,9 +87,9 @@ export async function createExamAttempt(examId, startClock = true, attemptProcto
   return data;
 }
 
-export async function updateAttemptStatus(attemptId, action, detail = null) {
+export async function updateAttemptStatus(attemptId, action, legacyAttempt, detail = null) {
   let urlString;
-  if (!getConfig().EXAMS_BASE_URL) {
+  if (!getConfig().EXAMS_BASE_URL || legacyAttempt) {
     urlString = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attemptId}`;
   } else {
     urlString = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/${attemptId}`;
@@ -103,32 +103,32 @@ export async function updateAttemptStatus(attemptId, action, detail = null) {
   return data;
 }
 
-export async function stopAttempt(attemptId) {
-  return updateAttemptStatus(attemptId, ExamAction.STOP);
+export async function stopAttempt(attemptId, legacyAttempt = false) {
+  return updateAttemptStatus(attemptId, ExamAction.STOP, legacyAttempt);
 }
 
-export async function continueAttempt(attemptId) {
-  return updateAttemptStatus(attemptId, ExamAction.START);
+export async function continueAttempt(attemptId, legacyAttempt = false) {
+  return updateAttemptStatus(attemptId, ExamAction.START, legacyAttempt);
 }
 
-export async function submitAttempt(attemptId) {
-  return updateAttemptStatus(attemptId, ExamAction.SUBMIT);
+export async function submitAttempt(attemptId, legacyAttempt = false) {
+  return updateAttemptStatus(attemptId, ExamAction.SUBMIT, legacyAttempt);
 }
 
-export async function resetAttempt(attemptId) {
-  return updateAttemptStatus(attemptId, ExamAction.RESET);
+export async function resetAttempt(attemptId, legacyAttempt = false) {
+  return updateAttemptStatus(attemptId, ExamAction.RESET, legacyAttempt);
 }
 
-export async function endExamWithFailure(attemptId, error) {
-  return updateAttemptStatus(attemptId, ExamAction.ERROR, error);
+export async function endExamWithFailure(attemptId, error, legacyAttempt = false) {
+  return updateAttemptStatus(attemptId, ExamAction.ERROR, legacyAttempt, error);
 }
 
-export async function softwareDownloadAttempt(attemptId) {
-  return updateAttemptStatus(attemptId, ExamAction.CLICK_DOWNLOAD_SOFTWARE);
+export async function softwareDownloadAttempt(attemptId, legacyAttempt = false) {
+  return updateAttemptStatus(attemptId, ExamAction.CLICK_DOWNLOAD_SOFTWARE, legacyAttempt);
 }
 
-export async function declineAttempt(attemptId) {
-  return updateAttemptStatus(attemptId, ExamAction.DECLINE);
+export async function declineAttempt(attemptId, legacyAttempt = false) {
+  return updateAttemptStatus(attemptId, ExamAction.DECLINE, legacyAttempt);
 }
 
 export async function fetchExamReviewPolicy(examId) {
