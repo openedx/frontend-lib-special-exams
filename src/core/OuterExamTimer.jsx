@@ -11,7 +11,7 @@ const ExamTimer = ({ courseId }) => {
   const { authenticatedUser } = useContext(AppContext);
   const {
     activeAttempt, showTimer, stopExam, submitExam,
-    expireExam, pollAttempt, apiErrorMsg, pingAttempt,
+    expireExam, apiErrorMsg, pingAttempt,
     getLatestAttemptData,
   } = state;
 
@@ -33,7 +33,6 @@ const ExamTimer = ({ courseId }) => {
           stopExamAttempt={stopExam}
           submitExam={submitExam}
           expireExamAttempt={expireExam}
-          pollExamAttempt={pollAttempt}
           pingAttempt={pingAttempt}
         />
       )}

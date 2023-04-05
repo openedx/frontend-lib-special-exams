@@ -10,53 +10,6 @@ async function fetchActiveAttempt() {
   return activeAttemptResponse.data;
 }
 
-/**
- * Converts the given value in minutes to a more human readable format
- * 1 -> 1 Minute
- * 2 -> 2 Minutes
- * 60 -> 1 hour
- * 90 -> 1 hour and 30 Minutes
- * 120 -> 2 hours
- * @param timeInMinutes - The exam time remaining as an integer of minutes
- * @returns - The time remaining as a human-readable string
- */
-function humanizedTime(timeInMinutes) {
-  const hours = Number.parseInt(timeInMinutes / 60, 10);
-  const minutes = timeInMinutes % 60;
-  let remainingTime = '';
-
-  if (hours !== 0) {
-    remainingTime += `${hours} hour`;
-    if (hours >= 2) {
-      remainingTime += 's';
-    }
-    remainingTime += ' and ';
-  }
-  remainingTime += `${minutes} minute`;
-  if (minutes !== 1) {
-    remainingTime += 's';
-  }
-
-  return remainingTime;
-}
-
-/**
- * Generates an accessibility_time_string.
- * @param timeRemainingSeconds -  The exam time remaining as an integer of minutes
- * @returns - An accessibility string for knowing how much time emains in the exam
- */
-function generateAccessibilityString(timeRemainingSeconds) {
-  const remainingTime = humanizedTime(parseInt(Math.floor(timeRemainingSeconds / 60.0, 0), 10));
-
-  /**
-  * INTL NOTE: At the moment, these strings are NOT internationalized/translated.
-  * The back-end also does not support this either.
-  *
-  * It is TBD if this needs to be implemented
-  */
-  return `you have ${remainingTime} remaining`;
-}
-
 export async function fetchExamAttemptsData(courseId, sequenceId) {
   let data;
   if (!getConfig().EXAMS_BASE_URL) {
@@ -74,12 +27,6 @@ export async function fetchExamAttemptsData(courseId, sequenceId) {
 
     const attemptData = await fetchActiveAttempt();
     data.active_attempt = attemptData;
-  }
-
-  // Only add a11y string if data was received from backend
-  if (Object.keys(data.active_attempt).length) {
-    const timeRemainingSeconds = data.active_attempt.time_remaining_seconds;
-    data.active_attempt.accessibility_time_string = generateAccessibilityString(timeRemainingSeconds);
   }
   return data;
 }
@@ -100,11 +47,6 @@ export async function fetchLatestAttempt(courseId) {
     const attemptData = await fetchActiveAttempt();
     data.active_attempt = attemptData;
   }
-
-  if (Object.keys(data.active_attempt).length) {
-    const timeRemainingSeconds = data.active_attempt.time_remaining_seconds;
-    data.active_attempt.accessibility_time_string = generateAccessibilityString(timeRemainingSeconds);
-  }
   return data;
 }
 
@@ -124,10 +66,6 @@ export async function pollExamAttempt(url) {
       activeAttemptResponse.status = activeAttemptResponse.attempt_status;
       delete activeAttemptResponse.attempt_status;
     }
-  }
-  if (Object.keys(activeAttemptResponse).length) {
-    const timeRemainingSeconds = activeAttemptResponse.time_remaining_seconds;
-    activeAttemptResponse.accessibility_time_string = generateAccessibilityString(timeRemainingSeconds);
   }
   return activeAttemptResponse;
 }

@@ -48,7 +48,6 @@ export const examSlice = createSlice({
         exam_display_name: '',
         exam_url_path: '',
         time_remaining_seconds: null,
-        accessibility_time_string: '',
         low_threshold_sec: null,
         critically_low_threshold_sec: null,
         course_id: '',
