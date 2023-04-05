@@ -137,9 +137,6 @@ describe('SequenceExamWrapper', () => {
       examState: Factory.build('examState', {
         timeIsOver: true,
         allowProctoringOptOut: true,
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         exam: Factory.build('exam', {
           is_proctored: true,
           attempt: {},
@@ -178,9 +175,6 @@ describe('SequenceExamWrapper', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         timeIsOver: true,
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         exam: Factory.build('exam', {
           is_proctored: true,
           type: ExamType.PROCTORED,
@@ -214,13 +208,6 @@ describe('SequenceExamWrapper', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         timeIsOver: true,
-        proctoringSettings: Factory.build('proctoringSettings', {
-          link_urls: [
-            {
-              contact_us: 'http://localhost:2000',
-            },
-          ],
-        }),
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           attempt: Factory.build('attempt', {
@@ -245,9 +232,6 @@ describe('SequenceExamWrapper', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         timeIsOver: true,
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Platform Name',
-        }),
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           attempt: Factory.build('attempt', {
@@ -359,7 +343,6 @@ describe('SequenceExamWrapper', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
           integration_specific_email: integrationEmail,
         }),
         exam: Factory.build('exam', {
@@ -394,9 +377,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows submit onboarding exam instructions if exam is onboarding and attempt status is ready_to_submit', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -423,9 +403,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows error onboarding exam instructions if exam is onboarding and attempt status is error', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -454,7 +431,6 @@ describe('SequenceExamWrapper', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
           integration_specific_email: 'test@example.com',
           learner_notification_from_email: 'test_notification@example.com',
         }),
@@ -493,7 +469,6 @@ describe('SequenceExamWrapper', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
           integration_specific_email: 'test@example.com',
         }),
         activeAttempt: {},
@@ -523,9 +498,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows error practice exam instructions if exam is onboarding and attempt status is error', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -553,9 +525,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows submitted practice exam instructions if exam is onboarding and attempt status is submitted', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -583,9 +552,6 @@ describe('SequenceExamWrapper', () => {
   it('Does not show expired page if exam is passed due date and is practice', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -610,9 +576,6 @@ describe('SequenceExamWrapper', () => {
   it.each([ExamType.TIMED, ExamType.PROCTORED, ExamType.ONBOARDING])('Shows expired page when exam is passed due date and is %s', (examType) => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -640,9 +603,6 @@ describe('SequenceExamWrapper', () => {
       (item) => {
         store.getState = () => ({
           examState: Factory.build('examState', {
-            proctoringSettings: Factory.build('proctoringSettings', {
-              platform_name: 'Your Platform',
-            }),
             activeAttempt: {},
             exam: Factory.build('exam', {
               is_proctored: true,
@@ -672,9 +632,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows exam content for timed exam if attempt status is submitted, due date has passed and hide after due is set to false', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           type: ExamType.TIMED,
@@ -702,9 +659,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows submitted exam page for proctored exams if attempt status is submitted, due date has passed and hide after due is set to false', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
@@ -732,9 +686,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows submitted page when proctored exam is in second_review_required status', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -807,9 +758,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows error message if receives unknown attempt status', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           type: ExamType.TIMED,
@@ -835,9 +783,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows ready to start page when proctored exam is in ready_to_start status', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -864,9 +809,6 @@ describe('SequenceExamWrapper', () => {
   it('Shows loading spinner while waiting to start exam', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          platform_name: 'Your Platform',
-        }),
         activeAttempt: {},
         exam: Factory.build('exam', {
           is_proctored: true,

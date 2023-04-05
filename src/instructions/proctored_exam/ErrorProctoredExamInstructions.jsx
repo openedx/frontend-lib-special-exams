@@ -1,16 +1,16 @@
 import React, { useContext } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { getConfig } from '@edx/frontend-platform';
 import { Hyperlink, MailtoLink } from '@edx/paragon';
 import ExamStateContext from '../../context';
 
 const ErrorProctoredExamInstructions = () => {
   const state = useContext(ExamStateContext);
   const {
-    link_urls: linkUrls,
-    platform_name: platformName,
     proctoring_escalation_email: proctoringEscalationEmail,
   } = state.proctoringSettings || {};
-  const contactUsUrl = linkUrls && linkUrls.contact_us;
+  const platformName = getConfig().SITE_NAME;
+  const contactUsUrl = getConfig().CONTACT_URL;
 
   const renderBody = () => {
     if (proctoringEscalationEmail) {

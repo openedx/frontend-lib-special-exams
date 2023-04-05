@@ -9,9 +9,6 @@ export const examSlice = createSlice({
     activeAttempt: null, // has the same structure as attempt in exam object
     allowProctoringOptOut: false,
     proctoringSettings: {
-      platform_name: '',
-      contact_us: '',
-      link_urls: null,
       exam_proctoring_backend: {
         download_url: '',
         instructions: [],
