@@ -75,7 +75,6 @@ Object {
     },
     "isLoading": false,
     "proctoringSettings": Object {
-      "contact_us": "",
       "exam_proctoring_backend": Object {
         "download_url": "",
         "instructions": Array [],
@@ -84,8 +83,6 @@ Object {
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
-      "link_urls": null,
-      "platform_name": "",
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
@@ -124,7 +121,6 @@ Object {
     },
     "isLoading": false,
     "proctoringSettings": Object {
-      "contact_us": "",
       "exam_proctoring_backend": Object {
         "download_url": "",
         "instructions": Array [],
@@ -133,8 +129,6 @@ Object {
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
-      "link_urls": null,
-      "platform_name": "",
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
@@ -212,7 +206,6 @@ Object {
     },
     "isLoading": false,
     "proctoringSettings": Object {
-      "contact_us": "",
       "exam_proctoring_backend": Object {
         "download_url": "",
         "instructions": Array [],
@@ -221,8 +214,6 @@ Object {
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
-      "link_urls": null,
-      "platform_name": "",
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
@@ -261,7 +252,6 @@ Object {
     },
     "isLoading": false,
     "proctoringSettings": Object {
-      "contact_us": "",
       "exam_proctoring_backend": Object {
         "download_url": "",
         "instructions": Array [],
@@ -270,8 +260,6 @@ Object {
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
-      "link_urls": null,
-      "platform_name": "",
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
@@ -283,7 +271,6 @@ Object {
 
 exports[`Data layer integration tests Test getProctoringSettings Should fail to fetch if error occurs 1`] = `
 Object {
-  "contact_us": "",
   "exam_proctoring_backend": Object {
     "download_url": "",
     "instructions": Array [],
@@ -292,8 +279,6 @@ Object {
   },
   "integration_specific_email": "",
   "learner_notification_from_email": "",
-  "link_urls": null,
-  "platform_name": "",
   "provider_name": "",
   "provider_tech_support_email": "",
   "provider_tech_support_phone": "",
@@ -302,7 +287,6 @@ Object {
 
 exports[`Data layer integration tests Test getProctoringSettings Should get, and save proctoringSettings 1`] = `
 Object {
-  "contact_us": "info@example.com",
   "exam_proctoring_backend": Object {
     "download_url": "",
     "instructions": Array [],
@@ -311,13 +295,6 @@ Object {
   },
   "integration_specific_email": "",
   "learner_notification_from_email": "",
-  "link_urls": Object {
-    "contact_us": "https://example.com/contact_us/",
-    "faq": "https://example.com/faq/",
-    "online_proctoring_rules": "https://example.com/online_proctoring_rules/",
-    "tech_requirements": "https://example.com/tech_requirements/",
-  },
-  "platform_name": "Your Platform Name Here",
   "provider_name": "",
   "provider_tech_support_email": "",
   "provider_tech_support_phone": "",
@@ -416,7 +393,6 @@ Object {
     },
     "isLoading": false,
     "proctoringSettings": Object {
-      "contact_us": "",
       "exam_proctoring_backend": Object {
         "download_url": "",
         "instructions": Array [],
@@ -425,8 +401,6 @@ Object {
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
-      "link_urls": null,
-      "platform_name": "",
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",

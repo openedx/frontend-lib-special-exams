@@ -2,14 +2,6 @@ import { Factory } from 'rosie'; // eslint-disable-line import/no-extraneous-dep
 
 Factory.define('proctoringSettings')
   .attrs({
-    platform_name: 'Your Platform Name Here',
-    contact_us: 'info@example.com',
-    link_urls: {
-      contact_us: 'https://example.com/contact_us/',
-      faq: 'https://example.com/faq/',
-      online_proctoring_rules: 'https://example.com/online_proctoring_rules/',
-      tech_requirements: 'https://example.com/tech_requirements/',
-    },
     exam_proctoring_backend: {
       download_url: '',
       instructions: [],
