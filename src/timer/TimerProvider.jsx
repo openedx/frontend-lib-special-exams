@@ -34,6 +34,7 @@ const TimerServiceProvider = ({
 }) => {
   const [timeState, setTimeState] = useState({});
   const [limitReached, setLimitReached] = useToggle(false);
+  const [accessibilityTimeString, setAccessibilityTimeString] = useState('');
   const {
     desktop_application_js_url: workerUrl,
     ping_interval: pingInterval,
@@ -52,6 +53,53 @@ const TimerServiceProvider = ({
       return (value < 10 ? `0${value}` : value);
     },
   ).join(':');
+
+  /**
+   * Converts the given value in minutes to a more human readable format
+   * 1 -> 1 Minute
+   * 2 -> 2 Minutes
+   * 60 -> 1 hour
+   * 90 -> 1 hour and 30 Minutes
+   * 120 -> 2 hours
+   * @param timeInMinutes - The exam time remaining as an integer of minutes
+   * @returns - The time remaining as a human-readable string
+   */
+  function humanizedTime(timeInMinutes) {
+    const hours = Number.parseInt(timeInMinutes / 60, 10);
+    const minutes = timeInMinutes % 60;
+    let remainingTime = '';
+
+    if (hours !== 0) {
+      remainingTime += `${hours} hour`;
+      if (hours >= 2) {
+        remainingTime += 's';
+      }
+      remainingTime += ' and ';
+    }
+    remainingTime += `${minutes} minute`;
+    if (minutes !== 1) {
+      remainingTime += 's';
+    }
+
+    return remainingTime;
+  }
+
+  /**
+   * Generates an accessibility_time_string.
+   * @param timeRemainingSeconds -  The exam time remaining as an integer of minutes
+   * @returns - An accessibility string for knowing how much time emains in the exam
+   */
+  function generateAccessibilityString(timeRemainingSeconds) {
+    const remainingTime = humanizedTime(parseInt(Math.floor(timeRemainingSeconds / 60.0, 0), 10));
+
+    /**
+    * INTL NOTE: At the moment, these strings are NOT internationalized/translated.
+    * The back-end also does not support this either.
+    *
+    * It is TBD if this needs to be implemented
+    */
+    return `you have ${remainingTime} remaining`;
+  }
 
   const pollExam = () => {
     const url = attempt.exam_started_poll_url;
@@ -86,10 +134,13 @@ const TimerServiceProvider = ({
       timerTick += 1;
       setTimeState(getFormattedRemainingTime(secondsLeft));
       processTimeLeft(liveInterval, secondsLeft);
+      // Every tick, update the a11y string
+      setAccessibilityTimeString(generateAccessibilityString(timeRemaining));
+
       // no polling during grace period
-      if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
-        pollExam();
-      }
+      // if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
+      //   pollExam();
+      // }
       // if exam is proctored ping provider app also
       if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
         pingHandler(pingInterval, workerUrl);
@@ -106,6 +157,7 @@ const TimerServiceProvider = ({
   return (
     <TimerContext.Provider value={{
       timeState,
+      accessibilityTimeString,
       getTimeString,
     }}
     >
