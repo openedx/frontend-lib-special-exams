@@ -14,8 +14,8 @@ describe('ExamTimerBlock', () => {
   let attempt;
   let store;
   const stopExamAttempt = jest.fn();
-  const expireExamAttempt = () => {};
-  const pollAttempt = () => {};
+  const expireExamAttempt = () => { };
+  const pollAttempt = () => { };
   const submitAttempt = jest.fn();
   submitAttempt.mockReturnValue(jest.fn());
   stopExamAttempt.mockReturnValue(jest.fn());
@@ -292,5 +292,59 @@ describe('ExamTimerBlock', () => {
     );
 
     await waitFor(() => expect(screen.getByText('00:00:19')).toBeInTheDocument());
+  });
+
+  const timesToTest = {
+    // Because times are rounded down, these values are 60 seconds off
+    '2 hours and 29 minutes': 9000,
+    '1 hour and 29 minutes': 5400,
+    '2 hours and 1 minute': 7320,
+    '1 hour and 1 minute': 3720,
+    '2 hours and 0 minutes': 7260,
+    '1 hour and 0 minutes': 3660,
+    '29 minutes': 1800,
+  };
+  Object.keys(timesToTest).forEach((timeString) => {
+    it(`Accessibility time string ${timeString} appears as expected based seconds remaining: ${timesToTest[timeString]}`, async () => {
+      // create a state with the respective number of seconds
+      const preloadedState = {
+        examState: {
+          isLoading: true,
+          timeIsOver: false,
+          activeAttempt: {
+            attempt_status: 'started',
+            exam_url_path: 'exam_url_path',
+            exam_display_name: 'exam name',
+            time_remaining_seconds: timesToTest[timeString],
+            exam_started_poll_url: '',
+            taking_as_proctored: false,
+            exam_type: 'a timed exam',
+          },
+          proctoringSettings: {},
+          exam: {
+            time_limit_mins: 30,
+          },
+        },
+      };
+
+      // Store it in the state
+      const testStore = await initializeTestStore(preloadedState);
+      examStore.getState = store.testStore;
+      attempt = testStore.getState().examState.activeAttempt;
+
+      // render an exam timer block with that data
+      render(
+        <ExamTimerBlock
+          attempt={attempt}
+          stopExamAttempt={stopExamAttempt}
+          expireExamAttempt={expireExamAttempt}
+          pollExamAttempt={pollAttempt}
+          submitExam={submitAttempt}
+        />,
+      );
+
+      // expect the a11y string to be a certain output
+      await waitFor(() => expect(screen.getByText(`you have ${timeString} remaining`)).toBeInTheDocument());
+    });
   });
 });

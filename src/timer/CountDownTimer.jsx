@@ -14,8 +14,7 @@ const CountDownTimer = injectIntl((props) => {
   const { intl } = props;
 
   const generateAccessbilityString = (timeState) => {
-    const { hours } = timeState;
-    const { minutes } = timeState;
+    const { hours, minutes } = timeState;
 
     let remainingTime = '';
 
