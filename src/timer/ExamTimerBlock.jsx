@@ -17,7 +17,7 @@ import {
  * Exam timer block component.
  */
 const ExamTimerBlock = injectIntl(({
-  attempt, stopExamAttempt, expireExamAttempt,
+  attempt, stopExamAttempt, expireExamAttempt, pollExamAttempt,
   intl, pingAttempt, submitExam,
 }) => {
   const [isShowMore, showMore, showLess] = useToggle(false);
@@ -57,7 +57,7 @@ const ExamTimerBlock = injectIntl(({
   }, []);
 
   return (
-    <TimerProvider attempt={attempt} pingHandler={pingAttempt}>
+    <TimerProvider attempt={attempt} pollHandler={pollExamAttempt} pingHandler={pingAttempt}>
       <Alert variant={alertVariant}>
         <div
           className="d-flex justify-content-between flex-column flex-lg-row align-items-start"

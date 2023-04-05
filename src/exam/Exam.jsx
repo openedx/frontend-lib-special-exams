@@ -25,7 +25,7 @@ const Exam = ({
   const state = useContext(ExamStateContext);
   const {
     isLoading, activeAttempt, showTimer, stopExam, exam,
-    expireExam, apiErrorMsg, pingAttempt,
+    expireExam, pollAttempt, apiErrorMsg, pingAttempt,
     getProctoringSettings, submitExam,
   } = state;
 
@@ -107,6 +107,7 @@ const Exam = ({
           stopExamAttempt={stopExam}
           submitExam={submitExam}
           expireExamAttempt={expireExam}
+          pollExamAttempt={pollAttempt}
           pingAttempt={pingAttempt}
         />
       )}

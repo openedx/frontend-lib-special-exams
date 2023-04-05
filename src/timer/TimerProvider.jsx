@@ -12,6 +12,7 @@ import { withExamStore } from '../hocs';
 
 /* give an extra 5 seconds where the timer holds at 00:00 before page refreshes */
 const GRACE_PERIOD_SECS = 5;
+const POLL_INTERVAL = 60;
 const TIME_LIMIT_CRITICAL_PCT = 0.05;
 const TIME_LIMIT_LOW_PCT = 0.2;
 
@@ -29,7 +30,7 @@ const getFormattedRemainingTime = (timeLeft) => ({
 });
 
 const TimerServiceProvider = ({
-  children, attempt, timeLimitMins, pingHandler,
+  children, attempt, timeLimitMins, pollHandler, pingHandler,
 }) => {
   const [timeState, setTimeState] = useState({});
   const [limitReached, setLimitReached] = useToggle(false);
@@ -51,6 +52,12 @@ const TimerServiceProvider = ({
       return (value < 10 ? `0${value}` : value);
     },
   ).join(':');
+
+  const pollExam = () => {
+    const url = attempt.exam_started_poll_url;
+    const queryString = `?sourceid=in_exam&proctored=${attempt.taking_as_proctored}`;
+    pollHandler(url + queryString);
+  };
 
   const processTimeLeft = (timer, secondsLeft) => {
     if (secondsLeft <= CRITICAL_LOW_TIME) {
@@ -79,6 +86,10 @@ const TimerServiceProvider = ({
       timerTick += 1;
       setTimeState(getFormattedRemainingTime(secondsLeft));
       processTimeLeft(liveInterval, secondsLeft);
+      // no polling during grace period
+      if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
+        pollExam();
+      }
       // if exam is proctored ping provider app
       if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
         pingHandler(pingInterval, workerUrl);
@@ -114,10 +125,12 @@ TimerServiceProvider.propTypes = {
   }).isRequired,
   timeLimitMins: PropTypes.number.isRequired,
   children: PropTypes.element.isRequired,
+  pollHandler: PropTypes.func,
   pingHandler: PropTypes.func,
 };
 
 TimerServiceProvider.defaultProps = {
+  pollHandler: () => {},
   pingHandler: () => {},
 };
 

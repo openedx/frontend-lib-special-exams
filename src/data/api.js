@@ -51,23 +51,23 @@ export async function fetchLatestAttempt(courseId) {
 }
 
 export async function pollExamAttempt(url) {
-  let activeAttemptResponse;
+  let data;
   if (!getConfig().EXAMS_BASE_URL) {
     const edxProctoringURL = new URL(
       `${getConfig().LMS_BASE_URL}${url}`,
     );
     const urlResponse = await getAuthenticatedHttpClient().get(edxProctoringURL.href);
-    activeAttemptResponse = urlResponse.activeAttemptResponse;
+    data = urlResponse.data;
   } else {
-    activeAttemptResponse = await fetchActiveAttempt();
+    data = await fetchActiveAttempt();
 
     // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
-    if (activeAttemptResponse.attempt_status) {
-      activeAttemptResponse.status = activeAttemptResponse.attempt_status;
-      delete activeAttemptResponse.attempt_status;
+    if (data.attempt_status) {
+      data.status = data.attempt_status;
+      delete data.attempt_status;
     }
   }
-  return activeAttemptResponse;
+  return data;
 }
 
 export async function createExamAttempt(examId, startClock = true, attemptProctored = false) {

@@ -13,9 +13,9 @@ const CountDownTimer = injectIntl((props) => {
   const [isShowTimer, showTimer, hideTimer] = useToggle(true);
   const { intl } = props;
 
-  const generateAccessbilityString = () => {
-    const hours = parseInt(timeString.substring(0, 2), 10);
-    const minutes = parseInt(timeString.substring(3, 5), 10);
+  const generateAccessbilityString = (timeState) => {
+    const { hours } = timeState;
+    const { minutes } = timeState;
 
     let remainingTime = '';
 
@@ -45,7 +45,7 @@ const CountDownTimer = injectIntl((props) => {
       className="exam-timer-clock d-flex justify-content-between"
       style={{ minWidth: isShowTimer ? '110px' : '32px' }}
     >
-      <span className="sr-only timer-announce" aria-live="assertive">{generateAccessbilityString(timeString)}</span>
+      <span className="sr-only timer-announce" aria-live="assertive">{generateAccessbilityString(timer.timeState)}</span>
       {isShowTimer && timeString}
       <span
         className="pl-2 d-flex flex-column justify-content-center"
