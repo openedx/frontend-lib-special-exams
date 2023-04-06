@@ -50,7 +50,6 @@ export const examSlice = createSlice({
         time_remaining_seconds: null,
         course_id: '',
         attempt_id: null,
-        accessibility_time_string: '',
         attempt_status: '',
         exam_started_poll_url: '',
         desktop_application_js_url: '',

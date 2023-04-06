@@ -9,15 +9,43 @@ import { TimerContext } from './TimerProvider';
  */
 const CountDownTimer = injectIntl((props) => {
   const timer = useContext(TimerContext);
+  const timeString = timer.getTimeString();
   const [isShowTimer, showTimer, hideTimer] = useToggle(true);
   const { intl } = props;
+
+  const generateAccessbilityString = (timeState) => {
+    const { hours, minutes } = timeState;
+
+    let remainingTime = '';
+
+    if (hours !== 0) {
+      remainingTime += `${hours} hour`;
+      if (hours >= 2) {
+        remainingTime += 's';
+      }
+      remainingTime += ' and ';
+    }
+    remainingTime += `${minutes} minute`;
+    if (minutes !== 1) {
+      remainingTime += 's';
+    }
+
+    /**
+    * INTL NOTE: At the moment, these strings are NOT internationalized/translated.
+    * The back-end also does not support this either.
+    *
+    * It is TBD if this needs to be implemented
+    */
+    return `you have ${remainingTime} remaining`;
+  };
 
   return (
     <div
       className="exam-timer-clock d-flex justify-content-between"
       style={{ minWidth: isShowTimer ? '110px' : '32px' }}
     >
-      {isShowTimer && timer.getTimeString()}
+      <span className="sr-only timer-announce" aria-live="assertive">{generateAccessbilityString(timer.timeState)}</span>
+      {isShowTimer && timeString}
       <span
         className="pl-2 d-flex flex-column justify-content-center"
         id="toggle_timer"

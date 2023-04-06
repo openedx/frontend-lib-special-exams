@@ -257,7 +257,6 @@ export function pollAttempt(url) {
       const updatedAttempt = {
         ...currentAttempt,
         time_remaining_seconds: data.time_remaining_seconds,
-        accessibility_time_string: data.accessibility_time_string,
         attempt_status: data.status,
       };
       dispatch(setActiveAttempt({
