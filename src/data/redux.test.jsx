@@ -37,6 +37,7 @@ describe('Data layer integration tests', () => {
   const fetchExamAttemptsDataLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`
     + `?content_id=${encodeURIComponent(contentId)}&is_learning_mfe=true`;
   const updateAttemptStatusLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attempt.attempt_id}`;
+  const createExamAttemptLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}`;
 
   const createUpdateAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
   const fetchExamAttemptsDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
@@ -178,11 +179,10 @@ describe('Data layer integration tests', () => {
         mergeConfig({ EXAMS_BASE_URL: null });
       });
 
-      it('Should start exam, and update attempt and exam', async () => {
-        const createExamAttemptUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}`;
+      it('Should create and start exam', async () => {
         axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: {} });
         axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
-        axiosMock.onPost(createExamAttemptUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
+        axiosMock.onPost(createExamAttemptLegacyUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
@@ -194,7 +194,7 @@ describe('Data layer integration tests', () => {
       });
     });
 
-    it('Should start exam, and update attempt and exam', async () => {
+    it('Should create and start exam', async () => {
       await initWithExamAttempt(exam, {});
 
       axiosMock.onGet(latestAttemptURL).reply(200, attempt);
@@ -208,6 +208,13 @@ describe('Data layer integration tests', () => {
         start_clock: 'true',
         attempt_proctored: 'false',
       }));
+    });
+
+    it('Should use legacy endpoint if use_legacy_attempt_api set on exam', async () => {
+      const legacyExam = Factory.build('exam', { use_legacy_attempt_api: true });
+      await initWithExamAttempt(legacyExam, {});
+      await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
+      expect(axiosMock.history.post[0].url).toEqual(createExamAttemptLegacyUrl);
     });
 
     it('Should fail to fetch if no exam id', async () => {
@@ -302,6 +309,16 @@ describe('Data layer integration tests', () => {
       expect(window.location.href).toEqual(attempt.exam_url_path);
 
       window.location = location;
+    });
+
+    it('Should use legacy endpoint if use_legacy_attempt_api set on attempt', async () => {
+      const legacyExam = Factory.build('exam', {
+        attempt: Factory.build('attempt', { use_legacy_attempt_api: true }),
+        use_legacy_attempt_api: true,
+      });
+      await initWithExamAttempt(legacyExam, legacyExam.attempt);
+      await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
+      expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
     });
 
     it('Should fail to fetch if error occurs', async () => {
@@ -516,6 +533,16 @@ describe('Data layer integration tests', () => {
 
       window.location = location;
     });
+
+    it('Should use legacy endpoint if use_legacy_attempt_api set on exam', async () => {
+      const legacyExam = Factory.build('exam', {
+        attempt: Factory.build('attempt', { use_legacy_attempt_api: true }),
+        use_legacy_attempt_api: true,
+      });
+      await initWithExamAttempt(legacyExam, legacyExam.attempt);
+      await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
+      expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
+    });
   });
 
   describe('Test expireExam', () => {
@@ -647,6 +674,13 @@ describe('Data layer integration tests', () => {
       const state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
       expect(axiosMock.history.post.length).toBe(1);
+    });
+
+    it('Should use legacy endpoint if use_legacy_attempt_api set on exam', async () => {
+      const legacyExam = Factory.build('exam', { use_legacy_attempt_api: true });
+      await initWithExamAttempt(legacyExam, {});
+      await executeThunk(thunks.createProctoredExamAttempt(), store.dispatch, store.getState);
+      expect(axiosMock.history.post[0].url).toEqual(createExamAttemptLegacyUrl);
     });
 
     it('Should fail to start if no attempt id', async () => {
@@ -969,30 +1003,7 @@ describe('Data layer integration tests', () => {
       expect(state.examState.examAccessToken.exam_access_token).toBe('');
     });
   });
+
+  describe('Test legacy service exams', () => {
+  });
 });
-
-// TODO: This needs it's own test file
-// describe('External API integration tests', () => {
-//   let store;
-
-//   describe('Test isExam', () => {
-//     it('Should return false if exam is not set', async () => {
-//       expect(isExam()).toBe(false);
-//     });
-//   });
-
-//   describe('Test getExamAccess', () => {
-//     it('Should return empty string if no access token', async () => {
-//       expect(getExamAccess()).toBe('');
-//     });
-//   });
-
-//   describe('Test fetchExamAccess', () => {
-//     it('Should dispatch get exam access token', async () => {
-//       const mockDispatch = jest.fn(() => store.dispatch);
-//       const mockState = jest.fn(() => store.getState);
-//       const dispatchReturn = fetchExamAccess(mockDispatch, mockState);
-//       expect(dispatchReturn).toBeInstanceOf(Promise);
-//     });
-//   });
-// });

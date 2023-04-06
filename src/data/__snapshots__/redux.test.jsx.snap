@@ -7,134 +7,6 @@ Object {
 }
 `;
 
-exports[`Data layer integration tests Test exams IDA url Should call the exams service to fetch attempt data 1`] = `
-Object {
-  "examState": Object {
-    "activeAttempt": Object {
-      "attempt_code": "",
-      "attempt_id": 1,
-      "attempt_status": "started",
-      "course_id": "course-v1:test+special+exam",
-      "desktop_application_js_url": "",
-      "exam_display_name": "timed",
-      "exam_started_poll_url": "/api/edx_proctoring/v1/proctored_exam/attempt/1",
-      "exam_type": "a timed exam",
-      "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
-      "in_timed_exam": true,
-      "software_download_url": "",
-      "taking_as_proctored": false,
-      "time_remaining_seconds": 1799.9,
-      "total_time": "30 minutes",
-    },
-    "allowProctoringOptOut": false,
-    "apiErrorMsg": "",
-    "exam": Object {
-      "attempt": Object {
-        "attempt_code": "",
-        "attempt_id": 1,
-        "attempt_status": "started",
-        "course_id": "course-v1:test+special+exam",
-        "desktop_application_js_url": "",
-        "exam_display_name": "timed",
-        "exam_started_poll_url": "/api/edx_proctoring/v1/proctored_exam/attempt/1",
-        "exam_type": "a timed exam",
-        "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
-        "in_timed_exam": true,
-        "software_download_url": "",
-        "taking_as_proctored": false,
-        "time_remaining_seconds": 1799.9,
-        "total_time": "30 minutes",
-      },
-      "backend": "test",
-      "content_id": "block-v1:test+special+exam+type@sequential+block@abc123",
-      "course_id": "course-v1:test+special+exam",
-      "due_date": null,
-      "exam_name": "prock exam",
-      "external_id": null,
-      "hide_after_due": false,
-      "id": 1,
-      "is_active": true,
-      "is_practice_exam": false,
-      "is_proctored": false,
-      "prerequisite_status": Object {
-        "are_prerequisites_satisifed": true,
-        "declined_prerequisites": Array [],
-        "failed_prerequisites": Array [],
-        "pending_prerequisites": Array [],
-        "satisfied_prerequisites": Array [],
-      },
-      "time_limit_mins": 30,
-      "total_time": "30 minutes",
-      "type": "timed",
-    },
-    "examAccessToken": Object {
-      "exam_access_token": "",
-      "exam_access_token_expiration": "",
-    },
-    "isLoading": false,
-    "proctoringSettings": Object {
-      "exam_proctoring_backend": Object {
-        "download_url": "",
-        "instructions": Array [],
-        "name": "",
-        "rules": Object {},
-      },
-      "integration_specific_email": "",
-      "learner_notification_from_email": "",
-      "provider_name": "",
-      "provider_tech_support_email": "",
-      "provider_tech_support_phone": "",
-    },
-    "timeIsOver": false,
-  },
-}
-`;
-
-exports[`Data layer integration tests Test exams IDA url Should call the exams service to get latest attempt data 1`] = `
-Object {
-  "examState": Object {
-    "activeAttempt": Object {
-      "attempt_code": "",
-      "attempt_id": 1,
-      "attempt_status": "ready_to_submit",
-      "course_id": "course-v1:test+special+exam",
-      "desktop_application_js_url": "",
-      "exam_display_name": "timed",
-      "exam_started_poll_url": "/api/edx_proctoring/v1/proctored_exam/attempt/1",
-      "exam_type": "a timed exam",
-      "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
-      "in_timed_exam": true,
-      "software_download_url": "",
-      "taking_as_proctored": false,
-      "time_remaining_seconds": 1799.9,
-      "total_time": "30 minutes",
-    },
-    "allowProctoringOptOut": false,
-    "apiErrorMsg": "",
-    "exam": Object {},
-    "examAccessToken": Object {
-      "exam_access_token": "",
-      "exam_access_token_expiration": "",
-    },
-    "isLoading": false,
-    "proctoringSettings": Object {
-      "exam_proctoring_backend": Object {
-        "download_url": "",
-        "instructions": Array [],
-        "name": "",
-        "rules": Object {},
-      },
-      "integration_specific_email": "",
-      "learner_notification_from_email": "",
-      "provider_name": "",
-      "provider_tech_support_email": "",
-      "provider_tech_support_phone": "",
-    },
-    "timeIsOver": false,
-  },
-}
-`;
-
 exports[`Data layer integration tests Test getExamAttemptsData Should get, and save exam and attempt 1`] = `
 Object {
   "examState": Object {
@@ -218,56 +90,10 @@ Object {
 }
 `;
 
-exports[`Data layer integration tests Test getLatestAttemptData Should get, and save latest attempt 1`] = `
-Object {
-  "examState": Object {
-    "activeAttempt": Object {
-      "attempt_code": "",
-      "attempt_id": 1,
-      "attempt_status": "started",
-      "course_id": "course-v1:test+special+exam",
-      "desktop_application_js_url": "",
-      "exam_display_name": "timed",
-      "exam_started_poll_url": "/api/edx_proctoring/v1/proctored_exam/attempt/1",
-      "exam_type": "a timed exam",
-      "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
-      "in_timed_exam": true,
-      "software_download_url": "",
-      "taking_as_proctored": false,
-      "time_remaining_seconds": 1799.9,
-      "total_time": "30 minutes",
-    },
-    "allowProctoringOptOut": false,
-    "apiErrorMsg": "",
-    "exam": Object {},
-    "examAccessToken": Object {
-      "exam_access_token": "",
-      "exam_access_token_expiration": "",
-    },
-    "isLoading": false,
-    "proctoringSettings": Object {
-      "exam_proctoring_backend": Object {
-        "download_url": "",
-        "instructions": Array [],
-        "name": "",
-        "rules": Object {},
-      },
-      "integration_specific_email": "",
-      "learner_notification_from_email": "",
-      "provider_name": "",
-      "provider_tech_support_email": "",
-      "provider_tech_support_phone": "",
-    },
-    "timeIsOver": false,
-  },
-}
-`;
-
 exports[`Data layer integration tests Test getLatestAttemptData with edx-proctoring as a backend (no EXAMS_BASE_URL) Should get, and save latest attempt 1`] = `
 Object {
   "examState": Object {
     "activeAttempt": Object {
-      "accessibility_time_string": "you have 30 minutes remaining",
       "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "started",
@@ -292,7 +118,6 @@ Object {
     },
     "isLoading": false,
     "proctoringSettings": Object {
-      "contact_us": "",
       "exam_proctoring_backend": Object {
         "download_url": "",
         "instructions": Array [],
@@ -301,8 +126,6 @@ Object {
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
-      "link_urls": null,
-      "platform_name": "",
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
@@ -346,7 +169,6 @@ Object {
 
 exports[`Data layer integration tests Test pollAttempt Should poll and update active attempt 1`] = `
 Object {
-  "accessibility_time_string": "you have 29 minutes remaining",
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -410,7 +232,6 @@ Object {
     "apiErrorMsg": "",
     "exam": Object {
       "attempt": Object {
-        "accessibility_time_string": "you have 30 minutes remaining",
         "attempt_code": "",
         "attempt_id": 2,
         "attempt_status": "created",
@@ -454,7 +275,6 @@ Object {
     },
     "isLoading": false,
     "proctoringSettings": Object {
-      "contact_us": "",
       "exam_proctoring_backend": Object {
         "download_url": "",
         "instructions": Array [],
@@ -463,8 +283,6 @@ Object {
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
-      "link_urls": null,
-      "platform_name": "",
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
@@ -563,7 +381,6 @@ Object {
 
 exports[`Data layer integration tests Test startProctoredExam with edx-proctoring as a backend (no EXAMS_BASE_URL) Should start exam, and update attempt and exam 1`] = `
 Object {
-  "accessibility_time_string": "you have 30 minutes remaining",
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -581,7 +398,7 @@ Object {
 }
 `;
 
-exports[`Data layer integration tests Test startTimedExam Should start exam, and update attempt and exam 1`] = `
+exports[`Data layer integration tests Test startTimedExam Should create and start exam 1`] = `
 Object {
   "attempt_code": "",
   "attempt_id": 1,
@@ -600,9 +417,8 @@ Object {
 }
 `;
 
-exports[`Data layer integration tests Test startTimedExam with edx-proctoring as a backend (no EXAMS_BASE_URL) Should start exam, and update attempt and exam 1`] = `
+exports[`Data layer integration tests Test startTimedExam with edx-proctoring as a backend (no EXAMS_BASE_URL) Should create and start exam 1`] = `
 Object {
-  "accessibility_time_string": "you have 30 minutes remaining",
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
