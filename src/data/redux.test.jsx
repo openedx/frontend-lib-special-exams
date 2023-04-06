@@ -191,6 +191,11 @@ describe('Data layer integration tests', () => {
         await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
         state = store.getState();
         expect(state.examState.activeAttempt).toMatchSnapshot();
+        expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
+          exam_id: exam.id,
+          start_clock: 'true',
+          attempt_proctored: 'false',
+        }));
       });
     });
 
