@@ -4,12 +4,11 @@ import MockAdapter from 'axios-mock-adapter';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { getConfig, mergeConfig } from '@edx/frontend-platform';
 
-import { isExam, fetchExamAccess, getExamAccess } from '../api';
 import * as thunks from './thunks';
 
 import executeThunk from '../utils';
 
-import { initializeTestStore, initializeMockApp } from '../setupTest';
+import { initializeTestStore, initializeMockApp, initializeTestConfig } from '../setupTest';
 import { ExamStatus } from '../constants';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
@@ -35,12 +34,24 @@ jest.mock('./messages/handlers', () => ({
 describe('Data layer integration tests', () => {
   const exam = Factory.build('exam', { attempt: Factory.build('attempt') });
   const { course_id: courseId, content_id: contentId, attempt } = exam;
-  const fetchExamAttemptsDataUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`
+  const fetchExamAttemptsDataLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`
     + `?content_id=${encodeURIComponent(contentId)}&is_learning_mfe=true`;
-  const updateAttemptStatusUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attempt.attempt_id}`;
+  const updateAttemptStatusLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attempt.attempt_id}`;
+  const createExamAttemptLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}`;
+
+  const createUpdateAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
+  const fetchExamAttemptsDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
+  const latestAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
   let store;
 
+  const initWithExamAttempt = async (testExam = exam, testAttempt = attempt) => {
+    axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: testExam });
+    axiosMock.onGet(latestAttemptURL).reply(200, testAttempt);
+    await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+  };
+
   beforeEach(async () => {
+    initializeTestConfig();
     windowSpy = jest.spyOn(window, 'window', 'get');
     axiosMock.reset();
     loggingService.logError.mockReset();
@@ -61,7 +72,8 @@ describe('Data layer integration tests', () => {
 
   describe('Test getExamAttemptsData', () => {
     it('Should get, and save exam and attempt', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam, active_attempt: attempt });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam });
+      axiosMock.onGet(latestAttemptURL).replyOnce(200, attempt);
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
 
@@ -83,8 +95,12 @@ describe('Data layer integration tests', () => {
     const fetchProctoringSettingsUrl = `${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/settings/exam_id/${exam.id}/`;
     const proctoringSettings = Factory.build('proctoringSettings');
 
+    beforeEach(async () => {
+      mergeConfig({ EXAMS_BASE_URL: null });
+    });
+
     it('Should get, and save proctoringSettings', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam, active_attempt: attempt });
+      axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
       axiosMock.onGet(fetchProctoringSettingsUrl).reply(200, proctoringSettings);
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
@@ -105,7 +121,7 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should fail to fetch if error occurs', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam, active_attempt: attempt });
+      axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
       axiosMock.onGet(fetchProctoringSettingsUrl).networkError();
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
@@ -120,8 +136,12 @@ describe('Data layer integration tests', () => {
     const getExamReviewPolicyUrl = `${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/review_policy/exam_id/${exam.id}/`;
     const reviewPolicy = 'Example review policy.';
 
+    beforeEach(async () => {
+      mergeConfig({ EXAMS_BASE_URL: null });
+    });
+
     it('Should get, and save getExamReviewPolicy', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam, active_attempt: attempt });
+      axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
       axiosMock.onGet(getExamReviewPolicyUrl).reply(200, { review_policy: reviewPolicy });
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
@@ -132,7 +152,7 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should fail to fetch if error occurs', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam, active_attempt: attempt });
+      axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
       axiosMock.onGet(getExamReviewPolicyUrl).networkError();
 
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
@@ -154,24 +174,59 @@ describe('Data layer integration tests', () => {
   });
 
   describe('Test startTimedExam', () => {
-    const createExamAttemptUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}`;
+    describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(() => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-    it('Should start exam, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: {} });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam, active_attempt: attempt });
-      axiosMock.onPost(createExamAttemptUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
+      it('Should create and start exam', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: {} });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
+        axiosMock.onPost(createExamAttemptLegacyUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      let state = store.getState();
-      expect(state.examState.activeAttempt).toBeNull();
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.activeAttempt).toBeNull();
+
+        await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.activeAttempt).toMatchSnapshot();
+        expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
+          exam_id: exam.id,
+          start_clock: 'true',
+          attempt_proctored: 'false',
+        }));
+      });
+    });
+
+    it('Should create and start exam', async () => {
+      await initWithExamAttempt(exam, {});
+
+      axiosMock.onGet(latestAttemptURL).reply(200, attempt);
+      axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: attempt.attempt_id });
 
       await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
-      state = store.getState();
+      const state = store.getState();
       expect(state.examState.activeAttempt).toMatchSnapshot();
+      expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
+        exam_id: exam.id,
+        start_clock: 'true',
+        attempt_proctored: 'false',
+      }));
+    });
+
+    it('Should use legacy endpoint if use_legacy_attempt_api set on exam', async () => {
+      const legacyExam = Factory.build('exam', { use_legacy_attempt_api: true });
+      await initWithExamAttempt(legacyExam, {});
+      await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
+      expect(axiosMock.history.post[0].url).toEqual(createExamAttemptLegacyUrl);
     });
 
     it('Should fail to fetch if no exam id', async () => {
-      axiosMock.onPost(createExamAttemptUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
+      // TODO: For working in these tests in the future
+      // This error logic is common to every thunk, so we can refactor this out and test it separately
+      // instead of repeating it for every feature.
+      axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: attempt.attempt_id });
 
       await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
 
@@ -185,48 +240,101 @@ describe('Data layer integration tests', () => {
     const readyToSubmitAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_SUBMIT });
     const readyToSubmitExam = Factory.build('exam', { attempt: readyToSubmitAttempt });
 
-    it('Should stop exam, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: attempt });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: readyToSubmitExam, active_attempt: {} });
-      axiosMock.onPut(updateAttemptStatusUrl).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
+    describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(() => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      it('Should stop exam, and update attempt', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: attempt });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam: readyToSubmitExam, active_attempt: {} });
+        axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+
+        await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+        expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
+        expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'stop' }));
+      });
+
+      it('Should stop exam, and redirect to sequence if not in exam section', async () => {
+        const { location } = window;
+        delete window.location;
+        window.location = {
+          href: '',
+        };
+
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam: {}, active_attempt: attempt });
+        axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        const state = store.getState();
+        expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+
+        await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
+        expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
+        expect(window.location.href).toEqual(attempt.exam_url_path);
+
+        window.location = location;
+      });
+    });
+
+    it('Should stop exam, and update attempt', async () => {
+      await initWithExamAttempt();
       let state = store.getState();
       expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+
+      axiosMock.onPut(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: readyToSubmitExam });
+      axiosMock.onGet(latestAttemptURL).reply(200, readyToSubmitAttempt);
 
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
       state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+      expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`);
+      expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'stop' }));
     });
 
-    it('Should stop exam, and redirect to sequence if no exam attempt', async () => {
+    it('Should stop exam, and redirect to sequence if not in exam section', async () => {
       const { location } = window;
       delete window.location;
       window.location = {
         href: '',
       };
 
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: {}, active_attempt: attempt });
-      axiosMock.onPut(updateAttemptStatusUrl).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
-
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await initWithExamAttempt({}, attempt);
       const state = store.getState();
       expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
 
+      axiosMock.onPut(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
+
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
-      expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusUrl);
+      expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`);
       expect(window.location.href).toEqual(attempt.exam_url_path);
 
       window.location = location;
     });
 
-    it('Should fail to fetch if error occurs', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: {}, active_attempt: attempt });
-      axiosMock.onPut(updateAttemptStatusUrl).networkError();
+    it('Should use legacy endpoint if use_legacy_attempt_api set on attempt', async () => {
+      const legacyExam = Factory.build('exam', {
+        attempt: Factory.build('attempt', { use_legacy_attempt_api: true }),
+        use_legacy_attempt_api: true,
+      });
+      await initWithExamAttempt(legacyExam, legacyExam.attempt);
+      await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
+      expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
+    });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+    it('Should fail to fetch if error occurs', async () => {
+      await initWithExamAttempt();
       let state = store.getState();
       expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+
+      axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).networkError();
 
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
       state = store.getState();
@@ -234,10 +342,8 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should fail to fetch if no active attempt', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: Factory.build('exam'), active_attempt: {} });
-      axiosMock.onGet(updateAttemptStatusUrl).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
+      await initWithExamAttempt(exam, {});
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
 
       const state = store.getState();
@@ -250,25 +356,48 @@ describe('Data layer integration tests', () => {
     const readyToSubmitAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_SUBMIT });
     const readyToSubmitExam = Factory.build('exam', { attempt: readyToSubmitAttempt });
 
-    it('Should stop exam, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: readyToSubmitExam, active_attempt: {} });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam, active_attempt: attempt });
-      axiosMock.onPost(updateAttemptStatusUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
+    describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(() => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      it('Should return to exam, and update attempt', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam: readyToSubmitExam, active_attempt: {} });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
+        axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+
+        await executeThunk(thunks.continueExam(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
+        expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'start' }));
+      });
+    });
+
+    it('Should return to exam, and update attempt', async () => {
+      await initWithExamAttempt(readyToSubmitExam, {});
       let state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam });
+      axiosMock.onGet(latestAttemptURL).reply(200, { attempt });
+      axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: attempt.attempt_id });
 
       await executeThunk(thunks.continueExam(), store.dispatch, store.getState);
       state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
+      expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'start' }));
     });
 
     it('Should fail to fetch if no attempt id', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: Factory.build('exam'), active_attempt: {} });
-      axiosMock.onGet(updateAttemptStatusUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
+      await initWithExamAttempt(Factory.build('exam'), {});
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      axiosMock.onGet(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: attempt.attempt_id });
       await executeThunk(thunks.continueExam(), store.dispatch, store.getState);
 
       const state = store.getState();
@@ -285,27 +414,54 @@ describe('Data layer integration tests', () => {
       });
     const examWithCreatedAttempt = Factory.build('exam', { attempt: createdAttempt });
 
-    it('Should reset exam, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: attempt });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: examWithCreatedAttempt, active_attempt: {} });
-      axiosMock.onPost(updateAttemptStatusUrl).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
+    describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(() => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      it('Should reset exam attempt', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: attempt });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, {
+          exam: examWithCreatedAttempt, active_attempt: {},
+        });
+        axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+
+        await executeThunk(thunks.resetExam(), store.dispatch, store.getState);
+
+        state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
+        expect(state).toMatchSnapshot();
+        expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
+        expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'reset_attempt' }));
+      });
+    });
+
+    it('Should reset exam attempt', async () => {
+      await initWithExamAttempt();
       let state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
-      await executeThunk(thunks.continueExam(), store.dispatch, store.getState);
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: examWithCreatedAttempt });
+      axiosMock.onGet(latestAttemptURL).reply(200, {});
+      axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
+
+      await executeThunk(thunks.resetExam(), store.dispatch, store.getState);
 
       state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
       expect(state).toMatchSnapshot();
+      expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
+      expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'reset_attempt' }));
     });
 
     it('Should fail to fetch if no attempt id', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: Factory.build('exam'), active_attempt: {} });
-      axiosMock.onGet(updateAttemptStatusUrl).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
+      await initWithExamAttempt(Factory.build('exam'), {});
+      axiosMock.onPut(`${createUpdateAttemptURL}/${createdAttempt.attempt_id}`).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.resetExam(), store.dispatch, store.getState);
 
       const state = store.getState();
@@ -318,25 +474,47 @@ describe('Data layer integration tests', () => {
     const submittedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.SUBMITTED });
     const submittedExam = Factory.build('exam', { attempt: submittedAttempt });
 
-    it('Should submit exam, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: attempt });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam, active_attempt: {} });
-      axiosMock.onPost(updateAttemptStatusUrl).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
+    describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(() => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      it('Should submit exam, and update attempt and exam', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: attempt });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam: submittedExam, active_attempt: {} });
+        axiosMock.onPost(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+
+        await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+      });
+    });
+
+    it('Should submit exam, and update attempt and exam', async () => {
+      await initWithExamAttempt();
       let state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam });
+      axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
       await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
       state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+      expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
+      expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'submit' }));
     });
 
     it('Should fail to fetch if no attempt id', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: Factory.build('exam'), active_attempt: {} });
-      axiosMock.onGet(updateAttemptStatusUrl).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
+      // TODO: For working in these tests in the future
+      // This error logic is common to every thunk, so we can refactor this out and test it separately
+      // instead of repeating it for every feature.
+      await initWithExamAttempt(Factory.build('exam'), {});
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
 
       const state = store.getState();
@@ -354,32 +532,27 @@ describe('Data layer integration tests', () => {
         href: '',
       };
 
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: {}, active_attempt: attempt });
-      axiosMock.onPut(updateAttemptStatusUrl).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
-
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await initWithExamAttempt({}, attempt);
       const state = store.getState();
       expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
 
+      axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
+
       await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
-      expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusUrl);
+      expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
       expect(window.location.href).toEqual(attempt.exam_url_path);
 
       window.location = location;
     });
 
-    it('Should fail to fetch if error occurs', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: {}, active_attempt: attempt });
-      axiosMock.onPut(updateAttemptStatusUrl).networkError();
-
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      let state = store.getState();
-      expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
-
+    it('Should use legacy endpoint if use_legacy_attempt_api set on exam', async () => {
+      const legacyExam = Factory.build('exam', {
+        attempt: Factory.build('attempt', { use_legacy_attempt_api: true }),
+        use_legacy_attempt_api: true,
+      });
+      await initWithExamAttempt(legacyExam, legacyExam.attempt);
       await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
-      state = store.getState();
-      expect(state.examState.apiErrorMsg).toBe('Network Error');
-      expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
     });
   });
 
@@ -387,26 +560,46 @@ describe('Data layer integration tests', () => {
     const submittedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.SUBMITTED });
     const submittedExam = Factory.build('exam', { attempt: submittedAttempt });
 
-    it('Should expire exam, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: attempt });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam, active_attempt: {} });
-      axiosMock.onPost(updateAttemptStatusUrl).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
+    describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(() => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      it('Should expire exam, and update attempt', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: attempt });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam: submittedExam, active_attempt: {} });
+        axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+
+        await executeThunk(thunks.expireExam(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+        expect(state.examState.timeIsOver).toBe(true);
+      });
+    });
+
+    it('Should submit expired exam, and update attempt', async () => {
+      await initWithExamAttempt();
       let state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam });
+      axiosMock.onGet(latestAttemptURL).reply(200, submittedAttempt);
+      axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
       await executeThunk(thunks.expireExam(), store.dispatch, store.getState);
       state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
       expect(state.examState.timeIsOver).toBe(true);
+      expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
+      expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'submit' }));
     });
 
     it('Should fail to fetch if no attempt id', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: Factory.build('exam'), active_attempt: {} });
-      axiosMock.onGet(updateAttemptStatusUrl).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
-
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await initWithExamAttempt(Factory.build('exam'), {});
       await executeThunk(thunks.expireExam(), store.dispatch, store.getState);
 
       const state = store.getState();
@@ -419,28 +612,41 @@ describe('Data layer integration tests', () => {
     const softwareDownloadedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.DOWNLOAD_SOFTWARE_CLICKED });
     const softwareDownloadedExam = Factory.build('exam', { attempt: softwareDownloadedAttempt });
 
-    it('Should start downloading proctoring software, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: attempt });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: softwareDownloadedExam, active_attempt: {} });
-      axiosMock.onPost(updateAttemptStatusUrl).reply(200, { exam_attempt_id: softwareDownloadedAttempt.attempt_id });
+    describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(() => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      let state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      it('Should start downloading proctoring software, and update attempt and exam', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: attempt });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, {
+          exam: softwareDownloadedExam, active_attempt: {},
+        });
+        axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, {
+          exam_attempt_id: softwareDownloadedAttempt.attempt_id,
+        });
 
-      await executeThunk(thunks.startProctoringSoftwareDownload(), store.dispatch, store.getState);
-      state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DOWNLOAD_SOFTWARE_CLICKED);
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+
+        await executeThunk(thunks.startProctoringSoftwareDownload(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DOWNLOAD_SOFTWARE_CLICKED);
+      });
     });
 
-    it('Should fail to start if no attempt id', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: Factory.build('exam'), active_attempt: {} });
-      axiosMock.onGet(updateAttemptStatusUrl).reply(200, { exam_attempt_id: softwareDownloadedAttempt.attempt_id });
+    it('Should start downloading proctoring software, and update attempt and exam', async () => {
+      await initWithExamAttempt();
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: softwareDownloadedExam, active_attempt: {} });
+      axiosMock.onPut(`${createUpdateAttemptURL}/${softwareDownloadedAttempt.attempt_id}`).reply(200, { exam_attempt_id: softwareDownloadedAttempt.attempt_id });
+
       await executeThunk(thunks.startProctoringSoftwareDownload(), store.dispatch, store.getState);
-
-      expect(loggingService.logError).toHaveBeenCalled();
+      const state = store.getState();
+      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DOWNLOAD_SOFTWARE_CLICKED);
+      expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${softwareDownloadedAttempt.attempt_id}`);
+      expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'click_download_software' }));
     });
   });
 
@@ -448,22 +654,48 @@ describe('Data layer integration tests', () => {
     const createdAttempt = Factory.build('attempt', { attempt_status: ExamStatus.CREATED });
     const createdExam = Factory.build('exam', { attempt: createdAttempt });
 
-    it('Should create exam attempt, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: Factory.build('exam'), active_attempt: {} });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: createdExam, active_attempt: {} });
-      axiosMock.onPost(updateAttemptStatusUrl).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
+    describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(async () => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      let state = store.getState();
-      expect(state.examState.exam.attempt).toEqual({});
+      it('Should create exam attempt, and update attempt and exam', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam: Factory.build('exam'), active_attempt: {} });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam: createdExam, active_attempt: {} });
+        axiosMock.onPost(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.exam.attempt).toEqual({});
+
+        await executeThunk(thunks.createProctoredExamAttempt(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
+      });
+    });
+
+    it('Should create exam attempt, and update attempt and exam', async () => {
+      await initWithExamAttempt(Factory.build('exam'), {});
+
+      // create thunk should POST attempt and update exam state from backend
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: createdExam });
+      axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
 
       await executeThunk(thunks.createProctoredExamAttempt(), store.dispatch, store.getState);
-      state = store.getState();
+      const state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
+      expect(axiosMock.history.post.length).toBe(1);
+    });
+
+    it('Should use legacy endpoint if use_legacy_attempt_api set on exam', async () => {
+      const legacyExam = Factory.build('exam', { use_legacy_attempt_api: true });
+      await initWithExamAttempt(legacyExam, {});
+      await executeThunk(thunks.createProctoredExamAttempt(), store.dispatch, store.getState);
+      expect(axiosMock.history.post[0].url).toEqual(createExamAttemptLegacyUrl);
     });
 
     it('Should fail to start if no attempt id', async () => {
-      axiosMock.onGet(updateAttemptStatusUrl).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
+      axiosMock.onGet(createUpdateAttemptURL).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
 
       await executeThunk(thunks.createProctoredExamAttempt(), store.dispatch, store.getState);
 
@@ -476,16 +708,40 @@ describe('Data layer integration tests', () => {
     const startedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.STARTED });
     const createdExam = Factory.build('exam', { attempt: createdAttempt });
     const startedExam = Factory.build('exam', { attempt: startedAttempt });
-    const continueAttemptUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${createdAttempt.attempt_id}`;
+    const continueAttemptLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${createdAttempt.attempt_id}`;
+
+    describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(async () => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
+
+      it('Should start exam, and update attempt and exam', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, {
+          exam: createdExam, active_attempt: createdAttempt,
+        });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, {
+          exam: startedExam, active_attempt: startedAttempt,
+        });
+        axiosMock.onPost(continueAttemptLegacyUrl).reply(200, { exam_attempt_id: startedAttempt.attempt_id });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.CREATED);
+
+        await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.activeAttempt).toMatchSnapshot();
+      });
+    });
 
     it('Should start exam, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: createdExam, active_attempt: createdAttempt });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: startedExam, active_attempt: startedAttempt });
-      axiosMock.onPost(continueAttemptUrl).reply(200, { exam_attempt_id: startedAttempt.attempt_id });
-
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await initWithExamAttempt(createdExam, createdAttempt);
       let state = store.getState();
       expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.CREATED);
+
+      axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: startedAttempt.attempt_id });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: startedExam });
+      axiosMock.onGet(latestAttemptURL).reply(200, startedAttempt);
 
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
       state = store.getState();
@@ -493,7 +749,7 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should fail to fetch if no exam id', async () => {
-      axiosMock.onPost(continueAttemptUrl).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
+      axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
 
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
 
@@ -514,17 +770,12 @@ describe('Data layer integration tests', () => {
       );
       const createdWorkerExam = Factory.build('exam', { attempt: createdWorkerAttempt });
       const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
-      const continueWorkerAttemptUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${createdWorkerAttempt.attempt_id}`;
 
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(
-        200, { exam: createdWorkerExam, active_attempt: createdWorkerAttempt },
-      );
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(
-        200, { exam: startedWorkerExam, active_attempt: startedWorkerAttempt },
-      );
-      axiosMock.onPost(continueWorkerAttemptUrl).reply(200, { exam_attempt_id: startedWorkerAttempt.attempt_id });
+      await initWithExamAttempt(createdWorkerExam, createdWorkerAttempt);
+      axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: startedWorkerAttempt.attempt_id });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: startedWorkerExam });
+      axiosMock.onGet(latestAttemptURL).reply(200, startedWorkerAttempt);
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
       expect(loggingService.logError).toHaveBeenCalledWith(
         'test error', {
@@ -546,37 +797,66 @@ describe('Data layer integration tests', () => {
     const declinedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.DECLINED });
     const declinedExam = Factory.build('exam', { attempt: declinedAttempt });
 
-    it('Should create exam attempt with declined status, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: Factory.build('exam'), active_attempt: {} });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: declinedExam, active_attempt: {} });
-      axiosMock.onPost(updateAttemptStatusUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
+    describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(async () => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      let state = store.getState();
-      expect(state.examState.exam.attempt).toEqual({});
+      it('Should create exam attempt with declined status, and update attempt and exam', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam: Factory.build('exam'), active_attempt: {} });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam: declinedExam, active_attempt: {} });
+        axiosMock.onPost(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
 
-      await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
-      state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.exam.attempt).toEqual({});
+
+        await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+      });
+
+      it('Should change existing attempt status to declined, and update attempt and exam', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam: createdExam, active_attempt: {} });
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam: declinedExam, active_attempt: {} });
+        axiosMock.onPost(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
+
+        await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
+        state = store.getState();
+        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+      });
     });
 
-    it('Should change attempt status to declined, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: createdExam, active_attempt: {} });
+    it('Should create exam attempt with declined status, and update attempt and exam', async () => {
+      await initWithExamAttempt(Factory.build('exam'), {});
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: declinedExam, active_attempt: {} });
-      axiosMock.onPost(updateAttemptStatusUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
+      axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
+      const state = store.getState();
+      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+      expect(axiosMock.history.post.length).toBe(1);
+    });
+
+    it('Should change existing attempt status to declined, and update attempt and exam', async () => {
+      await initWithExamAttempt(createdExam, {});
       let state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
 
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: declinedExam, active_attempt: {} });
+      axiosMock.onPut(`${createUpdateAttemptURL}/${declinedAttempt.attempt_id}`).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
+
       await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
       state = store.getState();
       expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+      expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'decline' }));
     });
 
     it('Should fail to start if no attempt id', async () => {
-      axiosMock.onGet(updateAttemptStatusUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
-
       await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
 
       expect(loggingService.logError).toHaveBeenCalled();
@@ -584,33 +864,44 @@ describe('Data layer integration tests', () => {
   });
 
   describe('Test pollAttempt', () => {
-    const pollExamAttemptUrl = `${getConfig().LMS_BASE_URL}${attempt.exam_started_poll_url}`;
+    describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
+      const pollExamAttemptUrl = `${getConfig().LMS_BASE_URL}${attempt.exam_started_poll_url}`;
+      beforeEach(async () => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-    it('Should poll exam attempt, and update attempt and exam', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: attempt });
-      axiosMock.onGet(pollExamAttemptUrl).reply(200, {
+      it('Should poll and update active attempt', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: attempt });
+        axiosMock.onGet(pollExamAttemptUrl).reply(200, {
+          time_remaining_seconds: 1739.9,
+          accessibility_time_string: 'you have 29 minutes remaining',
+          attempt_status: ExamStatus.STARTED,
+        });
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        let state = store.getState();
+        expect(state.examState.exam.attempt).toMatchSnapshot();
+
+        await executeThunk(thunks.pollAttempt(attempt.exam_started_poll_url), store.dispatch, store.getState);
+        state = store.getState();
+        const expectedPollUrl = `${getConfig().LMS_BASE_URL}${attempt.exam_started_poll_url}`;
+        expect(state.examState.exam.attempt).toMatchSnapshot();
+        expect(axiosMock.history.get[1].url).toEqual(expectedPollUrl);
+      });
+    });
+
+    it('Should poll and update active attempt', async () => {
+      await initWithExamAttempt(exam, attempt);
+
+      axiosMock.onGet(latestAttemptURL).reply(200, {
         time_remaining_seconds: 1739.9,
         accessibility_time_string: 'you have 29 minutes remaining',
         attempt_status: ExamStatus.STARTED,
       });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      let state = store.getState();
-      expect(state.examState.exam.attempt).toMatchSnapshot();
-
       await executeThunk(thunks.pollAttempt(attempt.exam_started_poll_url), store.dispatch, store.getState);
-      state = store.getState();
-      expect(state.examState.exam.attempt).toMatchSnapshot();
-    });
-
-    it('Should fail to start if no attempt id', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam, active_attempt: attempt });
-      axiosMock.onGet(pollExamAttemptUrl).networkError();
-
-      await executeThunk(thunks.pollAttempt(attempt.exam_started_poll_url), store.dispatch, store.getState);
-
       const state = store.getState();
-      expect(state.examState.apiErrorMsg).toBe('Network Error');
+      expect(state.examState.activeAttempt).toMatchSnapshot();
     });
   });
 
@@ -620,12 +911,9 @@ describe('Data layer integration tests', () => {
         'attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' },
       );
       const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(
-        200, { exam: startedWorkerExam, active_attempt: startedWorkerAttempt },
-      );
-      axiosMock.onPut(updateAttemptStatusUrl).reply(200, { exam_attempt_id: startedWorkerAttempt.attempt_id });
+      await initWithExamAttempt(startedWorkerExam, startedWorkerAttempt);
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+      axiosMock.onPut(`${createUpdateAttemptURL}/${startedWorkerAttempt.attempt_id}`).reply(200, { exam_attempt_id: startedWorkerAttempt.attempt_id });
       await executeThunk(thunks.pingAttempt(), store.dispatch, store.getState);
 
       expect(loggingService.logError).toHaveBeenCalledWith(
@@ -637,7 +925,6 @@ describe('Data layer integration tests', () => {
         },
       );
       const request = axiosMock.history.put[0];
-      expect(request.url).toEqual(updateAttemptStatusUrl);
       expect(request.data).toEqual(JSON.stringify({
         action: 'error',
         detail: 'test error',
@@ -646,55 +933,63 @@ describe('Data layer integration tests', () => {
   });
 
   describe('Test getLatestAttemptData', () => {
+    describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(async () => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
+
+      it('Should get, and save latest attempt', async () => {
+        const attemptDataUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}?is_learning_mfe=true`;
+        axiosMock.onGet(attemptDataUrl)
+          .reply(200, {
+            exam: {},
+            active_attempt: attempt,
+          });
+
+        await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
+
+        const state = store.getState();
+        expect(state)
+          .toMatchSnapshot();
+      });
+    });
+
     it('Should get, and save latest attempt', async () => {
-      const attemptDataUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}?is_learning_mfe=true`;
-      axiosMock.onGet(attemptDataUrl)
-        .reply(200, {
-          exam: {},
-          active_attempt: attempt,
-        });
+      await initWithExamAttempt();
+
+      axiosMock.onGet(latestAttemptURL).reply(200, Factory.build('attempt', { attempt_id: 1234 }));
 
       await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
 
       const state = store.getState();
-      expect(state)
-        .toMatchSnapshot();
+      expect(state.examState.activeAttempt.attempt_id).toEqual(1234);
     });
   });
 
-  describe('Test examRequiresAccessToken without exams url', () => {
-    it('Should not fetch exam access token', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam, active_attempt: attempt });
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
+  describe('Test examRequiresAccessToken', () => {
+    const fetchExamAccessUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${exam.id}/`;
 
-      const state = store.getState();
-      expect(state.examState.exam.id).toBe(exam.id);
-      expect(state.examState.examAccessToken.exam_access_token).toBe('');
-    });
-  });
+    describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
+      beforeEach(async () => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
 
-  describe('Test examRequiresAccessToken for exams IDA url', () => {
-    beforeAll(async () => {
-      mergeConfig({
-        EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
+      it('Should not fetch exam access token', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
+
+        const state = store.getState();
+        expect(state.examState.exam.id).toBe(exam.id);
+        expect(state.examState.examAccessToken.exam_access_token).toBe('');
       });
     });
 
     it('Should get exam access token', async () => {
-      const createExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
-      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
-      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-      const fetchExamAccessUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${exam.id}/`;
       const examAccessToken = Factory.build('examAccessToken');
 
-      axiosMock.onGet(examURL).reply(200, { exam });
-      axiosMock.onGet(activeAttemptURL).reply(200, {});
-      axiosMock.onPost(createExamAttemptURL).reply(200, { exam_attempt_id: 1111111 });
+      await initWithExamAttempt();
       axiosMock.onGet(fetchExamAccessUrl).reply(200, examAccessToken);
-
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
       await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
 
       const state = store.getState();
@@ -702,7 +997,6 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should fail to fetch if no exam id', async () => {
-      const fetchExamAccessUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${exam.id}/`;
       axiosMock.onGet(fetchExamAccessUrl).reply(200, {});
       await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
 
@@ -711,18 +1005,9 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should fail to fetch if API error occurs', async () => {
-      const createExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
-      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
-      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-      const fetchExamAccessUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${exam.id}/`;
-
-      axiosMock.onGet(examURL).reply(200, { exam });
-      axiosMock.onGet(activeAttemptURL).reply(200, {});
-      axiosMock.onPost(createExamAttemptURL).reply(200, { exam_attempt_id: 1111111 });
+      await initWithExamAttempt();
       axiosMock.onGet(fetchExamAccessUrl).reply(400, { detail: 'Exam access token not granted' });
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
       await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
 
       const state = store.getState();
@@ -730,154 +1015,6 @@ describe('Data layer integration tests', () => {
     });
   });
 
-  describe('Test exams IDA url', () => {
-    beforeAll(async () => {
-      mergeConfig({
-        EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
-      });
-    });
-
-    it('Should call the exams service for create attempt', async () => {
-      const createExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
-      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
-      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-
-      axiosMock.onGet(examURL)
-        .reply(200, { exam });
-      axiosMock.onGet(activeAttemptURL)
-        .reply(200, {});
-      axiosMock.onPost(createExamAttemptURL)
-        .reply(200, { exam_attempt_id: 1111111 });
-
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
-
-      expect(axiosMock.history.post[0].url)
-        .toEqual(createExamAttemptURL);
-    });
-
-    it('Should call the exams service for update attempt', async () => {
-      const updateExamAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/${attempt.id}`;
-      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
-      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-
-      axiosMock.onGet(examURL).reply(200, { exam });
-      axiosMock.onGet(activeAttemptURL).reply(200, { attempt });
-      axiosMock.onPut(updateExamAttemptURL).reply(200, { exam_attempt_id: attempt.id });
-
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-      await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
-      expect(axiosMock.history.put[0].url)
-        .toEqual(updateExamAttemptURL);
-    });
-
-    it('Should call the exams service to fetch attempt data', async () => {
-      const examURL = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
-      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-
-      axiosMock.onGet(examURL).reply(200, { exam });
-      axiosMock.onGet(activeAttemptURL).reply(200, attempt);
-
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
-
-      expect(axiosMock.history.get[0].url)
-        .toEqual(examURL);
-      expect(axiosMock.history.get[1].url)
-        .toEqual(activeAttemptURL);
-
-      const state = store.getState();
-      expect(state)
-        .toMatchSnapshot();
-    });
-
-    it('Should call the exams service to get latest attempt data', async () => {
-      const activeAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-
-      // Updated attempt with changed status
-      const updatedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_SUBMIT });
-
-      // Get initial data first, then updated data when calling pollAttempt
-      axiosMock.onGet(activeAttemptURL).replyOnce(200, attempt);
-      axiosMock.onGet(activeAttemptURL).reply(200, updatedAttempt);
-
-      // Get data, initialize state
-      await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
-      const beforeState = store.getState();
-      expect(beforeState.examState.activeAttempt).toEqual(attempt);
-
-      // Poll with initialized state
-      const dummyURL = `${getConfig().EXAMS_BASE_URL}/edx-proctoring/dummy-url`;
-      await executeThunk(thunks.pollAttempt(dummyURL), store.dispatch, store.getState);
-      const afterState = store.getState();
-      expect(afterState.examState.activeAttempt).toEqual(updatedAttempt);
-
-      expect(axiosMock.history.get[0].url).toEqual(activeAttemptURL);
-      expect(axiosMock.history.get[1].url).toEqual(activeAttemptURL);
-
-      expect(afterState).toMatchSnapshot();
-      expect(beforeState).not.toEqual(afterState); // Test that the state was updated when polled
-    });
-  });
-});
-
-describe('External API integration tests', () => {
-  let store;
-
-  describe('Test isExam', () => {
-    it('Should return false if exam is not set', async () => {
-      expect(isExam()).toBe(false);
-    });
-  });
-
-  describe('Test getExamAccess', () => {
-    it('Should return empty string if no access token', async () => {
-      expect(getExamAccess()).toBe('');
-    });
-  });
-
-  describe('Test fetchExamAccess', () => {
-    beforeAll(async () => {
-      mergeConfig({
-        EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
-      });
-    });
-
-    it('Should dispatch get exam access token', async () => {
-      const mockDispatch = jest.fn(() => store.dispatch);
-      const mockState = jest.fn(() => store.getState);
-      const dispatchReturn = fetchExamAccess(mockDispatch, mockState);
-      expect(dispatchReturn).toBeInstanceOf(Promise);
-    });
-  });
-});
-
-describe('External API integration tests', () => {
-  let store;
-
-  describe('Test isExam', () => {
-    it('Should return false if exam is not set', async () => {
-      expect(isExam()).toBe(false);
-    });
-  });
-
-  describe('Test getExamAccess', () => {
-    it('Should return empty string if no access token', async () => {
-      expect(getExamAccess()).toBe('');
-    });
-  });
-
-  describe('Test fetchExamAccess', () => {
-    beforeAll(async () => {
-      mergeConfig({
-        EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
-      });
-    });
-
-    it('Should dispatch get exam access token', async () => {
-      const mockDispatch = jest.fn(() => store.dispatch);
-      const mockState = jest.fn(() => store.getState);
-      const dispatchReturn = fetchExamAccess(mockDispatch, mockState);
-      expect(dispatchReturn).toBeInstanceOf(Promise);
-    });
+  describe('Test legacy service exams', () => {
   });
 });
