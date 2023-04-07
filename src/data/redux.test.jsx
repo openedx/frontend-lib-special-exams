@@ -223,6 +223,9 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should fail to fetch if no exam id', async () => {
+      // TODO: For working in these tests in the future
+      // This error logic is common to every thunk, so we can refactor this out and test it separately
+      // instead of repeating it for every feature.
       axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: attempt.attempt_id });
 
       await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
@@ -507,6 +510,9 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should fail to fetch if no attempt id', async () => {
+      // TODO: For working in these tests in the future
+      // This error logic is common to every thunk, so we can refactor this out and test it separately
+      // instead of repeating it for every feature.
       await initWithExamAttempt(Factory.build('exam'), {});
 
       await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
