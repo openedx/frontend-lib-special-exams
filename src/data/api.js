@@ -139,8 +139,13 @@ export async function fetchExamReviewPolicy(examId) {
   return data;
 }
 
-export async function fetchProctoringSettings(examId) {
-  const url = new URL(`${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/settings/exam_id/${examId}/`);
+export async function fetchProctoringSettings(courseId, examId) {
+  let url;
+  if (!getConfig().EXAMS_BASE_URL) {
+    url = new URL(`${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/settings/exam_id/${examId}/`);
+  } else {
+    url = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exam/provider_settings/course_id/${courseId}/exam_id/${examId}`);
+  }
   const { data } = await getAuthenticatedHttpClient().get(url.href);
   return data;
 }

@@ -110,7 +110,7 @@ export function getProctoringSettings() {
       return;
     }
     try {
-      const proctoringSettings = await fetchProctoringSettings(exam.id);
+      const proctoringSettings = await fetchProctoringSettings(exam.course_id, exam.id);
       dispatch(setProctoringSettings({ proctoringSettings }));
     } catch (error) {
       handleAPIError(error, dispatch);

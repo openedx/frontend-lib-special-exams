@@ -167,6 +167,22 @@ Object {
 }
 `;
 
+exports[`Data layer integration tests Test getProctoringSettings Test legacy URL for getProctoringSettings Should get, and save proctoringSettings 1`] = `
+Object {
+  "exam_proctoring_backend": Object {
+    "download_url": "",
+    "instructions": Array [],
+    "name": "",
+    "rules": Object {},
+  },
+  "integration_specific_email": "",
+  "learner_notification_from_email": "",
+  "provider_name": "",
+  "provider_tech_support_email": "",
+  "provider_tech_support_phone": "",
+}
+`;
+
 exports[`Data layer integration tests Test pollAttempt Should poll and update active attempt 1`] = `
 Object {
   "attempt_code": "",

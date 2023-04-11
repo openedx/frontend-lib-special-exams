@@ -38,10 +38,12 @@ describe('Data layer integration tests', () => {
     + `?content_id=${encodeURIComponent(contentId)}&is_learning_mfe=true`;
   const updateAttemptStatusLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attempt.attempt_id}`;
   const createExamAttemptLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}`;
+  const fetchProctoringSettingsLegacyUrl = `${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/settings/exam_id/${exam.id}/`;
 
   const createUpdateAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
   const fetchExamAttemptsDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
   const latestAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+  const fetchProctoringSettingsUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exam/provider_settings/course_id/${courseId}/exam_id/${exam.id}`;
   let store;
 
   const initWithExamAttempt = async (testExam = exam, testAttempt = attempt) => {
@@ -92,18 +94,29 @@ describe('Data layer integration tests', () => {
   });
 
   describe('Test getProctoringSettings', () => {
-    const fetchProctoringSettingsUrl = `${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/settings/exam_id/${exam.id}/`;
     const proctoringSettings = Factory.build('proctoringSettings');
 
-    beforeEach(async () => {
-      mergeConfig({ EXAMS_BASE_URL: null });
+    describe('Test legacy URL for getProctoringSettings', () => {
+      beforeEach(async () => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+      });
+
+      it('Should get, and save proctoringSettings', async () => {
+        axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
+        axiosMock.onGet(fetchProctoringSettingsLegacyUrl).reply(200, proctoringSettings);
+
+        await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+        await executeThunk(thunks.getProctoringSettings(), store.dispatch, store.getState);
+
+        const state = store.getState();
+        expect(state.examState.proctoringSettings).toMatchSnapshot();
+      });
     });
 
     it('Should get, and save proctoringSettings', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
+      await initWithExamAttempt();
       axiosMock.onGet(fetchProctoringSettingsUrl).reply(200, proctoringSettings);
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.getProctoringSettings(), store.dispatch, store.getState);
 
       const state = store.getState();
@@ -121,10 +134,9 @@ describe('Data layer integration tests', () => {
     });
 
     it('Should fail to fetch if error occurs', async () => {
-      axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam, active_attempt: attempt });
+      await initWithExamAttempt();
       axiosMock.onGet(fetchProctoringSettingsUrl).networkError();
 
-      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
       await executeThunk(thunks.getProctoringSettings(), store.dispatch, store.getState);
 
       const state = store.getState();
