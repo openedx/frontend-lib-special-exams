@@ -3,6 +3,7 @@ import { Icon, useToggle } from '@edx/paragon';
 import { Visibility, VisibilityOff } from '@edx/paragon/icons';
 import { injectIntl } from '@edx/frontend-platform/i18n';
 import { TimerContext } from './TimerProvider';
+import { generateHumanizedTime } from '../helpers';
 
 /**
  * Display timer textual value. Display hide/show button.
@@ -12,31 +13,17 @@ const CountDownTimer = injectIntl((props) => {
   const timeString = timer.getTimeString();
   const [isShowTimer, showTimer, hideTimer] = useToggle(true);
   const { intl } = props;
+  const { time_remaining_seconds: timeRemainingSeconds } = props.attempt;
 
-  const generateAccessbilityString = (timeState) => {
-    const { hours, minutes } = timeState;
-
-    let remainingTime = '';
-
-    if (hours !== 0) {
-      remainingTime += `${hours} hour`;
-      if (hours >= 2) {
-        remainingTime += 's';
-      }
-      remainingTime += ' and ';
-    }
-    remainingTime += `${minutes} minute`;
-    if (minutes !== 1) {
-      remainingTime += 's';
-    }
-
+  const generateAccessbilityString = () => {
+    const humanizedTime = generateHumanizedTime(timeRemainingSeconds);
     /**
     * INTL NOTE: At the moment, these strings are NOT internationalized/translated.
     * The back-end also does not support this either.
     *
     * It is TBD if this needs to be implemented
     */
-    return `you have ${remainingTime} remaining`;
+    return `you have ${humanizedTime} remaining`;
   };
 
   return (
@@ -44,7 +31,7 @@ const CountDownTimer = injectIntl((props) => {
       className="exam-timer-clock d-flex justify-content-between"
       style={{ minWidth: isShowTimer ? '110px' : '32px' }}
     >
-      <span className="sr-only timer-announce" aria-live="assertive">{generateAccessbilityString(timer.timeState)}</span>
+      <span className="sr-only timer-announce" aria-live="assertive">{generateAccessbilityString()}</span>
       {isShowTimer && timeString}
       <span
         className="pl-2 d-flex flex-column justify-content-center"

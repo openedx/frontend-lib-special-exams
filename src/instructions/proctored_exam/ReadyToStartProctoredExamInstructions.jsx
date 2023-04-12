@@ -13,7 +13,7 @@ const ReadyToStartProctoredExamInstructions = () => {
     startProctoredExam,
   } = state;
   const { attempt, reviewPolicy } = exam;
-  const { total_time: examDuration } = attempt;
+  const examDuration = attempt.total_time ? attempt.total_time : exam.total_time;
   const platformName = getConfig().SITE_NAME;
   const rulesUrl = getConfig().PROCTORED_EXAM_RULES_URL;
   const [beginExamClicked, setBeginExamClicked] = useState(false);

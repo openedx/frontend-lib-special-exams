@@ -1,6 +1,7 @@
 import { getConfig } from '@edx/frontend-platform';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { ExamAction } from '../constants';
+import { generateHumanizedTime } from '../helpers';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 
@@ -24,6 +25,11 @@ export async function fetchExamAttemptsData(courseId, sequenceId) {
     const examUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${sequenceId}`);
     const examResponse = await getAuthenticatedHttpClient().get(examUrl.href);
     data = examResponse.data;
+
+    // humanize total time if response is from edx-exams
+    data.exam.total_time = Number.isInteger(data.exam.total_time)
+      ? generateHumanizedTime(data.exam.total_time * 60)
+      : data.exam.total_time;
 
     const attemptData = await fetchActiveAttempt();
     data.active_attempt = attemptData;
