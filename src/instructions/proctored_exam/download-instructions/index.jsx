@@ -126,7 +126,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
           onStartExamClick={handleStartExamClick}
           downloadClicked={downloadClicked}
         />
-        {!LtiProviderExamInstructions && !withProviderInstructions && (
+        {!examHasLtiProvider && !withProviderInstructions && (
           <div className="pt-3">
             <div className="h4">
               <FormattedMessage

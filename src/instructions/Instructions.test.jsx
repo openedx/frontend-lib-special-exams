@@ -792,7 +792,7 @@ describe('SequenceExamWrapper', () => {
     await waitFor(() => { expect(windowSpy).toHaveBeenCalledWith('http://localhost:18740/lti/start_proctoring/4321', '_blank'); });
   });
 
-  it('Shows correct download instructions for legacy provider if attempt status is created', () => {
+  it('Shows correct download instructions for legacy rest provider if attempt status is created', () => {
     const instructions = [
       'instruction 1',
       'instruction 2',
@@ -838,6 +838,41 @@ describe('SequenceExamWrapper', () => {
     instructions.forEach((instruction) => {
       expect(screen.getByText(instruction)).toBeInTheDocument();
     });
+  });
+
+  it('Shows correct download instructions for legacy rpnow provider if attempt status is created', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'Provider Name',
+          exam_proctoring_backend: {},
+        }),
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          use_legacy_attempt_api: true,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.CREATED,
+            attempt_code: '1234-5678-9012-3456',
+            use_legacy_attempt_api: true,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(screen.getByDisplayValue('1234-5678-9012-3456')).toBeInTheDocument();
+    expect(screen.getByText('For security and exam integrity reasons, '
+      + 'we ask you to sign in to your edX account. Then we will '
+      + 'direct you to the RPNow proctoring experience.')).toBeInTheDocument();
   });
 
   it('Shows error message if receives unknown attempt status', () => {
