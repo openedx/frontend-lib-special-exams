@@ -1,13 +1,16 @@
 import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from './index';
 import { store, getExamAttemptsData, startTimedExam } from '../data';
+import { pollExamAttempt } from '../data/api';
 import { continueExam, submitExam } from '../data/thunks';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
-import { render, screen, act } from '../setupTest';
+import {
+  render, screen, act, initializeMockApp,
+} from '../setupTest';
 import ExamStateProvider from '../core/ExamStateProvider';
 import {
   ExamStatus, ExamType, INCOMPLETE_STATUSES,
@@ -23,14 +26,23 @@ jest.mock('../data/thunks', () => ({
   getExamReviewPolicy: jest.fn(),
   submitExam: jest.fn(),
 }));
+jest.mock('../data/api', () => ({
+  pollExamAttempt: jest.fn(),
+  softwareDownloadAttempt: jest.fn(),
+}));
 continueExam.mockReturnValue(jest.fn());
 submitExam.mockReturnValue(jest.fn());
 getExamAttemptsData.mockReturnValue(jest.fn());
 startTimedExam.mockReturnValue(jest.fn());
+pollExamAttempt.mockReturnValue(Promise.resolve({}));
 store.subscribe = jest.fn();
 store.dispatch = jest.fn();
 
 describe('SequenceExamWrapper', () => {
+  beforeEach(() => {
+    initializeMockApp();
+  });
+
   it('Start exam instructions can be successfully rendered', () => {
     store.getState = () => ({ examState: Factory.build('examState') });
 
@@ -709,7 +721,78 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
   });
 
-  it('Shows download software proctored exam instructions if attempt status is created', () => {
+  it('Shows correct download instructions for LTI provider if attempt status is created', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'LTI Provider',
+          provider_tech_support_email: 'ltiprovidersupport@example.com',
+          provider_tech_support_phone: '+123456789',
+        }),
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.CREATED,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText(
+      'If you have issues relating to proctoring, you can contact '
+      + 'LTI Provider technical support by emailing ltiprovidersupport@example.com or by calling +123456789.',
+    )).toBeInTheDocument();
+    expect(screen.getByText('Set up and start your proctored exam.')).toBeInTheDocument();
+    expect(screen.getByText('Start System Check')).toBeInTheDocument();
+    expect(screen.getByText('Start Exam')).toBeInTheDocument();
+  });
+
+  it('Initiates an LTI launch in a new window when the user clicks the System Check button', async () => {
+    const windowSpy = jest.spyOn(window, 'open');
+    windowSpy.mockImplementation(() => ({}));
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'LTI Provider',
+          provider_tech_support_email: 'ltiprovidersupport@example.com',
+          provider_tech_support_phone: '+123456789',
+        }),
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_id: 4321,
+            attempt_status: ExamStatus.CREATED,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    fireEvent.click(screen.getByText('Start System Check'));
+    await waitFor(() => { expect(windowSpy).toHaveBeenCalledWith('http://localhost:18740/lti/start_proctoring/4321', '_blank'); });
+  });
+
+  it('Shows correct download instructions for legacy provider if attempt status is created', () => {
     const instructions = [
       'instruction 1',
       'instruction 2',
@@ -729,8 +812,10 @@ describe('SequenceExamWrapper', () => {
         exam: Factory.build('exam', {
           is_proctored: true,
           type: ExamType.PROCTORED,
+          use_legacy_attempt_api: true,
           attempt: Factory.build('attempt', {
             attempt_status: ExamStatus.CREATED,
+            use_legacy_attempt_api: true,
           }),
         }),
       }),

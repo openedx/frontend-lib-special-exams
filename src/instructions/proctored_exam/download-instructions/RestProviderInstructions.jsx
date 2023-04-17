@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 
-const ProviderProctoredExamInstructions = ({
+const RestProviderInstructions = ({
   providerName, supportEmail, supportPhone, instructions,
 }) => (
   <>
@@ -39,17 +39,17 @@ const ProviderProctoredExamInstructions = ({
   </>
 );
 
-ProviderProctoredExamInstructions.propTypes = {
+RestProviderInstructions.propTypes = {
   providerName: PropTypes.string,
   supportEmail: PropTypes.string,
   supportPhone: PropTypes.string,
   instructions: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-ProviderProctoredExamInstructions.defaultProps = {
+RestProviderInstructions.defaultProps = {
   providerName: '',
   supportEmail: '',
   supportPhone: '',
 };
 
-export default ProviderProctoredExamInstructions;
+export default RestProviderInstructions;
