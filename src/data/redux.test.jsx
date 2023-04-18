@@ -83,6 +83,19 @@ describe('Data layer integration tests', () => {
       expect(state).toMatchSnapshot();
     });
 
+    it('Should translate total time correctly', async () => {
+      // configure exam whose total_time field is an int. This matches what is returned by edx-exams
+      exam.total_time = 30;
+
+      axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam });
+      axiosMock.onGet(latestAttemptURL).replyOnce(200, attempt);
+
+      await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
+
+      const state = store.getState();
+      expect(state.examState.exam.total_time).toBe('30 minutes');
+    });
+
     it('Should fail to fetch if error occurs', async () => {
       axiosMock.onGet(fetchExamAttemptsDataUrl).networkError();
 
@@ -1025,8 +1038,5 @@ describe('Data layer integration tests', () => {
       const state = store.getState();
       expect(state.examState.examAccessToken.exam_access_token).toBe('');
     });
-  });
-
-  describe('Test legacy service exams', () => {
   });
 });

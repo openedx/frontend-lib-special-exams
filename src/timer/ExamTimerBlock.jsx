@@ -122,7 +122,7 @@ const ExamTimerBlock = injectIntl(({
               </Button>
             )}
 
-            <CountDownTimer />
+            <CountDownTimer attempt={attempt} />
 
           </div>
         </div>

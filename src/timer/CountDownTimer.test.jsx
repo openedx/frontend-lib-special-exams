@@ -296,13 +296,14 @@ describe('ExamTimerBlock', () => {
 
   const timesToTest = {
     // Because times are rounded down, these values are 60 seconds off
-    '2 hours and 29 minutes': 9000,
-    '1 hour and 29 minutes': 5400,
-    '2 hours and 1 minute': 7320,
-    '1 hour and 1 minute': 3720,
-    '2 hours and 0 minutes': 7260,
-    '1 hour and 0 minutes': 3660,
-    '29 minutes': 1800,
+    '2 hours and 30 minutes': 9000,
+    '1 hour and 30 minutes': 5400,
+    '2 hours and 2 minutes': 7320,
+    '1 hour and 2 minutes': 3720,
+    '2 hours and 1 minute': 7260,
+    '1 hour and 1 minute': 3660,
+    '1 hour and 0 minutes': 3600,
+    '30 minutes': 1800,
   };
   Object.keys(timesToTest).forEach((timeString) => {
     it(`Accessibility time string ${timeString} appears as expected based seconds remaining: ${timesToTest[timeString]}`, async () => {

@@ -108,6 +108,35 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('review policy')).toBeInTheDocument();
   });
 
+  it('Shows correct instructions when attempt status is ready_to_start and attempt has no total time', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          is_proctored: true,
+          reviewPolicy: 'review policy',
+          total_time: '30 minutes',
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.READY_TO_START,
+            total_time: undefined,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(screen.getByTestId('proctored-exam-instructions-rulesLink')).toHaveTextContent('Rules for Online Proctored Exams');
+    expect(screen.getByTestId('duration-text')).toHaveTextContent('You have 30 minutes to complete this exam.');
+    expect(screen.getByText('review policy')).toBeInTheDocument();
+  });
+
   it('Instructions are shown when attempt status is submitted', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
