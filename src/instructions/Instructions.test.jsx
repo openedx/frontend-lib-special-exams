@@ -758,6 +758,38 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('Start Exam')).toBeInTheDocument();
   });
 
+  it('Hides support contact info on download instructions for LTI provider if not provided', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'LTI Provider',
+        }),
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.CREATED,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.queryByText('If you have issues relating to proctoring, you can contact LTI Provider')).toBeNull();
+    expect(screen.getByText('Set up and start your proctored exam.')).toBeInTheDocument();
+    expect(screen.getByText('Start System Check')).toBeInTheDocument();
+    expect(screen.getByText('Start Exam')).toBeInTheDocument();
+  });
+
   it('Initiates an LTI launch in a new window when the user clicks the System Check button', async () => {
     const windowSpy = jest.spyOn(window, 'open');
     windowSpy.mockImplementation(() => ({}));
@@ -777,6 +809,7 @@ describe('SequenceExamWrapper', () => {
             attempt_status: ExamStatus.CREATED,
           }),
         }),
+        getExamAttemptsData,
       }),
     });
 
@@ -790,6 +823,11 @@ describe('SequenceExamWrapper', () => {
     );
     fireEvent.click(screen.getByText('Start System Check'));
     await waitFor(() => { expect(windowSpy).toHaveBeenCalledWith('http://localhost:18740/lti/start_proctoring/4321', '_blank'); });
+
+    // also validate start button works
+    pollExamAttempt.mockReturnValue(Promise.resolve({ status: ExamStatus.READY_TO_START }));
+    fireEvent.click(screen.getByText('Start Exam'));
+    await waitFor(() => { expect(getExamAttemptsData).toHaveBeenCalled(); });
   });
 
   it('Shows correct download instructions for legacy rest provider if attempt status is created', () => {
@@ -926,7 +964,7 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('You must adhere to the following rules while you complete this exam.')).toBeInTheDocument();
   });
 
-  it('Shows loading spinner while waiting to start exam', () => {
+  it('Shows loading spinner while waiting to start exam', async () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         activeAttempt: {},
@@ -951,6 +989,7 @@ describe('SequenceExamWrapper', () => {
     );
 
     fireEvent.click(screen.getByTestId('start-exam-button'));
+    waitFor(() => expect(getExamAttemptsData).toHaveBeenCalled());
     expect(screen.getByTestId('exam-loading-spinner')).toBeInTheDocument();
   });
 });
