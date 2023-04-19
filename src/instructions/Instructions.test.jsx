@@ -1,13 +1,16 @@
 import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from './index';
 import { store, getExamAttemptsData, startTimedExam } from '../data';
+import { pollExamAttempt } from '../data/api';
 import { continueExam, submitExam } from '../data/thunks';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
-import { render, screen, act } from '../setupTest';
+import {
+  render, screen, act, initializeMockApp,
+} from '../setupTest';
 import ExamStateProvider from '../core/ExamStateProvider';
 import {
   ExamStatus, ExamType, INCOMPLETE_STATUSES,
@@ -23,14 +26,23 @@ jest.mock('../data/thunks', () => ({
   getExamReviewPolicy: jest.fn(),
   submitExam: jest.fn(),
 }));
+jest.mock('../data/api', () => ({
+  pollExamAttempt: jest.fn(),
+  softwareDownloadAttempt: jest.fn(),
+}));
 continueExam.mockReturnValue(jest.fn());
 submitExam.mockReturnValue(jest.fn());
 getExamAttemptsData.mockReturnValue(jest.fn());
 startTimedExam.mockReturnValue(jest.fn());
+pollExamAttempt.mockReturnValue(Promise.resolve({}));
 store.subscribe = jest.fn();
 store.dispatch = jest.fn();
 
 describe('SequenceExamWrapper', () => {
+  beforeEach(() => {
+    initializeMockApp();
+  });
+
   it('Start exam instructions can be successfully rendered', () => {
     store.getState = () => ({ examState: Factory.build('examState') });
 
@@ -709,22 +721,14 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
   });
 
-  it('Shows download software proctored exam instructions if attempt status is created', () => {
-    const instructions = [
-      'instruction 1',
-      'instruction 2',
-      'instruction 3',
-    ];
+  it('Shows correct download instructions for LTI provider if attempt status is created', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         activeAttempt: {},
         proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'Provider Name',
-          provider_tech_support_email: 'support@example.com',
+          provider_name: 'LTI Provider',
+          provider_tech_support_email: 'ltiprovidersupport@example.com',
           provider_tech_support_phone: '+123456789',
-          exam_proctoring_backend: {
-            instructions,
-          },
         }),
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -747,12 +751,166 @@ describe('SequenceExamWrapper', () => {
 
     expect(screen.getByText(
       'If you have issues relating to proctoring, you can contact '
+      + 'LTI Provider technical support by emailing ltiprovidersupport@example.com or by calling +123456789.',
+    )).toBeInTheDocument();
+    expect(screen.getByText('Set up and start your proctored exam.')).toBeInTheDocument();
+    expect(screen.getByText('Start System Check')).toBeInTheDocument();
+    expect(screen.getByText('Start Exam')).toBeInTheDocument();
+  });
+
+  it('Hides support contact info on download instructions for LTI provider if not provided', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'LTI Provider',
+        }),
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.CREATED,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.queryByText('If you have issues relating to proctoring, you can contact LTI Provider')).toBeNull();
+    expect(screen.getByText('Set up and start your proctored exam.')).toBeInTheDocument();
+    expect(screen.getByText('Start System Check')).toBeInTheDocument();
+    expect(screen.getByText('Start Exam')).toBeInTheDocument();
+  });
+
+  it('Initiates an LTI launch in a new window when the user clicks the System Check button', async () => {
+    const windowSpy = jest.spyOn(window, 'open');
+    windowSpy.mockImplementation(() => ({}));
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'LTI Provider',
+          provider_tech_support_email: 'ltiprovidersupport@example.com',
+          provider_tech_support_phone: '+123456789',
+        }),
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_id: 4321,
+            attempt_status: ExamStatus.CREATED,
+          }),
+        }),
+        getExamAttemptsData,
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    fireEvent.click(screen.getByText('Start System Check'));
+    await waitFor(() => { expect(windowSpy).toHaveBeenCalledWith('http://localhost:18740/lti/start_proctoring/4321', '_blank'); });
+
+    // also validate start button works
+    pollExamAttempt.mockReturnValue(Promise.resolve({ status: ExamStatus.READY_TO_START }));
+    fireEvent.click(screen.getByText('Start Exam'));
+    await waitFor(() => { expect(getExamAttemptsData).toHaveBeenCalled(); });
+  });
+
+  it('Shows correct download instructions for legacy rest provider if attempt status is created', () => {
+    const instructions = [
+      'instruction 1',
+      'instruction 2',
+      'instruction 3',
+    ];
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'Provider Name',
+          provider_tech_support_email: 'support@example.com',
+          provider_tech_support_phone: '+123456789',
+          exam_proctoring_backend: {
+            instructions,
+          },
+        }),
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          use_legacy_attempt_api: true,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.CREATED,
+            use_legacy_attempt_api: true,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText(
+      'If you have issues relating to proctoring, you can contact '
       + 'Provider Name technical support by emailing support@example.com or by calling +123456789.',
     )).toBeInTheDocument();
     expect(screen.getByText('Set up and start your proctored exam.')).toBeInTheDocument();
     instructions.forEach((instruction) => {
       expect(screen.getByText(instruction)).toBeInTheDocument();
     });
+  });
+
+  it('Shows correct download instructions for legacy rpnow provider if attempt status is created', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'Provider Name',
+          exam_proctoring_backend: {},
+        }),
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          use_legacy_attempt_api: true,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.CREATED,
+            attempt_code: '1234-5678-9012-3456',
+            use_legacy_attempt_api: true,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(screen.getByDisplayValue('1234-5678-9012-3456')).toBeInTheDocument();
+    expect(screen.getByText('For security and exam integrity reasons, '
+      + 'we ask you to sign in to your edX account. Then we will '
+      + 'direct you to the RPNow proctoring experience.')).toBeInTheDocument();
   });
 
   it('Shows error message if receives unknown attempt status', () => {
@@ -806,7 +964,7 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('You must adhere to the following rules while you complete this exam.')).toBeInTheDocument();
   });
 
-  it('Shows loading spinner while waiting to start exam', () => {
+  it('Shows loading spinner while waiting to start exam', async () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         activeAttempt: {},
@@ -831,6 +989,7 @@ describe('SequenceExamWrapper', () => {
     );
 
     fireEvent.click(screen.getByTestId('start-exam-button'));
+    waitFor(() => expect(getExamAttemptsData).toHaveBeenCalled());
     expect(screen.getByTestId('exam-loading-spinner')).toBeInTheDocument();
   });
 });

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import ExamCode from './ExamCode';
 
-const DefaultInstructions = ({ code }) => (
+const RPNowInstructions = ({ code }) => (
   <>
     <div className="h4">
       <FormattedMessage
@@ -55,8 +55,8 @@ const DefaultInstructions = ({ code }) => (
   </>
 );
 
-DefaultInstructions.propTypes = {
+RPNowInstructions.propTypes = {
   code: PropTypes.string.isRequired,
 };
 
-export default DefaultInstructions;
+export default RPNowInstructions;
