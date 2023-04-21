@@ -1,11 +1,11 @@
 import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from '../index';
 import { store, getExamAttemptsData } from '../../data';
 import { submitExam } from '../../data/thunks';
-import { render, screen } from '../../setupTest';
+import { initializeMockApp, render, screen } from '../../setupTest';
 import ExamStateProvider from '../../core/ExamStateProvider';
 import {
   ExamType,
@@ -27,6 +27,11 @@ store.subscribe = jest.fn();
 store.dispatch = jest.fn();
 
 describe('SequenceExamWrapper', () => {
+  beforeEach(() => {
+    initializeMockApp();
+    jest.clearAllMocks();
+  });
+
   it('Start exam instructions can be successfully rendered', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
@@ -164,6 +169,7 @@ describe('SequenceExamWrapper', () => {
   it('Shows correct instructions when attempt status is ready_to_submit ', () => {
     const attempt = Factory.build('attempt', {
       attempt_status: ExamStatus.READY_TO_SUBMIT,
+      use_legacy_attempt_api: true,
     });
     store.getState = () => ({
       examState: Factory.build('examState', {
@@ -188,6 +194,39 @@ describe('SequenceExamWrapper', () => {
     expect(queryByTestId('proctored-exam-instructions-title')).toHaveTextContent('Are you sure you want to end your proctored exam?');
     fireEvent.click(queryByTestId('end-exam-button'));
     expect(submitExam).toHaveBeenCalled();
+  });
+
+  it('Initiates an LTI launch in a new window when the user clicks the submit button', async () => {
+    const windowSpy = jest.spyOn(window, 'open');
+    windowSpy.mockImplementation(() => ({}));
+    const attempt = Factory.build('attempt', {
+      attempt_status: ExamStatus.READY_TO_SUBMIT,
+      use_legacy_attempt_api: false,
+      attempt_id: 1,
+    });
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: attempt,
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt,
+        }),
+      }),
+    });
+
+    const { queryByTestId } = render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(queryByTestId('proctored-exam-instructions-title')).toHaveTextContent('Are you sure you want to end your proctored exam?');
+    fireEvent.click(queryByTestId('end-exam-button'));
+    await waitFor(() => { expect(windowSpy).toHaveBeenCalledWith('http://localhost:18740/lti/end_assessment/1', '_blank'); });
   });
 
   it('Instructions are shown when attempt status is verified', () => {
