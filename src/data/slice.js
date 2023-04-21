@@ -56,6 +56,7 @@ export const examSlice = createSlice({
         ping_interval: null,
         attempt_code: '',
         external_id: '',
+        use_legacy_attempt_api: true,
       },
       type: '',
     },
