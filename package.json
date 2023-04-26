@@ -43,8 +43,6 @@
     "url": "https://github.com/edx/frontend-lib-special-exams/issues"
   },
   "dependencies": {
-    "@edx/frontend-build": "12.7.0",
-    "@edx/frontend-platform": "4.0.1",
     "@fortawesome/fontawesome-svg-core": "1.2.34",
     "@fortawesome/free-brands-svg-icons": "5.11.2",
     "@fortawesome/free-regular-svg-icons": "5.11.2",
@@ -54,6 +52,7 @@
     "eventemitter3": "^4.0.7"
   },
   "peerDependencies": {
+    "@edx/frontend-platform": "^4.0.0",
     "@edx/paragon": "^19.4.1 || ^20.22.4",
     "@reduxjs/toolkit": "^1.5.1",
     "prop-types": "^15.7.2",
@@ -65,6 +64,8 @@
     "redux": "^4.0.5"
   },
   "devDependencies": {
+    "@edx/frontend-build": "12.8.16",
+    "@edx/frontend-platform": "4.2.0",
     "@edx/paragon": "^20.22.4",
     "@edx/reactifex": "^2.1.1",
     "@reduxjs/toolkit": "^1.5.1",

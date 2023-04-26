@@ -57,7 +57,7 @@ const FailedPrerequisitesProctoredExamInstructions = (props) => {
 
 FailedPrerequisitesProctoredExamInstructions.propTypes = {
   allowProctoringOptOut: PropTypes.bool.isRequired,
-  prerequisites: PropTypes.arrayOf(PropTypes.object).isRequired,
+  prerequisites: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   skipProctoredExam: PropTypes.func.isRequired,
 };
 
