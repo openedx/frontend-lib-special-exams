@@ -9,9 +9,6 @@ export const examSlice = createSlice({
     activeAttempt: null, // has the same structure as attempt in exam object
     allowProctoringOptOut: false,
     proctoringSettings: {
-      platform_name: '',
-      contact_us: '',
-      link_urls: null,
       exam_proctoring_backend: {
         download_url: '',
         instructions: [],
@@ -53,13 +50,13 @@ export const examSlice = createSlice({
         time_remaining_seconds: null,
         course_id: '',
         attempt_id: null,
-        accessibility_time_string: '',
         attempt_status: '',
         exam_started_poll_url: '',
         desktop_application_js_url: '',
         ping_interval: null,
         attempt_code: '',
         external_id: '',
+        use_legacy_attempt_api: true,
       },
       type: '',
     },

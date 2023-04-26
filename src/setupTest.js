@@ -1,7 +1,7 @@
 import 'babel-polyfill';
 import '@testing-library/jest-dom';
 import './data/__factories__';
-import { getConfig } from '@edx/frontend-platform';
+import { getConfig, mergeConfig } from '@edx/frontend-platform';
 import { configure as configureLogging } from '@edx/frontend-platform/logging';
 import { configure as configureAuth, MockAuthService } from '@edx/frontend-platform/auth';
 import { AppContext } from '@edx/frontend-platform/react';
@@ -24,7 +24,14 @@ class MockLoggingService {
   }
 }
 
+export function initializeTestConfig() {
+  mergeConfig({
+    EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
+  });
+}
+
 export function initializeMockApp() {
+  initializeTestConfig();
   const loggingService = configureLogging(MockLoggingService, {
     config: getConfig(),
   });

@@ -2,8 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 
-const ProviderProctoredExamInstructions = ({
-  providerName, supportEmail, supportPhone, instructions,
+const LtiProviderExamInstructions = ({
+  providerName, supportEmail, supportPhone,
 }) => (
   <>
     <p>
@@ -15,13 +15,6 @@ const ProviderProctoredExamInstructions = ({
         + 'valid form of photo identification such as a driver’s license or passport.'}
       />
     </p>
-    <ol>
-      {instructions.map((item, index) => (
-        <li key={`${index.toString()}`}>
-          {item}
-        </li>
-      ))}
-    </ol>
     {supportEmail && supportPhone && (
       <p>
         <FormattedMessage
@@ -39,17 +32,16 @@ const ProviderProctoredExamInstructions = ({
   </>
 );
 
-ProviderProctoredExamInstructions.propTypes = {
+LtiProviderExamInstructions.propTypes = {
   providerName: PropTypes.string,
   supportEmail: PropTypes.string,
   supportPhone: PropTypes.string,
-  instructions: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
-ProviderProctoredExamInstructions.defaultProps = {
+LtiProviderExamInstructions.defaultProps = {
   providerName: '',
   supportEmail: '',
   supportPhone: '',
 };
 
-export default ProviderProctoredExamInstructions;
+export default LtiProviderExamInstructions;

@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { getConfig } from '@edx/frontend-platform';
 import { Button, Container, Spinner } from '@edx/paragon';
 import ExamStateContext from '../../context';
 import Footer from './Footer';
@@ -8,14 +9,13 @@ const ReadyToStartProctoredExamInstructions = () => {
   const state = useContext(ExamStateContext);
   const {
     exam,
-    proctoringSettings,
     getExamReviewPolicy,
     startProctoredExam,
   } = state;
   const { attempt, reviewPolicy } = exam;
-  const { total_time: examDuration } = attempt;
-  const { link_urls: linkUrls, platform_name: platformName } = proctoringSettings;
-  const rulesUrl = linkUrls && linkUrls.online_proctoring_rules;
+  const examDuration = attempt.total_time ? attempt.total_time : exam.total_time;
+  const platformName = getConfig().SITE_NAME;
+  const rulesUrl = getConfig().PROCTORED_EXAM_RULES_URL;
   const [beginExamClicked, setBeginExamClicked] = useState(false);
 
   useEffect(() => {

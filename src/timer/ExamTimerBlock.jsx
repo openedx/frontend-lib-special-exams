@@ -122,9 +122,8 @@ const ExamTimerBlock = injectIntl(({
                 />
               </Button>
             )}
-            <span className="sr-only timer-announce" aria-live="assertive">{attempt.accessibility_time_string}</span>
 
-            <CountDownTimer />
+            <CountDownTimer attempt={attempt} />
 
           </div>
         </div>

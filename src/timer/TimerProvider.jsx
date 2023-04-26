@@ -91,7 +91,7 @@ const TimerServiceProvider = ({
       if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
         pollExam();
       }
-      // if exam is proctored ping provider app also
+      // if exam is proctored ping provider app
       if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
         pingHandler(pingInterval, workerUrl);
       }

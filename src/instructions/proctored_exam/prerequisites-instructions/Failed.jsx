@@ -1,12 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { getConfig } from '@edx/frontend-platform';
 import SkipProctoredExamButton from '../SkipProctoredExamButton';
 
 const FailedPrerequisitesProctoredExamInstructions = (props) => {
   const {
-    allowProctoringOptOut, prerequisites, platformName, skipProctoredExam,
+    allowProctoringOptOut, prerequisites, skipProctoredExam,
   } = props;
+  const platformName = getConfig().SITE_NAME;
 
   return (
     <>
@@ -55,8 +57,7 @@ const FailedPrerequisitesProctoredExamInstructions = (props) => {
 
 FailedPrerequisitesProctoredExamInstructions.propTypes = {
   allowProctoringOptOut: PropTypes.bool.isRequired,
-  prerequisites: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
-  platformName: PropTypes.string.isRequired,
+  prerequisites: PropTypes.arrayOf(PropTypes.object).isRequired,
   skipProctoredExam: PropTypes.func.isRequired,
 };
 
