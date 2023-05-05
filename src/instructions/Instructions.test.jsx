@@ -4,7 +4,7 @@ import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from './index';
 import { store, getExamAttemptsData, startTimedExam } from '../data';
-import { pollExamAttempt } from '../data/api';
+import { pollExamAttempt, softwareDownloadAttempt } from '../data/api';
 import { continueExam, submitExam } from '../data/thunks';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
@@ -807,6 +807,7 @@ describe('SequenceExamWrapper', () => {
           attempt: Factory.build('attempt', {
             attempt_id: 4321,
             attempt_status: ExamStatus.CREATED,
+            use_legacy_attempt_api: false,
           }),
         }),
         getExamAttemptsData,
@@ -823,6 +824,7 @@ describe('SequenceExamWrapper', () => {
     );
     fireEvent.click(screen.getByText('Start System Check'));
     await waitFor(() => { expect(windowSpy).toHaveBeenCalledWith('http://localhost:18740/lti/start_proctoring/4321', '_blank'); });
+    expect(softwareDownloadAttempt).toHaveBeenCalledWith(4321, false);
 
     // also validate start button works
     pollExamAttempt.mockReturnValue(Promise.resolve({ status: ExamStatus.READY_TO_START }));
