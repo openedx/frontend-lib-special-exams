@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@edx/paragon';
 import ExamStateContext from '../../context';
@@ -11,8 +12,18 @@ const SubmitProctoredExamInstructions = () => {
     exam,
     activeAttempt,
   } = state;
-  const { type: examType } = exam || {};
+  const { type: examType, attempt } = exam || {};
   const { exam_display_name: examName } = activeAttempt;
+  const examHasLtiProvider = !attempt.use_legacy_attempt_api;
+  const submitLtiAttemptUrl = `${getConfig().EXAMS_BASE_URL}/lti/end_assessment/${attempt.attempt_id}`;
+
+  const handleSubmitClick = () => {
+    if (examHasLtiProvider) {
+      window.open(submitLtiAttemptUrl, '_blank');
+    } else {
+      submitExam();
+    }
+  };
 
   return (
     <>
@@ -48,7 +59,7 @@ const SubmitProctoredExamInstructions = () => {
           />
         </p>
       )}
-      <Button variant="primary" onClick={submitExam} className="mr-2" data-testid="end-exam-button">
+      <Button variant="primary" onClick={handleSubmitClick} className="mr-2" data-testid="end-exam-button">
         <FormattedMessage
           id="exam.SubmitProctoredExamInstructions.submit"
           defaultMessage="Yes, end my proctored exam"

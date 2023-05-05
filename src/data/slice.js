@@ -9,9 +9,6 @@ export const examSlice = createSlice({
     activeAttempt: null, // has the same structure as attempt in exam object
     allowProctoringOptOut: false,
     proctoringSettings: {
-      platform_name: '',
-      contact_us: '',
-      link_urls: null,
       exam_proctoring_backend: {
         download_url: '',
         instructions: [],
@@ -51,21 +48,23 @@ export const examSlice = createSlice({
         exam_display_name: '',
         exam_url_path: '',
         time_remaining_seconds: null,
-        low_threshold_sec: null,
-        critically_low_threshold_sec: null,
         course_id: '',
         attempt_id: null,
-        accessibility_time_string: '',
         attempt_status: '',
         exam_started_poll_url: '',
         desktop_application_js_url: '',
         ping_interval: null,
         attempt_code: '',
         external_id: '',
+        use_legacy_attempt_api: true,
       },
       type: '',
     },
     apiErrorMsg: '',
+    examAccessToken: {
+      exam_access_token: '',
+      exam_access_token_expiration: '',
+    },
   },
   reducers: {
     setAllowProctoringOptOut: (state, { payload }) => {
@@ -85,6 +84,9 @@ export const examSlice = createSlice({
     setProctoringSettings: (state, { payload }) => {
       state.proctoringSettings = payload.proctoringSettings;
     },
+    setExamAccessToken: (state, { payload }) => {
+      state.examAccessToken = payload.examAccessToken;
+    },
     expireExamAttempt: (state) => {
       state.timeIsOver = true;
     },
@@ -99,8 +101,8 @@ export const examSlice = createSlice({
 
 export const {
   setIsLoading, setExamState, expireExamAttempt,
-  setActiveAttempt, setProctoringSettings, setReviewPolicy,
-  setApiError, setAllowProctoringOptOut,
+  setActiveAttempt, setProctoringSettings, setExamAccessToken,
+  setReviewPolicy, setApiError, setAllowProctoringOptOut,
 } = examSlice.actions;
 
 export default examSlice.reducer;

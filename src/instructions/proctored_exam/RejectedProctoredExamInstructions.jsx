@@ -1,11 +1,9 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import ExamStateContext from '../../context';
+import { getConfig } from '@edx/frontend-platform';
 
 const RejectedProctoredExamInstructions = () => {
-  const state = useContext(ExamStateContext);
-  const { proctoringSettings } = state;
-  const { platform_name: platformName } = proctoringSettings;
+  const platformName = getConfig().SITE_NAME;
 
   return (
     <>
