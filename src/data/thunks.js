@@ -31,6 +31,7 @@ import {
 import { ExamStatus } from '../constants';
 import { workerPromiseForEventNames, pingApplication } from './messages/handlers';
 import actionToMessageTypesMap from './messages/constants';
+import notifyStartExam from './messages/proctorio';
 
 function handleAPIError(error, dispatch) {
   const { message, detail } = error;
@@ -183,6 +184,7 @@ export function startProctoredExam() {
     }
     const { desktop_application_js_url: workerUrl } = attempt || {};
     const useWorker = window.Worker && workerUrl;
+    const examHasLtiProvider = !exam.useLegacyAttemptApi;
 
     if (useWorker) {
       const startExamTimeoutMilliseconds = EXAM_START_TIMEOUT_MILLISECONDS;
@@ -209,6 +211,9 @@ export function startProctoredExam() {
           );
         });
     } else {
+      if (examHasLtiProvider) {
+        notifyStartExam();
+      }
       await updateAttemptAfter(
         exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api),
       )(dispatch);
