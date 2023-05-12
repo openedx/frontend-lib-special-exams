@@ -55,7 +55,10 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
         if (data.status === ExamStatus.READY_TO_START) {
           setSystemCheckStatus('success');
         } else {
-          softwareDownloadAttempt(attemptId);
+          // TODO: This call circumvents the thunk for startProctoringSoftwareDownload
+          // which is a bit odd and would handle useLegacyAttempt for us.
+          // There's an opportunity to refactor and clean this up a bit.
+          softwareDownloadAttempt(attemptId, useLegacyAttemptApi);
           window.open(launchSoftwareUrl, '_blank');
         }
       });

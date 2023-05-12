@@ -1,7 +1,6 @@
 frontend-lib-special-exams
 =================================
-
-This is a react library responsible for extending learning app with special exams functionality, e.g. proctored/timed exams.  
+This is a react library responsible for extending learning app with special exams functionality, e.g. proctored/timed exams.
 
 Set up instructions
 --------------------------

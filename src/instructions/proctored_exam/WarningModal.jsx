@@ -1,25 +1,31 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Button, Modal } from '@edx/paragon';
+import { ActionRow, ModalDialog, Button } from '@edx/paragon';
 
 const WarningModal = ({
   isOpen, handleClose, title, body,
 }) => (
-  <Modal
-    title={title}
-    open={isOpen}
-    onClose={() => {}}
-    renderDefaultCloseButton={false}
-    renderHeaderCloseButton={false}
-    buttons={[
-      <Button variant="tertiary" onClick={handleClose}>Ok</Button>,
-    ]}
-    body={(
-      <p>
-        {body}
-      </p>
-    )}
-  />
+  <ModalDialog
+    isOpen={isOpen}
+    hasCloseButton={false}
+  >
+
+    <ModalDialog.Header>
+      <ModalDialog.Title>
+        {title}
+      </ModalDialog.Title>
+    </ModalDialog.Header>
+    <ModalDialog.Body>
+      {body}
+    </ModalDialog.Body>
+    <ModalDialog.Footer>
+      <ActionRow>
+        <Button onClick={handleClose} variant="tertiary">
+          Ok
+        </Button>
+      </ActionRow>
+    </ModalDialog.Footer>
+  </ModalDialog>
 );
 
 WarningModal.propTypes = {
