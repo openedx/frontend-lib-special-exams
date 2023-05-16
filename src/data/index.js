@@ -1,5 +1,6 @@
 export {
   getExamAttemptsData,
+  getLatestAttemptData,
   getProctoringSettings,
   startTimedExam,
   startProctoredExam,
@@ -13,6 +14,7 @@ export {
   pingAttempt,
   resetExam,
   getAllowProctoringOptOut,
+  examRequiresAccessToken,
 } from './thunks';
 
 export { default as store } from './store';

@@ -66,16 +66,17 @@ const ExamTimerBlock = injectIntl(({
           <div>
             <FormattedMessage
               id="exam.examTimer.text"
-              defaultMessage='You are taking "'
+              defaultMessage='You are taking "{examLink}" as {examType}.'
+              values={{
+                examLink: (
+                  <Alert.Link href={attempt.exam_url_path}>
+                    {attempt.exam_display_name}
+                  </Alert.Link>
+                ),
+                examType: attempt.exam_type,
+              }}
             />
-            <Alert.Link href={attempt.exam_url_path}>
-              {attempt.exam_display_name}
-            </Alert.Link>
-            <FormattedMessage
-              id="exam.examTimer.text"
-              defaultMessage='" as {examType}. '
-              values={{ examType: attempt.exam_type }}
-            />
+            {' '}
             {
               isShowMore
                 ? (
@@ -120,9 +121,8 @@ const ExamTimerBlock = injectIntl(({
                 />
               </Button>
             )}
-            <span className="sr-only timer-announce" aria-live="assertive">{attempt.accessibility_time_string}</span>
 
-            <CountDownTimer />
+            <CountDownTimer attempt={attempt} />
 
           </div>
         </div>
@@ -136,8 +136,6 @@ ExamTimerBlock.propTypes = {
     exam_url_path: PropTypes.string.isRequired,
     exam_display_name: PropTypes.string.isRequired,
     time_remaining_seconds: PropTypes.number.isRequired,
-    low_threshold_sec: PropTypes.number.isRequired,
-    critically_low_threshold_sec: PropTypes.number.isRequired,
   }),
   stopExamAttempt: PropTypes.func.isRequired,
   expireExamAttempt: PropTypes.func.isRequired,

@@ -1,6 +1,8 @@
 import { logError } from '@edx/frontend-platform/logging';
+import { getConfig } from '@edx/frontend-platform';
 import {
   fetchExamAttemptsData,
+  fetchLatestAttempt,
   createExamAttempt,
   stopAttempt,
   continueAttempt,
@@ -12,6 +14,7 @@ import {
   resetAttempt,
   declineAttempt,
   endExamWithFailure,
+  fetchExamAccessToken,
 } from './api';
 import { isEmpty } from '../helpers';
 import {
@@ -20,6 +23,7 @@ import {
   expireExamAttempt,
   setActiveAttempt,
   setProctoringSettings,
+  setExamAccessToken,
   setReviewPolicy,
   setApiError,
   setAllowProctoringOptOut,
@@ -59,7 +63,6 @@ function updateAttemptAfter(courseId, sequenceId, promiseToBeResolvedFirst = nul
         if (!noLoading) { dispatch(setIsLoading({ isLoading: false })); }
       }
     }
-
     try {
       const attemptData = await fetchExamAttemptsData(courseId, sequenceId);
       dispatch(setExamState({
@@ -78,6 +81,23 @@ export function getExamAttemptsData(courseId, sequenceId) {
   return updateAttemptAfter(courseId, sequenceId);
 }
 
+export function getLatestAttemptData(courseId) {
+  return async (dispatch) => {
+    dispatch(setIsLoading({ isLoading: true }));
+    try {
+      const attemptData = await fetchLatestAttempt(courseId);
+      dispatch(setExamState({
+        exam: attemptData.exam,
+        activeAttempt: !isEmpty(attemptData.active_attempt) ? attemptData.active_attempt : null,
+      }));
+    } catch (error) {
+      handleAPIError(error, dispatch);
+    } finally {
+      dispatch(setIsLoading({ isLoading: false }));
+    }
+  };
+}
+
 export function getProctoringSettings() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
@@ -90,10 +110,29 @@ export function getProctoringSettings() {
       return;
     }
     try {
-      const proctoringSettings = await fetchProctoringSettings(exam.id);
+      const proctoringSettings = await fetchProctoringSettings(exam.course_id, exam.id);
       dispatch(setProctoringSettings({ proctoringSettings }));
     } catch (error) {
       handleAPIError(error, dispatch);
+    }
+  };
+}
+
+export function examRequiresAccessToken() {
+  return async (dispatch, getState) => {
+    if (!getConfig().EXAMS_BASE_URL) {
+      return;
+    }
+    const { exam } = getState().examState;
+    if (!exam.id) {
+      logError('Failed to get exam access token. No exam id.');
+      return;
+    }
+    try {
+      const examAccessToken = await fetchExamAccessToken(exam.id);
+      dispatch(setExamAccessToken({ examAccessToken }));
+    } catch (error) {
+      logError('Exam access token was not granted.');
     }
   };
 }
@@ -113,7 +152,7 @@ export function startTimedExam() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, createExamAttempt(exam.id),
+      exam.course_id, exam.content_id, createExamAttempt(exam.id, exam.use_legacy_attempt_api),
     )(dispatch);
   };
 }
@@ -126,7 +165,7 @@ export function createProctoredExamAttempt() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, createExamAttempt(exam.id, false, true),
+      exam.course_id, exam.content_id, createExamAttempt(exam.id, exam.use_legacy_attempt_api, false, true),
     )(dispatch);
   };
 }
@@ -151,7 +190,7 @@ export function startProctoredExam() {
         startExamTimeoutMilliseconds,
         attempt.external_id,
       ).then(() => updateAttemptAfter(
-        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
+        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api),
       )(dispatch))
         .catch(error => {
           const message = error?.message || 'Worker failed to respond.';
@@ -171,7 +210,7 @@ export function startProctoredExam() {
         });
     } else {
       await updateAttemptAfter(
-        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id),
+        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api),
       )(dispatch);
     }
   };
@@ -185,13 +224,14 @@ export function skipProctoringExam() {
       return;
     }
     const attemptId = exam.attempt.attempt_id;
+    const useLegacyAttemptApi = exam.use_legacy_attempt_api;
     if (attemptId) {
       await updateAttemptAfter(
-        exam.course_id, exam.content_id, declineAttempt(attemptId),
+        exam.course_id, exam.content_id, declineAttempt(attemptId, useLegacyAttemptApi),
       )(dispatch);
     } else {
       await updateAttemptAfter(
-        exam.course_id, exam.content_id, createExamAttempt(exam.id, true, false),
+        exam.course_id, exam.content_id, createExamAttempt(exam.id, true, false, useLegacyAttemptApi),
       )(dispatch);
     }
   };
@@ -218,7 +258,6 @@ export function pollAttempt(url) {
       const updatedAttempt = {
         ...currentAttempt,
         time_remaining_seconds: data.time_remaining_seconds,
-        accessibility_time_string: data.accessibility_time_string,
         attempt_status: data.status,
       };
       dispatch(setActiveAttempt({
@@ -246,10 +285,14 @@ export function stopExam() {
       return;
     }
 
-    const { attempt_id: attemptId, exam_url_path: examUrl } = activeAttempt;
+    const {
+      attempt_id: attemptId,
+      exam_url_path: examUrl,
+      use_legacy_attempt_api: useLegacyAttemptAPI,
+    } = activeAttempt;
     if (!exam.attempt || attemptId !== exam.attempt.attempt_id) {
       try {
-        await stopAttempt(attemptId);
+        await stopAttempt(attemptId, useLegacyAttemptAPI);
         window.location.href = examUrl;
       } catch (error) {
         handleAPIError(error, dispatch);
@@ -258,7 +301,7 @@ export function stopExam() {
     }
 
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, stopAttempt(attemptId),
+      exam.course_id, exam.content_id, stopAttempt(attemptId, useLegacyAttemptAPI),
     )(dispatch);
   };
 }
@@ -267,6 +310,7 @@ export function continueExam() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
     const attemptId = exam.attempt.attempt_id;
+    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     if (!attemptId) {
       logError('Failed to continue exam. No attempt id.');
       handleAPIError(
@@ -276,7 +320,7 @@ export function continueExam() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, continueAttempt(attemptId),
+      exam.course_id, exam.content_id, continueAttempt(attemptId, useLegacyAttemptAPI),
     )(dispatch);
   };
 }
@@ -285,6 +329,7 @@ export function resetExam() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
     const attemptId = exam.attempt.attempt_id;
+    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     if (!attemptId) {
       logError('Failed to reset exam attempt. No attempt id.');
       handleAPIError(
@@ -294,7 +339,7 @@ export function resetExam() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, resetAttempt(attemptId),
+      exam.course_id, exam.content_id, resetAttempt(attemptId, useLegacyAttemptAPI),
     )(dispatch);
   };
 }
@@ -326,10 +371,14 @@ export function submitExam() {
       return;
     }
 
-    const { attempt_id: attemptId, exam_url_path: examUrl } = activeAttempt;
+    const {
+      attempt_id: attemptId,
+      exam_url_path: examUrl,
+      use_legacy_attempt_api: useLegacyAttemptAPI,
+    } = activeAttempt;
     if (!exam.attempt || attemptId !== exam.attempt.attempt_id) {
       try {
-        await submitAttempt(attemptId);
+        await submitAttempt(attemptId, useLegacyAttemptAPI);
         window.location.href = examUrl;
         handleBackendProviderSubmission();
       } catch (error) {
@@ -338,7 +387,7 @@ export function submitExam() {
       return;
     }
 
-    await updateAttemptAfter(exam.course_id, exam.content_id, submitAttempt(attemptId))(dispatch);
+    await updateAttemptAfter(exam.course_id, exam.content_id, submitAttempt(attemptId, useLegacyAttemptAPI))(dispatch);
     handleBackendProviderSubmission();
   };
 }
@@ -350,6 +399,7 @@ export function expireExam() {
       desktop_application_js_url: workerUrl,
       attempt_id: attemptId,
       external_id: attemptExternalId,
+      use_legacy_attempt_api: useLegacyAttemptAPI,
     } = activeAttempt || {};
     const useWorker = window.Worker && activeAttempt && workerUrl;
 
@@ -362,8 +412,9 @@ export function expireExam() {
       return;
     }
 
+    // this sure looks like a bug
     await updateAttemptAfter(
-      activeAttempt.course_id, exam.content_id, submitAttempt(attemptId),
+      activeAttempt.course_id, exam.content_id, submitAttempt(attemptId, useLegacyAttemptAPI),
     )(dispatch);
     dispatch(expireExamAttempt());
 
@@ -413,6 +464,7 @@ export function startProctoringSoftwareDownload() {
   return async (dispatch, getState) => {
     const { exam } = getState().examState;
     const attemptId = exam.attempt.attempt_id;
+    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     if (!attemptId) {
       logError('Failed to start downloading proctoring software. No attempt id.');
       handleAPIError(
@@ -422,7 +474,7 @@ export function startProctoringSoftwareDownload() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, softwareDownloadAttempt(attemptId),
+      exam.course_id, exam.content_id, softwareDownloadAttempt(attemptId, useLegacyAttemptAPI),
     )(dispatch);
   };
 }

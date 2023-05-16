@@ -1,13 +1,10 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Button } from '@edx/paragon';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import ExamStateContext from '../../context';
+import { getConfig } from '@edx/frontend-platform';
 
 const Footer = () => {
-  const state = useContext(ExamStateContext);
-  const { proctoringSettings } = state;
-  const { link_urls: linkUrls } = proctoringSettings;
-  const faqUrl = linkUrls && linkUrls.faq;
+  const faqUrl = getConfig().PROCTORED_EXAM_FAQ_URL;
 
   return (
     <div className="footer-sequence">
