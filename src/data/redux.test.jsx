@@ -811,6 +811,23 @@ describe('Data layer integration tests', () => {
         },
       );
     });
+
+    it('Should notify top window on LTI exam start', async () => {
+      const mockPostMessage = jest.fn();
+      windowSpy.mockImplementation(() => ({
+        top: {
+          postMessage: mockPostMessage,
+        },
+      }));
+
+      await initWithExamAttempt(createdExam, createdAttempt);
+      axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: startedAttempt.attempt_id });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: startedExam });
+      axiosMock.onGet(latestAttemptURL).reply(200, startedAttempt);
+
+      await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
+      expect(mockPostMessage).toHaveBeenCalledWith(['exam_state_change', 'exam_take'], '*');
+    });
   });
 
   describe('Test skipProctoringExam', () => {
