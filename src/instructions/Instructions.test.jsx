@@ -611,7 +611,8 @@ describe('SequenceExamWrapper', () => {
   });
 
   [ExamType.PROCTORED, ExamType.TIMED].forEach((examType) => {
-    it.each(INCOMPLETE_STATUSES)(`Shows expired page when exam is ${examType} and has passed due date and attempt is in %s status`,
+    it.each(INCOMPLETE_STATUSES)(
+      `Shows expired page when exam is ${examType} and has passed due date and attempt is in %s status`,
       (item) => {
         store.getState = () => ({
           examState: Factory.build('examState', {
@@ -638,7 +639,8 @@ describe('SequenceExamWrapper', () => {
         );
 
         expect(screen.getByText('The due date for this exam has passed')).toBeInTheDocument();
-      });
+      },
+    );
   });
 
   it('Shows exam content for timed exam if attempt status is submitted, due date has passed and hide after due is set to false', () => {

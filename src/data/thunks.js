@@ -153,7 +153,9 @@ export function startTimedExam() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, createExamAttempt(exam.id, exam.use_legacy_attempt_api),
+      exam.course_id,
+      exam.content_id,
+      createExamAttempt(exam.id, exam.use_legacy_attempt_api),
     )(dispatch);
   };
 }
@@ -166,7 +168,9 @@ export function createProctoredExamAttempt() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, createExamAttempt(exam.id, exam.use_legacy_attempt_api, false, true),
+      exam.course_id,
+      exam.content_id,
+      createExamAttempt(exam.id, exam.use_legacy_attempt_api, false, true),
     )(dispatch);
   };
 }
@@ -192,7 +196,9 @@ export function startProctoredExam() {
         startExamTimeoutMilliseconds,
         attempt.external_id,
       ).then(() => updateAttemptAfter(
-        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api),
+        exam.course_id,
+        exam.content_id,
+        continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api),
       )(dispatch))
         .catch(error => {
           const message = error?.message || 'Worker failed to respond.';
@@ -215,7 +221,9 @@ export function startProctoredExam() {
         notifyStartExam();
       }
       await updateAttemptAfter(
-        exam.course_id, exam.content_id, continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api),
+        exam.course_id,
+        exam.content_id,
+        continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api),
       )(dispatch);
     }
   };
@@ -232,11 +240,15 @@ export function skipProctoringExam() {
     const useLegacyAttemptApi = exam.use_legacy_attempt_api;
     if (attemptId) {
       await updateAttemptAfter(
-        exam.course_id, exam.content_id, declineAttempt(attemptId, useLegacyAttemptApi),
+        exam.course_id,
+        exam.content_id,
+        declineAttempt(attemptId, useLegacyAttemptApi),
       )(dispatch);
     } else {
       await updateAttemptAfter(
-        exam.course_id, exam.content_id, createExamAttempt(exam.id, true, false, useLegacyAttemptApi),
+        exam.course_id,
+        exam.content_id,
+        createExamAttempt(exam.id, true, false, useLegacyAttemptApi),
       )(dispatch);
     }
   };
@@ -305,9 +317,7 @@ export function stopExam() {
       return;
     }
 
-    await updateAttemptAfter(
-      exam.course_id, exam.content_id, stopAttempt(attemptId, useLegacyAttemptAPI),
-    )(dispatch);
+    await updateAttemptAfter(exam.course_id, exam.content_id, stopAttempt(attemptId, useLegacyAttemptAPI))(dispatch);
   };
 }
 
@@ -325,7 +335,9 @@ export function continueExam() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, continueAttempt(attemptId, useLegacyAttemptAPI),
+      exam.course_id,
+      exam.content_id,
+      continueAttempt(attemptId, useLegacyAttemptAPI),
     )(dispatch);
   };
 }
@@ -343,9 +355,7 @@ export function resetExam() {
       );
       return;
     }
-    await updateAttemptAfter(
-      exam.course_id, exam.content_id, resetAttempt(attemptId, useLegacyAttemptAPI),
-    )(dispatch);
+    await updateAttemptAfter(exam.course_id, exam.content_id, resetAttempt(attemptId, useLegacyAttemptAPI))(dispatch);
   };
 }
 
@@ -419,7 +429,9 @@ export function expireExam() {
 
     // this sure looks like a bug
     await updateAttemptAfter(
-      activeAttempt.course_id, exam.content_id, submitAttempt(attemptId, useLegacyAttemptAPI),
+      activeAttempt.course_id,
+      exam.content_id,
+      submitAttempt(attemptId, useLegacyAttemptAPI),
     )(dispatch);
     dispatch(expireExamAttempt());
 
@@ -458,9 +470,10 @@ export function pingAttempt(timeoutInSeconds, workerUrl) {
             examId: exam.id,
           },
         );
+
+        // eslint-disable-next-line function-paren-newline
         await updateAttemptAfter(
-          exam.course_id, exam.content_id, endExamWithFailure(activeAttempt.attempt_id, message),
-        )(dispatch);
+          exam.course_id, exam.content_id, endExamWithFailure(activeAttempt.attempt_id, message))(dispatch);
       });
   };
 }
@@ -479,7 +492,9 @@ export function startProctoringSoftwareDownload() {
       return;
     }
     await updateAttemptAfter(
-      exam.course_id, exam.content_id, softwareDownloadAttempt(attemptId, useLegacyAttemptAPI),
+      exam.course_id,
+      exam.content_id,
+      softwareDownloadAttempt(attemptId, useLegacyAttemptAPI),
     )(dispatch);
   };
 }

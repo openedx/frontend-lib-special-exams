@@ -15,15 +15,16 @@ const ExamTimer = ({ courseId }) => {
     getLatestAttemptData,
   } = state;
 
+  useEffect(() => {
+    getLatestAttemptData(courseId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
+
   // if user is not authenticated they cannot have active exam, so no need for timer
   // (also exam API would return 403 error)
   if (!authenticatedUser) {
     return null;
   }
-
-  useEffect(() => {
-    getLatestAttemptData(courseId);
-  }, [courseId]);
 
   return (
     <div className="d-flex flex-column justify-content-center">

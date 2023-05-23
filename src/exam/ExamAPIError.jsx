@@ -6,7 +6,7 @@ import { injectIntl, intlShape, FormattedMessage } from '@edx/frontend-platform/
 import ExamStateContext from '../context';
 import messages from './messages';
 
-function ExamAPIError({ intl }) {
+const ExamAPIError = ({ intl }) => {
   const state = useContext(ExamStateContext);
   const { SITE_NAME, SUPPORT_URL } = getConfig();
   const { apiErrorMsg } = state;
@@ -42,7 +42,7 @@ function ExamAPIError({ intl }) {
       </p>
     </Alert>
   );
-}
+};
 
 ExamAPIError.propTypes = {
   intl: intlShape.isRequired,
