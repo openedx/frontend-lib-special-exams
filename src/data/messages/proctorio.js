@@ -5,11 +5,16 @@
  * vendor-specific integrations long term. As of now these events
  * will trigger on ANY lti integration, not just Proctorio.
  */
-function notifyStartExam() {
+export function notifyStartExam() {
   window.top.postMessage(
     ['exam_state_change', 'exam_take'],
     '*', // this isn't emitting secure data so any origin is fine
   );
 }
 
-export default notifyStartExam;
+export function notifyEndExam() {
+  window.top.postMessage(
+    ['exam_state_change', 'exam_end'],
+    '*', // this isn't emitting secure data so any origin is fine
+  );
+}
