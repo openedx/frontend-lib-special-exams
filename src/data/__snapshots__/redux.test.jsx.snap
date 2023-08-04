@@ -197,7 +197,7 @@ Object {
   "in_timed_exam": true,
   "software_download_url": "",
   "taking_as_proctored": false,
-  "time_remaining_seconds": 1739.9,
+  "time_remaining_seconds": 1799.9,
   "total_time": "30 minutes",
 }
 `;

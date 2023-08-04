@@ -1,14 +1,24 @@
 import { getConfig } from '@edx/frontend-platform';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
+import { logError } from '@edx/frontend-platform/logging';
 import { ExamAction } from '../constants';
 import { generateHumanizedTime } from '../helpers';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 
 async function fetchActiveAttempt() {
+  // fetch 'active' (timer is running) attempt if it exists
   const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
   return activeAttemptResponse.data;
+}
+
+async function fetchLatestExamAttempt(sequenceId) {
+  // fetch lastest attempt for a specific exam
+  const attemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
+  attemptUrl.searchParams.append('content_id', sequenceId);
+  const response = await getAuthenticatedHttpClient().get(attemptUrl.href);
+  return response.data;
 }
 
 export async function fetchExamAttemptsData(courseId, sequenceId) {
@@ -56,22 +66,24 @@ export async function fetchLatestAttempt(courseId) {
   return data;
 }
 
-export async function pollExamAttempt(url) {
+export async function pollExamAttempt(pollUrl, sequenceId) {
   let data;
-  if (!getConfig().EXAMS_BASE_URL) {
+  if (pollUrl) {
     const edxProctoringURL = new URL(
-      `${getConfig().LMS_BASE_URL}${url}`,
+      `${getConfig().LMS_BASE_URL}${pollUrl}`,
     );
     const urlResponse = await getAuthenticatedHttpClient().get(edxProctoringURL.href);
     data = urlResponse.data;
-  } else {
-    data = await fetchActiveAttempt();
+  } else if (getConfig().EXAMS_BASE_URL) {
+    data = await fetchLatestExamAttempt(sequenceId);
 
     // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
     if (data.attempt_status) {
       data.status = data.attempt_status;
       delete data.attempt_status;
     }
+  } else {
+    logError('pollExamAttempt called but no pollUrl is set');
   }
   return data;
 }
