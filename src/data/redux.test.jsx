@@ -4,6 +4,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { getConfig, mergeConfig } from '@edx/frontend-platform';
 
+import * as api from './api';
 import * as thunks from './thunks';
 
 import executeThunk from '../utils';
@@ -957,6 +958,35 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.pollAttempt(attempt.exam_started_poll_url), store.dispatch, store.getState);
       const state = store.getState();
       expect(state.examState.activeAttempt).toMatchSnapshot();
+    });
+
+    describe('pollAttempt api called directly', () => {
+      // in the download view we call this function directly withough invoking the wrapping thunk
+      it('should call pollUrl if one is provided', async () => {
+        const pollExamAttemptUrl = `${getConfig().LMS_BASE_URL}${attempt.exam_started_poll_url}`;
+        axiosMock.onGet(pollExamAttemptUrl).reply(200, {
+          time_remaining_seconds: 1739.9,
+          accessibility_time_string: 'you have 29 minutes remaining',
+          attempt_status: ExamStatus.STARTED,
+        });
+        await api.pollExamAttempt(attempt.exam_started_poll_url);
+        expect(axiosMock.history.get[0].url).toEqual(pollExamAttemptUrl);
+      });
+      it('should call the latest attempt for a sequence if a sequence id is provided instead of a pollUrl', async () => {
+        const sequenceId = 'block-v1:edX+Test+123';
+        const expectedUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest?content_id=${encodeURIComponent(sequenceId)}`;
+        axiosMock.onGet(expectedUrl).reply(200, {
+          time_remaining_seconds: 1739.9,
+          status: ExamStatus.STARTED,
+        });
+        await api.pollExamAttempt(null, sequenceId);
+        expect(axiosMock.history.get[0].url).toEqual(expectedUrl);
+      });
+      test('pollUrl is required if edx-exams in not enabled, an error should be logged', async () => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+        api.pollExamAttempt(null, null);
+        expect(loggingService.logError).toHaveBeenCalled();
+      });
     });
   });
 

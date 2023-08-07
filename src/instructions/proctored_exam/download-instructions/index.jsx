@@ -50,7 +50,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
     ? `${getConfig().EXAMS_BASE_URL}/lti/start_proctoring/${attemptId}` : downloadUrl;
 
   const handleDownloadClick = () => {
-    pollExamAttempt(`${pollUrl}?sourceid=instructions`)
+    pollExamAttempt(pollUrl, sequenceId)
       .then((data) => {
         if (data.status === ExamStatus.READY_TO_START) {
           setSystemCheckStatus('success');
@@ -66,7 +66,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
   };
 
   const handleStartExamClick = () => {
-    pollExamAttempt(`${pollUrl}?sourceid=instructions`)
+    pollExamAttempt(pollUrl, sequenceId)
       .then((data) => (
         data.status === ExamStatus.READY_TO_START
           ? getExamAttemptsData(courseId, sequenceId)
