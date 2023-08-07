@@ -87,7 +87,7 @@ export async function pollExamAttempt(pollUrl, sequenceId) {
   } else {
     // sites configured with only edx-proctoring must have pollUrl set
     // sites configured with edx-exams expect sequenceId if pollUrl is not set
-    logError('pollExamAttempt recieved unexpected parameters pollUrl=${pollUrl} sequenceId=${sequenceId}');
+    logError(`pollExamAttempt recieved unexpected parameters pollUrl=${pollUrl} sequenceId=${sequenceId}`);
   }
   return data;
 }
