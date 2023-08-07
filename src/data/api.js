@@ -14,7 +14,9 @@ async function fetchActiveAttempt() {
 }
 
 async function fetchLatestExamAttempt(sequenceId) {
-  // fetch lastest attempt for a specific exam
+  // the calls the same endpoint as fetchActiveAttempt but it behaves slightly different
+  // with an exam's section specified. The attempt for that requested exam is always returned
+  // even if it is not 'active' (timer is not running)
   const attemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   attemptUrl.searchParams.append('content_id', sequenceId);
   const response = await getAuthenticatedHttpClient().get(attemptUrl.href);
@@ -74,7 +76,7 @@ export async function pollExamAttempt(pollUrl, sequenceId) {
     );
     const urlResponse = await getAuthenticatedHttpClient().get(edxProctoringURL.href);
     data = urlResponse.data;
-  } else if (getConfig().EXAMS_BASE_URL) {
+  } else if (sequenceId && getConfig().EXAMS_BASE_URL) {
     data = await fetchLatestExamAttempt(sequenceId);
 
     // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
@@ -83,7 +85,9 @@ export async function pollExamAttempt(pollUrl, sequenceId) {
       delete data.attempt_status;
     }
   } else {
-    logError('pollExamAttempt called but no pollUrl is set');
+    // sites configured with only edx-proctoring must have pollUrl set
+    // sites configured with edx-exams expect sequenceId if pollUrl is not set
+    logError('pollExamAttempt recieved unexpected parameters pollUrl=${pollUrl} sequenceId=${sequenceId}');
   }
   return data;
 }
