@@ -33,7 +33,7 @@ const PendingPrerequisitesProctoredExamInstructions = ({ allowProctoringOptOut, 
     </p>
     <ol style={{ listStyleType: 'disc' }}>
       {prerequisites.map((item, index) => (
-        <li key={index.toString()}>
+        <li key={`${index.toString()}`}>
           {item.jumpto_url
             ? <a href={item.jumpto_url}>{item.display_name}</a>
             : item.display_name}
@@ -53,7 +53,7 @@ const PendingPrerequisitesProctoredExamInstructions = ({ allowProctoringOptOut, 
 
 PendingPrerequisitesProctoredExamInstructions.propTypes = {
   allowProctoringOptOut: PropTypes.bool.isRequired,
-  prerequisites: PropTypes.arrayOf(PropTypes.object).isRequired,
+  prerequisites: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
   skipProctoredExam: PropTypes.func.isRequired,
 };
 

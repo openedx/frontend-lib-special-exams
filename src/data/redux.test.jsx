@@ -4,6 +4,7 @@ import MockAdapter from 'axios-mock-adapter';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { getConfig, mergeConfig } from '@edx/frontend-platform';
 
+import * as api from './api';
 import * as thunks from './thunks';
 
 import executeThunk from '../utils';
@@ -432,11 +433,13 @@ describe('Data layer integration tests', () => {
   });
 
   describe('Test resetExam', () => {
-    const createdAttempt = Factory.build('attempt',
+    const createdAttempt = Factory.build(
+      'attempt',
       {
         attempt_status: ExamStatus.CREATED,
         attempt_id: 2,
-      });
+      },
+    );
     const examWithCreatedAttempt = Factory.build('exam', { attempt: createdAttempt });
 
     describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
@@ -578,6 +581,21 @@ describe('Data layer integration tests', () => {
       await initWithExamAttempt(legacyExam, legacyExam.attempt);
       await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
       expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
+    });
+
+    it('Should notify top window on LTI exam end', async () => {
+      const mockPostMessage = jest.fn();
+      windowSpy.mockImplementation(() => ({
+        top: {
+          postMessage: mockPostMessage,
+        },
+      }));
+
+      await initWithExamAttempt();
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam });
+      axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
+      await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
+      expect(mockPostMessage).toHaveBeenCalledWith(['exam_state_change', 'exam_end'], '*');
     });
   });
 
@@ -787,12 +805,8 @@ describe('Data layer integration tests', () => {
         URL: { createObjectURL: jest.fn() },
       }));
 
-      const createdWorkerAttempt = Factory.build(
-        'attempt', { attempt_status: ExamStatus.CREATED, desktop_application_js_url: 'http://proctortest.com' },
-      );
-      const startedWorkerAttempt = Factory.build(
-        'attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' },
-      );
+      const createdWorkerAttempt = Factory.build('attempt', { attempt_status: ExamStatus.CREATED, desktop_application_js_url: 'http://proctortest.com' });
+      const startedWorkerAttempt = Factory.build('attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' });
       const createdWorkerExam = Factory.build('exam', { attempt: createdWorkerAttempt });
       const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
 
@@ -802,22 +816,39 @@ describe('Data layer integration tests', () => {
       axiosMock.onGet(latestAttemptURL).reply(200, startedWorkerAttempt);
 
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
-      expect(loggingService.logError).toHaveBeenCalledWith(
-        'test error', {
-          attemptId: createdWorkerAttempt.attempt_id,
-          attemptStatus: createdWorkerAttempt.attempt_status,
-          courseId: createdWorkerAttempt.course_id,
-          examId: createdWorkerExam.id,
+      expect(loggingService.logError).toHaveBeenCalledWith('test error', {
+        attemptId: createdWorkerAttempt.attempt_id,
+        attemptStatus: createdWorkerAttempt.attempt_status,
+        courseId: createdWorkerAttempt.course_id,
+        examId: createdWorkerExam.id,
+      });
+    });
+
+    it('Should notify top window on LTI exam start', async () => {
+      const mockPostMessage = jest.fn();
+      windowSpy.mockImplementation(() => ({
+        top: {
+          postMessage: mockPostMessage,
         },
-      );
+      }));
+
+      await initWithExamAttempt(createdExam, createdAttempt);
+      axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: startedAttempt.attempt_id });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: startedExam });
+      axiosMock.onGet(latestAttemptURL).reply(200, startedAttempt);
+
+      await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
+      expect(mockPostMessage).toHaveBeenCalledWith(['exam_state_change', 'exam_take'], '*');
     });
   });
 
   describe('Test skipProctoringExam', () => {
-    const createdAttempt = Factory.build('attempt',
+    const createdAttempt = Factory.build(
+      'attempt',
       {
         attempt_status: ExamStatus.CREATED,
-      });
+      },
+    );
     const createdExam = Factory.build('exam', { attempt: createdAttempt });
     const declinedAttempt = Factory.build('attempt', { attempt_status: ExamStatus.DECLINED });
     const declinedExam = Factory.build('exam', { attempt: declinedAttempt });
@@ -928,27 +959,52 @@ describe('Data layer integration tests', () => {
       const state = store.getState();
       expect(state.examState.activeAttempt).toMatchSnapshot();
     });
+
+    describe('pollAttempt api called directly', () => {
+      // in the download view we call this function directly withough invoking the wrapping thunk
+      it('should call pollUrl if one is provided', async () => {
+        const pollExamAttemptUrl = `${getConfig().LMS_BASE_URL}${attempt.exam_started_poll_url}`;
+        axiosMock.onGet(pollExamAttemptUrl).reply(200, {
+          time_remaining_seconds: 1739.9,
+          accessibility_time_string: 'you have 29 minutes remaining',
+          attempt_status: ExamStatus.STARTED,
+        });
+        await api.pollExamAttempt(attempt.exam_started_poll_url);
+        expect(axiosMock.history.get[0].url).toEqual(pollExamAttemptUrl);
+      });
+      it('should call the latest attempt for a sequence if a sequence id is provided instead of a pollUrl', async () => {
+        const sequenceId = 'block-v1:edX+Test+123';
+        const expectedUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest?content_id=${encodeURIComponent(sequenceId)}`;
+        axiosMock.onGet(expectedUrl).reply(200, {
+          time_remaining_seconds: 1739.9,
+          status: ExamStatus.STARTED,
+        });
+        await api.pollExamAttempt(null, sequenceId);
+        expect(axiosMock.history.get[0].url).toEqual(expectedUrl);
+      });
+      test('pollUrl is required if edx-exams in not enabled, an error should be logged', async () => {
+        mergeConfig({ EXAMS_BASE_URL: null });
+        api.pollExamAttempt(null, null);
+        expect(loggingService.logError).toHaveBeenCalled();
+      });
+    });
   });
 
   describe('Test pingAttempt', () => {
     it('Should send attempt to error state on ping failure', async () => {
-      const startedWorkerAttempt = Factory.build(
-        'attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' },
-      );
+      const startedWorkerAttempt = Factory.build('attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' });
       const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
       await initWithExamAttempt(startedWorkerExam, startedWorkerAttempt);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${startedWorkerAttempt.attempt_id}`).reply(200, { exam_attempt_id: startedWorkerAttempt.attempt_id });
       await executeThunk(thunks.pingAttempt(), store.dispatch, store.getState);
 
-      expect(loggingService.logError).toHaveBeenCalledWith(
-        'test error', {
-          attemptId: startedWorkerAttempt.attempt_id,
-          attemptStatus: startedWorkerAttempt.attempt_status,
-          courseId: startedWorkerAttempt.course_id,
-          examId: startedWorkerExam.id,
-        },
-      );
+      expect(loggingService.logError).toHaveBeenCalledWith('test error', {
+        attemptId: startedWorkerAttempt.attempt_id,
+        attemptStatus: startedWorkerAttempt.attempt_status,
+        courseId: startedWorkerAttempt.course_id,
+        examId: startedWorkerExam.id,
+      });
       const request = axiosMock.history.put[0];
       expect(request.data).toEqual(JSON.stringify({
         action: 'error',

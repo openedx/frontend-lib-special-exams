@@ -25,16 +25,17 @@ const ExamWrapper = ({ children, ...props }) => {
 
   const isGated = sequence && sequence.gatedContent !== undefined && sequence.gatedContent.gated;
 
+  useEffect(() => {
+    loadInitialData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // if the user is browsing public content (not logged in) they cannot be in an exam
   // if the user is staff they may view exam content without an exam attempt
   // any requests for exam state will 403 so just short circuit this component here
   if (!authenticatedUser || isStaff) {
     return children;
   }
-
-  useEffect(() => {
-    loadInitialData();
-  }, []);
 
   return (
     <Exam
