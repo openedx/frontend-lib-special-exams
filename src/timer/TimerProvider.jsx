@@ -54,9 +54,8 @@ const TimerServiceProvider = ({
   ).join(':');
 
   const pollExam = () => {
-    const url = attempt.exam_started_poll_url;
-    const queryString = `?sourceid=in_exam&proctored=${attempt.taking_as_proctored}`;
-    pollHandler(url + queryString);
+    // poll url may be null if this is an LTI exam
+    pollHandler(attempt.exam_started_poll_url);
   };
 
   const processTimeLeft = (timer, secondsLeft) => {
