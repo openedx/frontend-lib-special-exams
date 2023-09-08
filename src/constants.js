@@ -32,6 +32,7 @@ export const ONBOARDING_ERRORS = [
 export const IS_STARTED_STATUS = (status) => [ExamStatus.STARTED, ExamStatus.READY_TO_SUBMIT].includes(status);
 export const IS_INCOMPLETE_STATUS = (status) => INCOMPLETE_STATUSES.includes(status);
 export const IS_ONBOARDING_ERROR = (status) => ONBOARDING_ERRORS.includes(status);
+// if the exam is proctored we expect the software to be monitoring these states
 export const IS_PROCTORED_STATUS = (status) => IS_STARTED_STATUS(status) || status === ExamStatus.READY_TO_START;
 
 // Available actions are taken from
