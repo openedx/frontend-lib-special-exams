@@ -1125,6 +1125,16 @@ describe('Data layer integration tests', () => {
       expect(mockPostMessage).toHaveBeenCalled();
     });
 
+    it('should not check application status for non-LTI proctored exams', async () => {
+      const proctoredAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_START, exam_type: ExamType.PROCTORED, use_legacy_attempt_api: true });
+      const proctoredExam = Factory.build('exam', { type: ExamType.PROCTORED, attempt: proctoredAttempt });
+      await initWithExamAttempt(proctoredExam, proctoredAttempt);
+
+      await executeThunk(thunks.checkExamEntry(), store.dispatch, store.getState);
+      await new Promise(process.nextTick);
+      expect(mockPostMessage).not.toHaveBeenCalled();
+    });
+
     it('should not check application status for exams in a non-proctored state', async () => {
       const nonProctoredAttempt = Factory.build('attempt', { attempt_status: ExamStatus.CREATED });
       const proctoredExam = Factory.build('exam', { attempt: nonProctoredAttempt });
