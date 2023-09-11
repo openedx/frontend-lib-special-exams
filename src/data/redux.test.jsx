@@ -10,7 +10,7 @@ import * as thunks from './thunks';
 import executeThunk from '../utils';
 
 import { initializeTestStore, initializeMockApp, initializeTestConfig } from '../setupTest';
-import { ExamStatus } from '../constants';
+import { ExamStatus, ExamType } from '../constants';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 
@@ -1093,6 +1093,100 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(state.examState.examAccessToken.exam_access_token).toBe('');
+    });
+  });
+
+  describe('Test checkExamEntry', () => {
+    const mockPostMessage = jest.fn();
+    const mockAddEventListener = jest.fn();
+
+    beforeEach(() => {
+      windowSpy.mockImplementation(() => ({
+        top: {
+          postMessage: mockPostMessage,
+        },
+        addEventListener: mockAddEventListener,
+        removeEventListener: jest.fn(),
+      }));
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+      axiosMock.reset();
+    });
+
+    it('should check application status for LTI proctored exams in a proctored state', async () => {
+      const proctoredAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_START, exam_type: ExamType.PROCTORED });
+      const proctoredExam = Factory.build('exam', { type: ExamType.PROCTORED, attempt: proctoredAttempt });
+      await initWithExamAttempt(proctoredExam, proctoredAttempt);
+
+      await executeThunk(thunks.checkExamEntry(), store.dispatch, store.getState);
+      await new Promise(process.nextTick);
+      expect(mockPostMessage).toHaveBeenCalled();
+    });
+
+    it('should not check application status for non-LTI proctored exams', async () => {
+      const proctoredAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_START, exam_type: ExamType.PROCTORED, use_legacy_attempt_api: true });
+      const proctoredExam = Factory.build('exam', { type: ExamType.PROCTORED, attempt: proctoredAttempt });
+      await initWithExamAttempt(proctoredExam, proctoredAttempt);
+
+      await executeThunk(thunks.checkExamEntry(), store.dispatch, store.getState);
+      await new Promise(process.nextTick);
+      expect(mockPostMessage).not.toHaveBeenCalled();
+    });
+
+    it('should not check application status for exams in a non-proctored state', async () => {
+      const nonProctoredAttempt = Factory.build('attempt', { attempt_status: ExamStatus.CREATED });
+      const proctoredExam = Factory.build('exam', { attempt: nonProctoredAttempt });
+      await initWithExamAttempt(proctoredExam, nonProctoredAttempt);
+
+      await executeThunk(thunks.checkExamEntry(), store.dispatch, store.getState);
+      await new Promise(process.nextTick);
+      expect(mockPostMessage).not.toHaveBeenCalled();
+    });
+
+    it('should not check timed exams', async () => {
+      // default exam is timed
+      await initWithExamAttempt();
+
+      await executeThunk(thunks.checkExamEntry(), store.dispatch, store.getState);
+      await new Promise(process.nextTick);
+      expect(mockPostMessage).not.toHaveBeenCalled();
+    });
+
+    it('should transition to error state if check fails', async () => {
+      const proctoredAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_START, exam_type: ExamType.PROCTORED });
+      const proctoredExam = Factory.build('exam', { type: ExamType.PROCTORED, attempt: proctoredAttempt });
+      await initWithExamAttempt(proctoredExam, proctoredAttempt);
+
+      await executeThunk(thunks.checkExamEntry(), store.dispatch, store.getState);
+
+      await new Promise(process.nextTick);
+      const handleResponseCb = mockAddEventListener.mock.calls[0][1];
+      axiosMock.onPut(`${createUpdateAttemptURL}/${proctoredAttempt.attempt_id}`).reply(200, { exam_attempt_id: proctoredAttempt.attempt_id });
+      handleResponseCb({ origin: 'https://getproctorio.com', data: { active: false } });
+
+      await new Promise(process.nextTick);
+      const request = axiosMock.history.put[0];
+      expect(request.data).toEqual(JSON.stringify({
+        action: 'error',
+        detail: 'exam reentry disallowed',
+      }));
+    });
+
+    it('should not transition to error state if check succeeds', async () => {
+      const proctoredAttempt = Factory.build('attempt', { attempt_status: ExamStatus.READY_TO_START, exam_type: ExamType.PROCTORED });
+      const proctoredExam = Factory.build('exam', { type: ExamType.PROCTORED, attempt: proctoredAttempt });
+      await initWithExamAttempt(proctoredExam, proctoredAttempt);
+
+      await executeThunk(thunks.checkExamEntry(), store.dispatch, store.getState);
+
+      await new Promise(process.nextTick);
+      const handleResponseCb = mockAddEventListener.mock.calls[0][1];
+      handleResponseCb({ origin: 'https://getproctorio.com', data: { active: true } });
+
+      await new Promise(process.nextTick);
+      expect(axiosMock.history.put.length).toBe(0);
     });
   });
 });

@@ -59,7 +59,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
           // which is a bit odd and would handle useLegacyAttempt for us.
           // There's an opportunity to refactor and clean this up a bit.
           softwareDownloadAttempt(attemptId, useLegacyAttemptApi);
-          window.open(launchSoftwareUrl, '_blank');
+          window.location.assign(launchSoftwareUrl);
         }
       });
     setDownloadClicked(true);
