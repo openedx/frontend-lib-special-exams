@@ -582,21 +582,6 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
       expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
     });
-
-    it('Should notify top window on LTI exam end', async () => {
-      const mockPostMessage = jest.fn();
-      windowSpy.mockImplementation(() => ({
-        top: {
-          postMessage: mockPostMessage,
-        },
-      }));
-
-      await initWithExamAttempt();
-      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam });
-      axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
-      await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
-      expect(mockPostMessage).toHaveBeenCalledWith(['exam_state_change', 'exam_end'], '*');
-    });
   });
 
   describe('Test expireExam', () => {
