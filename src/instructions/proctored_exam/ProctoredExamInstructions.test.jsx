@@ -197,8 +197,12 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Initiates an LTI launch in a new window when the user clicks the submit button', async () => {
-    const windowSpy = jest.spyOn(window, 'open');
-    windowSpy.mockImplementation(() => ({}));
+    const { location } = window;
+    delete window.location;
+    const mockAssign = jest.fn();
+    window.location = {
+      assign: mockAssign,
+    };
     const attempt = Factory.build('attempt', {
       attempt_status: ExamStatus.READY_TO_SUBMIT,
       use_legacy_attempt_api: false,
@@ -226,7 +230,10 @@ describe('SequenceExamWrapper', () => {
 
     expect(queryByTestId('proctored-exam-instructions-title')).toHaveTextContent('Are you sure you want to end your proctored exam?');
     fireEvent.click(queryByTestId('end-exam-button'));
-    await waitFor(() => { expect(windowSpy).toHaveBeenCalledWith('http://localhost:18740/lti/end_assessment/1', '_blank'); });
+    await waitFor(() => { expect(mockAssign).toHaveBeenCalledWith('http://localhost:18740/lti/end_assessment/1'); });
+
+    // restore window.location
+    window.location = location;
   });
 
   it('Instructions are shown when attempt status is verified', () => {

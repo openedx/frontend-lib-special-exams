@@ -19,7 +19,7 @@ const SubmitProctoredExamInstructions = () => {
 
   const handleSubmitClick = () => {
     if (examHasLtiProvider) {
-      window.open(submitLtiAttemptUrl, '_blank');
+      window.location.assign(submitLtiAttemptUrl);
     }
     submitExam();
   };

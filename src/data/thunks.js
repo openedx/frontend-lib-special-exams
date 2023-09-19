@@ -31,7 +31,7 @@ import {
 import { ExamStatus, ExamType, IS_PROCTORED_STATUS } from '../constants';
 import { workerPromiseForEventNames, pingApplication } from './messages/handlers';
 import actionToMessageTypesMap from './messages/constants';
-import { checkAppStatus, notifyEndExam, notifyStartExam } from './messages/proctorio';
+import { checkAppStatus, notifyStartExam } from './messages/proctorio';
 
 function handleAPIError(error, dispatch) {
   const { message, detail } = error;
@@ -364,7 +364,6 @@ export function submitExam() {
     const { exam, activeAttempt } = getState().examState;
     const { desktop_application_js_url: workerUrl, external_id: attemptExternalId } = activeAttempt || {};
     const useWorker = window.Worker && activeAttempt && workerUrl;
-    const examHasLtiProvider = !exam.useLegacyAttemptApi;
 
     const handleBackendProviderSubmission = () => {
       // if a backend provider is being used during the exam
@@ -375,9 +374,6 @@ export function submitExam() {
             { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
             dispatch,
           ));
-      }
-      if (examHasLtiProvider) {
-        notifyEndExam();
       }
     };
 

@@ -27,10 +27,3 @@ export function notifyStartExam() {
     '*', // this isn't emitting secure data so any origin is fine
   );
 }
-
-export function notifyEndExam() {
-  window.top.postMessage(
-    ['exam_state_change', 'exam_end'],
-    '*', // this isn't emitting secure data so any origin is fine
-  );
-}
