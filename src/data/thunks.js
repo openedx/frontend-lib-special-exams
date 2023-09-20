@@ -539,7 +539,7 @@ export function checkExamEntry() {
     const { exam } = getState().examState;
     // Check only applies to LTI exams
     if (
-      !exam.attempt
+      !exam?.attempt
       || exam.attempt.exam_type !== ExamType.PROCTORED
       || exam.attempt.use_legacy_attempt_api
     ) { return; }
