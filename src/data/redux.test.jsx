@@ -1090,6 +1090,9 @@ describe('Data layer integration tests', () => {
         top: {
           postMessage: mockPostMessage,
         },
+        location: {
+          origin: 'https://edx.example.com',
+        },
         addEventListener: mockAddEventListener,
         removeEventListener: jest.fn(),
       }));
@@ -1149,7 +1152,7 @@ describe('Data layer integration tests', () => {
       await new Promise(process.nextTick);
       const handleResponseCb = mockAddEventListener.mock.calls[0][1];
       axiosMock.onPut(`${createUpdateAttemptURL}/${proctoredAttempt.attempt_id}`).reply(200, { exam_attempt_id: proctoredAttempt.attempt_id });
-      handleResponseCb({ origin: 'https://getproctorio.com', data: { active: false } });
+      handleResponseCb({ origin: 'https://edx.example.com', data: { active: false } });
 
       await new Promise(process.nextTick);
       const request = axiosMock.history.put[0];
@@ -1168,7 +1171,7 @@ describe('Data layer integration tests', () => {
 
       await new Promise(process.nextTick);
       const handleResponseCb = mockAddEventListener.mock.calls[0][1];
-      handleResponseCb({ origin: 'https://getproctorio.com', data: { active: true } });
+      handleResponseCb({ origin: 'https://edx.example.com', data: { active: true } });
 
       await new Promise(process.nextTick);
       expect(axiosMock.history.put.length).toBe(0);

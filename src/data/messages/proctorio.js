@@ -8,7 +8,7 @@
 export async function checkAppStatus() {
   return new Promise((resolve, reject) => {
     const handleResponse = event => {
-      if (event.origin === 'https://getproctorio.com') {
+      if (event.origin === window.location.origin) {
         window.removeEventListener('message', handleResponse);
         if (event?.data?.active) {
           resolve();
