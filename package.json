@@ -26,7 +26,7 @@
     "build": "make build",
     "prepublishOnly": "npm run build",
     "semantic-release": "semantic-release",
-    "i18n_extract": "BABEL_ENV=i18n fedx-scripts babel src --quiet > /dev/null",
+    "i18n_extract": "fedx-scripts formatjs extract",
     "is-es5": "es-check es5 ./dist/*.js",
     "lint": "fedx-scripts eslint --ext .js --ext .jsx .",
     "lint:fix": "fedx-scripts eslint --fix --ext .js --ext .jsx .",
@@ -65,7 +65,7 @@
     "redux": "^4.0.5"
   },
   "devDependencies": {
-    "@edx/frontend-build": "12.8.16",
+    "@edx/frontend-build": "13.0.1",
     "@edx/frontend-platform": "5.0.0",
     "@edx/paragon": "20.44.0",
     "@edx/reactifex": "^2.1.1",

@@ -8,7 +8,7 @@ tx_url1 = https://www.transifex.com/api/2/project/edx-platform/resource/$(transi
 tx_url2 = https://www.transifex.com/api/2/project/edx-platform/resource/$(transifex_resource)/source/
 
 # This directory must match .babelrc .
-transifex_temp = ./temp/babel-plugin-react-intl
+transifex_temp = ./temp/babel-plugin-formatjs
 
 build:
 	rm -rf ./dist
@@ -23,7 +23,7 @@ precommit:
 	npm audit
 
 requirements:
-	npm install
+	npm ci
 
 i18n.extract:
 	# Pulling display strings from .jsx files into .json files...
