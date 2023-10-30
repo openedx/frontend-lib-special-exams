@@ -28,10 +28,10 @@ import {
   setApiError,
   setAllowProctoringOptOut,
 } from './slice';
-import { ExamStatus } from '../constants';
+import { ExamStatus, ExamType, IS_PROCTORED_STATUS } from '../constants';
 import { workerPromiseForEventNames, pingApplication } from './messages/handlers';
 import actionToMessageTypesMap from './messages/constants';
-import { notifyEndExam, notifyStartExam } from './messages/proctorio';
+import { checkAppStatus, notifyStartExam } from './messages/proctorio';
 
 function handleAPIError(error, dispatch) {
   const { message, detail } = error;
@@ -364,7 +364,6 @@ export function submitExam() {
     const { exam, activeAttempt } = getState().examState;
     const { desktop_application_js_url: workerUrl, external_id: attemptExternalId } = activeAttempt || {};
     const useWorker = window.Worker && activeAttempt && workerUrl;
-    const examHasLtiProvider = !exam.useLegacyAttemptApi;
 
     const handleBackendProviderSubmission = () => {
       // if a backend provider is being used during the exam
@@ -375,9 +374,6 @@ export function submitExam() {
             { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
             dispatch,
           ));
-      }
-      if (examHasLtiProvider) {
-        notifyEndExam();
       }
     };
 
@@ -526,5 +522,38 @@ export function getExamReviewPolicy() {
 export function getAllowProctoringOptOut(allowProctoringOptOut) {
   return (dispatch) => {
     dispatch(setAllowProctoringOptOut({ allowProctoringOptOut }));
+  };
+}
+
+/**
+ * Check if we are allowed to enter an exam where proctoring has started.
+ * There is no support for reentry with LTI. The exam must be completed
+ * in the proctored window. If a non-proctored window is opened, the exam will
+ * be ended with an error.
+ *
+ * This check is necessary to prevent using a second browser to access the exam
+ * content unproctored.
+ */
+export function checkExamEntry() {
+  return async (dispatch, getState) => {
+    const { exam } = getState().examState;
+    // Check only applies to LTI exams
+    if (
+      !exam?.attempt
+      || exam.attempt.exam_type !== ExamType.PROCTORED
+      || exam.attempt.use_legacy_attempt_api
+    ) { return; }
+
+    if (IS_PROCTORED_STATUS(exam.attempt.attempt_status)) {
+      Promise.race([
+        checkAppStatus(),
+        new Promise((resolve, reject) => {
+          setTimeout(() => reject(), EXAM_START_TIMEOUT_MILLISECONDS);
+        }),
+      ]).catch(() => {
+        dispatch(setApiError({ errorMsg: 'Something has gone wrong with your exam. Proctoring application not detected.' }));
+        updateAttemptAfter(exam.course_id, exam.content_id, endExamWithFailure(exam.attempt.attempt_id, 'exam reentry disallowed'))(dispatch);
+      });
+    }
   };
 }

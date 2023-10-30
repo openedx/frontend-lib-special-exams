@@ -17,10 +17,11 @@ const ExamWrapper = ({ children, ...props }) => {
     originalUserIsStaff,
     canAccessProctoredExams,
   } = props;
-  const { getExamAttemptsData, getAllowProctoringOptOut } = state;
+  const { getExamAttemptsData, getAllowProctoringOptOut, checkExamEntry } = state;
   const loadInitialData = async () => {
     await getExamAttemptsData(courseId, sequence.id);
     await getAllowProctoringOptOut(sequence.allowProctoringOptOut);
+    await checkExamEntry();
   };
 
   const isGated = sequence && sequence.gatedContent !== undefined && sequence.gatedContent.gated;
