@@ -5,6 +5,11 @@ export function isExam() {
   return !!exam?.id;
 }
 
+export function hasActiveExamAttempt() {
+  const { activeAttempt } = store.getState().examState;
+  return !!activeAttempt?.attempt_id;
+}
+
 export function getExamAccess() {
   const { exam, examAccessToken } = store.getState().examState;
   if (!exam) {

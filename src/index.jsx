@@ -5,5 +5,6 @@ export {
   getExamAccess,
   isExam,
   fetchExamAccess,
+  hasActiveExamAttempt,
 } from './api';
 export { store } from './data';
