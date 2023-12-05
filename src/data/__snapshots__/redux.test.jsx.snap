@@ -1,16 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Data layer integration tests Test examRequiresAccessToken Should get exam access token 1`] = `
-Object {
+{
   "exam_access_token": "Z173480948902JK34432",
   "exam_access_token_expiration": "60",
 }
 `;
 
 exports[`Data layer integration tests Test getExamAttemptsData Should get, and save exam and attempt 1`] = `
-Object {
-  "examState": Object {
-    "activeAttempt": Object {
+{
+  "examState": {
+    "activeAttempt": {
       "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "started",
@@ -28,8 +28,8 @@ Object {
     },
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
-    "exam": Object {
-      "attempt": Object {
+    "exam": {
+      "attempt": {
         "attempt_code": "",
         "attempt_id": 1,
         "attempt_status": "started",
@@ -56,28 +56,28 @@ Object {
       "is_active": true,
       "is_practice_exam": false,
       "is_proctored": false,
-      "prerequisite_status": Object {
+      "prerequisite_status": {
         "are_prerequisites_satisifed": true,
-        "declined_prerequisites": Array [],
-        "failed_prerequisites": Array [],
-        "pending_prerequisites": Array [],
-        "satisfied_prerequisites": Array [],
+        "declined_prerequisites": [],
+        "failed_prerequisites": [],
+        "pending_prerequisites": [],
+        "satisfied_prerequisites": [],
       },
       "time_limit_mins": 30,
       "total_time": "30 minutes",
       "type": "timed",
     },
-    "examAccessToken": Object {
+    "examAccessToken": {
       "exam_access_token": "",
       "exam_access_token_expiration": "",
     },
     "isLoading": false,
-    "proctoringSettings": Object {
-      "exam_proctoring_backend": Object {
+    "proctoringSettings": {
+      "exam_proctoring_backend": {
         "download_url": "",
-        "instructions": Array [],
+        "instructions": [],
         "name": "",
-        "rules": Object {},
+        "rules": {},
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
@@ -91,9 +91,9 @@ Object {
 `;
 
 exports[`Data layer integration tests Test getLatestAttemptData with edx-proctoring as a backend (no EXAMS_BASE_URL) Should get, and save latest attempt 1`] = `
-Object {
-  "examState": Object {
-    "activeAttempt": Object {
+{
+  "examState": {
+    "activeAttempt": {
       "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "started",
@@ -111,18 +111,18 @@ Object {
     },
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
-    "exam": Object {},
-    "examAccessToken": Object {
+    "exam": {},
+    "examAccessToken": {
       "exam_access_token": "",
       "exam_access_token_expiration": "",
     },
     "isLoading": false,
-    "proctoringSettings": Object {
-      "exam_proctoring_backend": Object {
+    "proctoringSettings": {
+      "exam_proctoring_backend": {
         "download_url": "",
-        "instructions": Array [],
+        "instructions": [],
         "name": "",
-        "rules": Object {},
+        "rules": {},
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
@@ -136,12 +136,12 @@ Object {
 `;
 
 exports[`Data layer integration tests Test getProctoringSettings Should fail to fetch if error occurs 1`] = `
-Object {
-  "exam_proctoring_backend": Object {
+{
+  "exam_proctoring_backend": {
     "download_url": "",
-    "instructions": Array [],
+    "instructions": [],
     "name": "",
-    "rules": Object {},
+    "rules": {},
   },
   "integration_specific_email": "",
   "learner_notification_from_email": "",
@@ -152,12 +152,12 @@ Object {
 `;
 
 exports[`Data layer integration tests Test getProctoringSettings Should get, and save proctoringSettings 1`] = `
-Object {
-  "exam_proctoring_backend": Object {
+{
+  "exam_proctoring_backend": {
     "download_url": "",
-    "instructions": Array [],
+    "instructions": [],
     "name": "",
-    "rules": Object {},
+    "rules": {},
   },
   "integration_specific_email": "",
   "learner_notification_from_email": "",
@@ -168,12 +168,12 @@ Object {
 `;
 
 exports[`Data layer integration tests Test getProctoringSettings Test legacy URL for getProctoringSettings Should get, and save proctoringSettings 1`] = `
-Object {
-  "exam_proctoring_backend": Object {
+{
+  "exam_proctoring_backend": {
     "download_url": "",
-    "instructions": Array [],
+    "instructions": [],
     "name": "",
-    "rules": Object {},
+    "rules": {},
   },
   "integration_specific_email": "",
   "learner_notification_from_email": "",
@@ -184,7 +184,7 @@ Object {
 `;
 
 exports[`Data layer integration tests Test pollAttempt Should poll and update active attempt 1`] = `
-Object {
+{
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -203,7 +203,7 @@ Object {
 `;
 
 exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt 1`] = `
-Object {
+{
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -222,7 +222,7 @@ Object {
 `;
 
 exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt 2`] = `
-Object {
+{
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -241,13 +241,13 @@ Object {
 `;
 
 exports[`Data layer integration tests Test resetExam Should reset exam attempt 1`] = `
-Object {
-  "examState": Object {
+{
+  "examState": {
     "activeAttempt": null,
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
-    "exam": Object {
-      "attempt": Object {
+    "exam": {
+      "attempt": {
         "attempt_code": "",
         "attempt_id": 2,
         "attempt_status": "created",
@@ -274,28 +274,28 @@ Object {
       "is_active": true,
       "is_practice_exam": false,
       "is_proctored": false,
-      "prerequisite_status": Object {
+      "prerequisite_status": {
         "are_prerequisites_satisifed": true,
-        "declined_prerequisites": Array [],
-        "failed_prerequisites": Array [],
-        "pending_prerequisites": Array [],
-        "satisfied_prerequisites": Array [],
+        "declined_prerequisites": [],
+        "failed_prerequisites": [],
+        "pending_prerequisites": [],
+        "satisfied_prerequisites": [],
       },
       "time_limit_mins": 30,
       "total_time": "30 minutes",
       "type": "timed",
     },
-    "examAccessToken": Object {
+    "examAccessToken": {
       "exam_access_token": "",
       "exam_access_token_expiration": "",
     },
     "isLoading": false,
-    "proctoringSettings": Object {
-      "exam_proctoring_backend": Object {
+    "proctoringSettings": {
+      "exam_proctoring_backend": {
         "download_url": "",
-        "instructions": Array [],
+        "instructions": [],
         "name": "",
-        "rules": Object {},
+        "rules": {},
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
@@ -309,13 +309,13 @@ Object {
 `;
 
 exports[`Data layer integration tests Test resetExam with edx-proctoring as backend (no EXAMS_BASE_URL) Should reset exam attempt 1`] = `
-Object {
-  "examState": Object {
+{
+  "examState": {
     "activeAttempt": null,
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
-    "exam": Object {
-      "attempt": Object {
+    "exam": {
+      "attempt": {
         "attempt_code": "",
         "attempt_id": 2,
         "attempt_status": "created",
@@ -342,28 +342,28 @@ Object {
       "is_active": true,
       "is_practice_exam": false,
       "is_proctored": false,
-      "prerequisite_status": Object {
+      "prerequisite_status": {
         "are_prerequisites_satisifed": true,
-        "declined_prerequisites": Array [],
-        "failed_prerequisites": Array [],
-        "pending_prerequisites": Array [],
-        "satisfied_prerequisites": Array [],
+        "declined_prerequisites": [],
+        "failed_prerequisites": [],
+        "pending_prerequisites": [],
+        "satisfied_prerequisites": [],
       },
       "time_limit_mins": 30,
       "total_time": "30 minutes",
       "type": "timed",
     },
-    "examAccessToken": Object {
+    "examAccessToken": {
       "exam_access_token": "",
       "exam_access_token_expiration": "",
     },
     "isLoading": false,
-    "proctoringSettings": Object {
-      "exam_proctoring_backend": Object {
+    "proctoringSettings": {
+      "exam_proctoring_backend": {
         "download_url": "",
-        "instructions": Array [],
+        "instructions": [],
         "name": "",
-        "rules": Object {},
+        "rules": {},
       },
       "integration_specific_email": "",
       "learner_notification_from_email": "",
@@ -377,7 +377,7 @@ Object {
 `;
 
 exports[`Data layer integration tests Test startProctoredExam Should start exam, and update attempt and exam 1`] = `
-Object {
+{
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -396,7 +396,7 @@ Object {
 `;
 
 exports[`Data layer integration tests Test startProctoredExam with edx-proctoring as a backend (no EXAMS_BASE_URL) Should start exam, and update attempt and exam 1`] = `
-Object {
+{
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -415,7 +415,7 @@ Object {
 `;
 
 exports[`Data layer integration tests Test startTimedExam Should create and start exam 1`] = `
-Object {
+{
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -434,7 +434,7 @@ Object {
 `;
 
 exports[`Data layer integration tests Test startTimedExam with edx-proctoring as a backend (no EXAMS_BASE_URL) Should create and start exam 1`] = `
-Object {
+{
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
