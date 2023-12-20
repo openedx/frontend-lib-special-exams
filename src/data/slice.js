@@ -17,6 +17,7 @@ export const examSlice = createSlice({
       },
       provider_tech_support_email: '',
       provider_tech_support_phone: '',
+      provider_tech_support_url: '',
       provider_name: '',
       learner_notification_from_email: '',
       integration_specific_email: '',

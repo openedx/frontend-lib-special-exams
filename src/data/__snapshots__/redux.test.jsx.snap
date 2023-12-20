@@ -84,6 +84,7 @@ Object {
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
+      "provider_tech_support_url": "",
     },
     "timeIsOver": false,
   },
@@ -129,6 +130,7 @@ Object {
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
+      "provider_tech_support_url": "",
     },
     "timeIsOver": false,
   },
@@ -148,6 +150,7 @@ Object {
   "provider_name": "",
   "provider_tech_support_email": "",
   "provider_tech_support_phone": "",
+  "provider_tech_support_url": "",
 }
 `;
 
@@ -302,6 +305,7 @@ Object {
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
+      "provider_tech_support_url": "",
     },
     "timeIsOver": false,
   },
@@ -370,6 +374,7 @@ Object {
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
+      "provider_tech_support_url": "",
     },
     "timeIsOver": false,
   },
