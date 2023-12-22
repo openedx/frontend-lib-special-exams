@@ -84,6 +84,7 @@ exports[`Data layer integration tests Test getExamAttemptsData Should get, and s
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
+      "provider_tech_support_url": "",
     },
     "timeIsOver": false,
   },
@@ -129,6 +130,7 @@ exports[`Data layer integration tests Test getLatestAttemptData with edx-proctor
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
+      "provider_tech_support_url": "",
     },
     "timeIsOver": false,
   },
@@ -148,6 +150,7 @@ exports[`Data layer integration tests Test getProctoringSettings Should fail to 
   "provider_name": "",
   "provider_tech_support_email": "",
   "provider_tech_support_phone": "",
+  "provider_tech_support_url": "",
 }
 `;
 
@@ -302,6 +305,7 @@ exports[`Data layer integration tests Test resetExam Should reset exam attempt 1
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
+      "provider_tech_support_url": "",
     },
     "timeIsOver": false,
   },
@@ -370,6 +374,7 @@ exports[`Data layer integration tests Test resetExam with edx-proctoring as back
       "provider_name": "",
       "provider_tech_support_email": "",
       "provider_tech_support_phone": "",
+      "provider_tech_support_url": "",
     },
     "timeIsOver": false,
   },
