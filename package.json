@@ -54,7 +54,7 @@
   },
   "peerDependencies": {
     "@edx/frontend-platform": "^4.2.0 || ^5.0.0 || ^6.0.0",
-    "@edx/paragon": "^19.4.1 || ^20.22.4 || ^21.0.0",
+    "@openedx/paragon": "^19.4.1 || ^20.22.4 || ^21.0.0",
     "@reduxjs/toolkit": "^1.5.1",
     "prop-types": "^15.7.2",
     "react": "^16.14.0 || ^17.0.0",
@@ -65,9 +65,9 @@
     "redux": "^4.0.5"
   },
   "devDependencies": {
-    "@edx/frontend-build": "13.0.3",
+    "@openedx/frontend-build": "13.0.19",
     "@edx/frontend-platform": "6.0.2",
-    "@edx/paragon": "21.5.3",
+    "@openedx/paragon": "21.11.3",
     "@edx/reactifex": "^2.1.1",
     "@reduxjs/toolkit": "^1.5.1",
     "@testing-library/dom": "7.16.3",

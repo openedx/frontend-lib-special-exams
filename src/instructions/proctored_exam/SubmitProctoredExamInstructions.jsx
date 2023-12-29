@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button } from '@edx/paragon';
+import { Button } from '@openedx/paragon';
 import ExamStateContext from '../../context';
 import { ExamType } from '../../constants';
 

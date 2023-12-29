@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { getConfig } from '@edx/frontend-platform';
-import { Button, Container, Spinner } from '@edx/paragon';
+import { Button, Container, Spinner } from '@openedx/paragon';
 import ExamStateContext from '../../context';
 import Footer from './Footer';
 

@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
-import { Container } from '@edx/paragon';
+import { Container } from '@openedx/paragon';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import ExamStateContext from '../../../context';
 import PendingPrerequisitesProctoredExamInstructions from './Pending';

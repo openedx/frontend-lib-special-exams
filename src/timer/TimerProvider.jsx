@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { useToggle } from '@edx/paragon';
+import { useToggle } from '@openedx/paragon';
 import { Emitter } from '../data';
 import {
   TIMER_IS_CRITICALLY_LOW,

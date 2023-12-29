@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Container } from '@edx/paragon';
+import { Container } from '@openedx/paragon';
 import { ExamType } from '../constants';
 import { VerifiedOnboardingExamInstructions } from './onboarding_exam';
 import { VerifiedProctoredExamInstructions } from './proctored_exam';

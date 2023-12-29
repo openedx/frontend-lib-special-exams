@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage, injectIntl, intlShape } from '@edx/frontend-platform/i18n';
-import { Container } from '@edx/paragon';
+import { Container } from '@openedx/paragon';
 import ExamStateContext from '../../../context';
 import { ExamStatus } from '../../../constants';
 import WarningModal from '../WarningModal';

@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Container, MailtoLink, Hyperlink } from '@edx/paragon';
+import { Container, MailtoLink, Hyperlink } from '@openedx/paragon';
 import ExamStateContext from '../../context';
 import { ExamStatus } from '../../constants';
 import Footer from './Footer';

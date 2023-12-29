@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { MailtoLink } from '@edx/paragon';
+import { MailtoLink } from '@openedx/paragon';
 import ExamStateContext from '../../context';
 
 const VerifiedOnboardingExamInstructions = () => {
