@@ -39,6 +39,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
     provider_name: providerName,
     provider_tech_support_email: supportEmail,
     provider_tech_support_phone: supportPhone,
+    provider_tech_support_url: supportURL,
     exam_proctoring_backend: proctoringBackend,
   } = proctoringSettings;
   const examHasLtiProvider = !useLegacyAttemptApi;
@@ -81,6 +82,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
           providerName={providerName}
           supportEmail={supportEmail}
           supportPhone={supportPhone}
+          supportURL={supportURL}
         />
       );
     }

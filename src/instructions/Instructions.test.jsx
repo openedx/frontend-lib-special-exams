@@ -723,7 +723,7 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
   });
 
-  it('Shows correct download instructions for LTI provider if attempt status is created', () => {
+  it('Shows correct download instructions for LTI provider if attempt status is created, with support email and phone', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         activeAttempt: {},
@@ -755,6 +755,46 @@ describe('SequenceExamWrapper', () => {
       'If you have issues relating to proctoring, you can contact '
       + 'LTI Provider technical support by emailing ltiprovidersupport@example.com or by calling +123456789.',
     )).toBeInTheDocument();
+    expect(screen.getByText('Set up and start your proctored exam.')).toBeInTheDocument();
+    expect(screen.getByText('Start System Check')).toBeInTheDocument();
+    expect(screen.getByText('Start Exam')).toBeInTheDocument();
+  });
+
+  it('Shows correct download instructions for LTI provider if attempt status is created with support URL', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        activeAttempt: {},
+        proctoringSettings: Factory.build('proctoringSettings', {
+          provider_name: 'LTI Provider',
+          provider_tech_support_email: 'ltiprovidersupport@example.com',
+          provider_tech_support_phone: '+123456789',
+          provider_tech_support_url: 'www.example.com',
+        }),
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.CREATED,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <Instructions>
+          <div>Sequence</div>
+        </Instructions>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    expect(screen.getByText(
+      'If you have issues relating to proctoring, you can contact LTI Provider technical support by visiting',
+      { exact: false },
+    )).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'www.example.com in a new tab' })).toHaveAttribute('href', 'www.example.com');
+
     expect(screen.getByText('Set up and start your proctored exam.')).toBeInTheDocument();
     expect(screen.getByText('Start System Check')).toBeInTheDocument();
     expect(screen.getByText('Start Exam')).toBeInTheDocument();
