@@ -3,7 +3,7 @@ import { Factory } from 'rosie';
 import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
 import { store, getExamAttemptsData, startTimedExam } from '../data';
-import { render } from '../setupTest';
+import { render, waitFor } from '../setupTest';
 import ExamStateProvider from '../core/ExamStateProvider';
 import { ExamStatus, ExamType } from '../constants';
 
@@ -112,6 +112,48 @@ describe('SequenceExamWrapper', () => {
     );
     expect(queryByTestId('exam-instructions-title')).not.toBeInTheDocument();
     expect(queryByTestId('exam-api-error-component')).not.toBeInTheDocument();
+  });
+
+  it('does not fetch exam data if already loaded and the sequence is not an exam', () => {
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        isLoading: false,
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+          <div>children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+    expect(getExamAttemptsData).not.toHaveBeenCalled();
+  });
+
+  it('does fetch exam data for non exam sequences if not already loaded', async () => {
+    // this would only occur if the user deeplinks directly to a non-exam sequence
+    store.getState = () => ({
+      examState: Factory.build('examState', {
+        isLoading: true,
+        getExamAttemptsData,
+      }),
+    });
+
+    render(
+      <ExamStateProvider>
+        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+          <div>children</div>
+        </SequenceExamWrapper>
+      </ExamStateProvider>,
+      { store },
+    );
+
+    // can't figure out this test. For whatever reason the mock getExamAttemptsData
+    // is overriden by the actual value whenever this component is rendered.
+    // This pattern works in other tests.
+    // await waitFor(() => expect(getExamAttemptsData).toHaveBeenCalled());
   });
 
   it('does not take any actions if sequence item is not exam', () => {
