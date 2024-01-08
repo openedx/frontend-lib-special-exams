@@ -2,16 +2,28 @@ import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
-import { store, getExamAttemptsData, startTimedExam } from '../data';
+import { store, startTimedExam } from '../data';
+import { getExamAttemptsData } from '../data/thunks';
 import { render, waitFor } from '../setupTest';
 import ExamStateProvider from '../core/ExamStateProvider';
 import { ExamStatus, ExamType } from '../constants';
 
 jest.mock('../data', () => ({
   store: {},
-  getExamAttemptsData: jest.fn(),
   startTimedExam: jest.fn(),
 }));
+
+// because of the way ExamStateProvider and other locations inconsistantly import from
+// thunks directly instead of using the data module we need to mock the underlying
+// thunk file. It would be nice to clean this up in the future.
+jest.mock('../data/thunks', () => {
+  const originalModule = jest.requireActual('../data/thunks');
+  return {
+    ...originalModule,
+    getExamAttemptsData: jest.fn(),
+  };
+});
+
 getExamAttemptsData.mockReturnValue(jest.fn());
 startTimedExam.mockReturnValue(jest.fn());
 store.subscribe = jest.fn();
@@ -24,10 +36,15 @@ describe('SequenceExamWrapper', () => {
   };
   const courseId = 'course-v1:test+test+test';
 
-  it('is successfully rendered and shows instructions if the user is not staff', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
     store.getState = () => ({
       examState: Factory.build('examState'),
+      isLoading: false,
     });
+  });
+
+  it('is successfully rendered and shows instructions if the user is not staff', () => {
     const { queryByTestId } = render(
       <ExamStateProvider>
         <SequenceExamWrapper sequence={sequence} courseId={courseId}>
@@ -114,13 +131,7 @@ describe('SequenceExamWrapper', () => {
     expect(queryByTestId('exam-api-error-component')).not.toBeInTheDocument();
   });
 
-  it('does not fetch exam data if already loaded and the sequence is not an exam', () => {
-    store.getState = () => ({
-      examState: Factory.build('examState', {
-        isLoading: false,
-      }),
-    });
-
+  it('does not fetch exam data if already loaded and the sequence is not an exam', async () => {
     render(
       <ExamStateProvider>
         <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
@@ -129,7 +140,8 @@ describe('SequenceExamWrapper', () => {
       </ExamStateProvider>,
       { store },
     );
-    expect(getExamAttemptsData).not.toHaveBeenCalled();
+    // assert the exam data is not fetched
+    await expect(waitFor(() => expect(getExamAttemptsData).toHaveBeenCalled())).rejects.toThrow();
   });
 
   it('does fetch exam data for non exam sequences if not already loaded', async () => {
@@ -137,7 +149,6 @@ describe('SequenceExamWrapper', () => {
     store.getState = () => ({
       examState: Factory.build('examState', {
         isLoading: true,
-        getExamAttemptsData,
       }),
     });
 
@@ -149,11 +160,7 @@ describe('SequenceExamWrapper', () => {
       </ExamStateProvider>,
       { store },
     );
-
-    // can't figure out this test. For whatever reason the mock getExamAttemptsData
-    // is overriden by the actual value whenever this component is rendered.
-    // This pattern works in other tests.
-    // await waitFor(() => expect(getExamAttemptsData).toHaveBeenCalled());
+    await waitFor(() => expect(getExamAttemptsData).toHaveBeenCalled());
   });
 
   it('does not take any actions if sequence item is not exam', () => {
