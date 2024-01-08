@@ -27,7 +27,10 @@ const ExamWrapper = ({ children, ...props }) => {
   const isGated = sequence && sequence.gatedContent !== undefined && sequence.gatedContent.gated;
 
   useEffect(() => {
-    loadInitialData();
+    // fetch exam data on exam sequences or if no exam data has been fetched yet
+    if (sequence.isTimeLimited || state.isLoading) {
+      loadInitialData();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
