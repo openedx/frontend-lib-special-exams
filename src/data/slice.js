@@ -106,4 +106,8 @@ export const {
   setReviewPolicy, setApiError, setAllowProctoringOptOut,
 } = examSlice.actions;
 
+export const {
+  reducer,
+} = examSlice;
+
 export default examSlice.reducer;
