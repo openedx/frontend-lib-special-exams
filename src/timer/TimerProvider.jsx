@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useToggle } from '@edx/paragon';
-import { Emitter } from '../data';
+import { Emitter, pollAttempt, pingAttempt } from '../data';
 import {
   TIMER_IS_CRITICALLY_LOW,
   TIMER_IS_LOW,
   TIMER_LIMIT_REACHED,
   TIMER_REACHED_NULL,
 } from './events';
-import { withExamStore } from '../hocs';
 
 /* give an extra 5 seconds where the timer holds at 00:00 before page refreshes */
 const GRACE_PERIOD_SECS = 5;
@@ -18,20 +18,17 @@ const TIME_LIMIT_LOW_PCT = 0.2;
 
 export const TimerContext = React.createContext({});
 
-const mapStateToProps = (state) => {
-  const { activeAttempt, exam } = state.specialExams;
-  return { attempt: activeAttempt, timeLimitMins: exam.time_limit_mins };
-};
-
 const getFormattedRemainingTime = (timeLeft) => ({
   hours: Math.floor(timeLeft / (60 * 60)),
   minutes: Math.floor((timeLeft / 60) % 60),
   seconds: Math.floor(timeLeft % 60),
 });
 
-const TimerServiceProvider = ({
-  children, attempt, timeLimitMins, pollHandler, pingHandler,
+const TimerProvider = ({
+  children,
 }) => {
+  const { activeAttempt: attempt, exam } = useSelector(state => state.specialExams);
+  const { time_limit_mins: timeLimitMins } = exam;
   const [timeState, setTimeState] = useState({});
   const [limitReached, setLimitReached] = useToggle(false);
   const {
@@ -44,6 +41,8 @@ const TimerServiceProvider = ({
   const LOW_TIME = timeLimitMins * 60 * TIME_LIMIT_LOW_PCT;
   let liveInterval = null;
 
+  const dispatch = useDispatch();
+
   const getTimeString = () => Object.values(timeState).map(
     item => {
       // Do not show timer negative value.
@@ -55,7 +54,7 @@ const TimerServiceProvider = ({
 
   const pollExam = () => {
     // poll url may be null if this is an LTI exam
-    pollHandler(attempt.exam_started_poll_url);
+    dispatch(pollAttempt(attempt.exam_started_poll_url));
   };
 
   const processTimeLeft = (timer, secondsLeft) => {
@@ -92,7 +91,7 @@ const TimerServiceProvider = ({
       }
       // if exam is proctored ping provider app
       if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
-        pingHandler(pingInterval, workerUrl);
+        dispatch(pingAttempt(pingInterval, workerUrl));
       }
     }, 1000);
     return () => {
@@ -115,24 +114,7 @@ const TimerServiceProvider = ({
   );
 };
 
-TimerServiceProvider.propTypes = {
-  attempt: PropTypes.shape({
-    time_remaining_seconds: PropTypes.number.isRequired,
-    exam_started_poll_url: PropTypes.string,
-    desktop_application_js_url: PropTypes.string,
-    ping_interval: PropTypes.number,
-    taking_as_proctored: PropTypes.bool,
-    attempt_status: PropTypes.string.isRequired,
-  }).isRequired,
-  timeLimitMins: PropTypes.number.isRequired,
+TimerProvider.propTypes = {
   children: PropTypes.element.isRequired,
-  pollHandler: PropTypes.func,
-  pingHandler: PropTypes.func,
 };
-
-TimerServiceProvider.defaultProps = {
-  pollHandler: () => {},
-  pingHandler: () => {},
-};
-
-export default withExamStore(TimerServiceProvider, mapStateToProps);
+export default TimerProvider;

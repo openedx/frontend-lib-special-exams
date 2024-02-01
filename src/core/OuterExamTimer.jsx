@@ -1,22 +1,24 @@
 import React, { useEffect, useContext } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { AppContext } from '@edx/frontend-platform/react';
 import ExamStateContext from '../context';
+import { getLatestAttemptData } from '../data';
 import { ExamTimerBlock } from '../timer';
 import ExamAPIError from '../exam/ExamAPIError';
 import ExamStateProvider from './ExamStateProvider';
 
 const ExamTimer = ({ courseId }) => {
-  const state = useContext(ExamStateContext);
+  const examState = useContext(ExamStateContext);
   const { authenticatedUser } = useContext(AppContext);
-  const {
-    activeAttempt, showTimer, stopExam, submitExam,
-    expireExam, pollAttempt, apiErrorMsg, pingAttempt,
-    getLatestAttemptData,
-  } = state;
+  const { showTimer } = examState;
+
+  const { apiErrorMsg } = useSelector(state => state.specialExams);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    getLatestAttemptData(courseId);
+    dispatch(getLatestAttemptData(courseId));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
@@ -29,14 +31,7 @@ const ExamTimer = ({ courseId }) => {
   return (
     <div className="d-flex flex-column justify-content-center">
       {showTimer && (
-        <ExamTimerBlock
-          attempt={activeAttempt}
-          stopExamAttempt={stopExam}
-          submitExam={submitExam}
-          expireExamAttempt={expireExam}
-          pollExamAttempt={pollAttempt}
-          pingAttempt={pingAttempt}
-        />
+        <ExamTimerBlock />
       )}
       {apiErrorMsg && <ExamAPIError />}
     </div>
