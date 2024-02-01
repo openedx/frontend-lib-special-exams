@@ -6,4 +6,3 @@ export {
   isExam,
   fetchExamAccess,
 } from './api';
-export { store } from './data';

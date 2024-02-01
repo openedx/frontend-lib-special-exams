@@ -5,11 +5,6 @@ import {
   render, screen, initializeTestStore, fireEvent,
 } from '../setupTest';
 import { stopExam, submitExam } from '../data';
-import specialExams from '../data/store';
-
-jest.mock('../data/store', () => ({
-  specialExams: {},
-}));
 
 // We do a partial mock to avoid mocking out other exported values (e.g. the store and the Emitter).
 jest.mock('../data', () => {
@@ -50,7 +45,6 @@ describe('ExamTimerBlock', () => {
       },
     };
     store = await initializeTestStore(preloadedState);
-    specialExams.getState = store.getState;
     attempt = store.getState().specialExams.activeAttempt;
   });
 
@@ -113,7 +107,6 @@ describe('ExamTimerBlock', () => {
       },
     };
     const testStore = await initializeTestStore(preloadedState);
-    specialExams.getState = store.testStore;
     attempt = testStore.getState().specialExams.activeAttempt;
     render(
       <ExamTimerBlock />,
@@ -176,7 +169,6 @@ describe('ExamTimerBlock', () => {
       },
     };
     const testStore = await initializeTestStore(preloadedState);
-    specialExams.getState = store.testStore;
     attempt = testStore.getState().specialExams.activeAttempt;
 
     render(
@@ -219,7 +211,6 @@ describe('ExamTimerBlock', () => {
       },
     };
     let testStore = await initializeTestStore(preloadedState);
-    specialExams.getState = store.testStore;
     attempt = testStore.getState().specialExams.activeAttempt;
     const { rerender } = render(
       <ExamTimerBlock />,
@@ -231,7 +222,6 @@ describe('ExamTimerBlock', () => {
       time_remaining_seconds: 20,
     };
     testStore = await initializeTestStore(preloadedState);
-    specialExams.getState = store.testStore;
     const updatedAttempt = testStore.getState().specialExams.activeAttempt;
 
     expect(updatedAttempt.time_remaining_seconds).toBe(20);
@@ -279,7 +269,6 @@ describe('ExamTimerBlock', () => {
 
       // Store it in the state
       const testStore = await initializeTestStore(preloadedState);
-      specialExams.getState = store.testStore;
       attempt = testStore.getState().specialExams.activeAttempt;
 
       // render an exam timer block with that data

@@ -16,11 +16,11 @@ export {
   resetExam,
   getAllowProctoringOptOut,
   examRequiresAccessToken,
+  checkExamEntry,
 } from './thunks';
 
 export {
   expireExamAttempt,
 } from './slice';
 
-export { default as store } from './store';
 export { default as Emitter } from './emitter';

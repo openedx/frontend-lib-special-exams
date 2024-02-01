@@ -1,14 +1,18 @@
+import { useDispatch, useSelector } from 'react-redux';
 import React, { useContext, useEffect } from 'react';
 import { AppContext } from '@edx/frontend-platform/react';
 import PropTypes from 'prop-types';
 import Exam from './Exam';
-import ExamStateContext from '../context';
+import {
+  getExamAttemptsData,
+  getAllowProctoringOptOut,
+  checkExamEntry,
+} from '../data';
 
 /**
  * Exam wrapper is responsible for triggering initial exam data fetching and rendering Exam.
  */
 const ExamWrapper = ({ children, ...props }) => {
-  const state = useContext(ExamStateContext);
   const { authenticatedUser } = useContext(AppContext);
   const {
     sequence,
@@ -17,9 +21,13 @@ const ExamWrapper = ({ children, ...props }) => {
     originalUserIsStaff,
     canAccessProctoredExams,
   } = props;
-  const { getExamAttemptsData, getAllowProctoringOptOut, checkExamEntry } = state;
+
+  const { isLoading } = useSelector(state => state.specialExams);
+
+  const dispatch = useDispatch();
+
   const loadInitialData = async () => {
-    await getExamAttemptsData(courseId, sequence.id);
+    await dispatch(getExamAttemptsData(courseId, sequence.id));
     await getAllowProctoringOptOut(sequence.allowProctoringOptOut);
     await checkExamEntry();
   };
@@ -28,7 +36,7 @@ const ExamWrapper = ({ children, ...props }) => {
 
   useEffect(() => {
     // fetch exam data on exam sequences or if no exam data has been fetched yet
-    if (sequence.isTimeLimited || state.isLoading) {
+    if (sequence.isTimeLimited || isLoading) {
       loadInitialData();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

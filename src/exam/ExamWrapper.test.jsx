@@ -2,10 +2,9 @@ import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
-import { store, startTimedExam } from '../data';
+import { startTimedExam } from '../data';
 import { getExamAttemptsData } from '../data/thunks';
-import { render, waitFor } from '../setupTest';
-import ExamStateProvider from '../core/ExamStateProvider';
+import { render, waitFor, initializeTestStore } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
 
 jest.mock('../data', () => ({
@@ -26,8 +25,6 @@ jest.mock('../data/thunks', () => {
 
 getExamAttemptsData.mockReturnValue(jest.fn());
 startTimedExam.mockReturnValue(jest.fn());
-store.subscribe = jest.fn();
-store.dispatch = jest.fn();
 
 describe('SequenceExamWrapper', () => {
   const sequence = {
@@ -35,10 +32,11 @@ describe('SequenceExamWrapper', () => {
     isTimeLimited: true,
   };
   const courseId = 'course-v1:test+test+test';
+  let store;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
-    store.getState = () => ({
+    store = await initializeTestStore({
       specialExams: Factory.build('specialExams'),
       isLoading: false,
     });
@@ -46,11 +44,9 @@ describe('SequenceExamWrapper', () => {
 
   it('is successfully rendered and shows instructions if the user is not staff', () => {
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Subsection is a Timed Exam (30 minutes)');
@@ -66,11 +62,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('proctored-exam-instructions-title')).toHaveTextContent('This exam is proctored');
@@ -83,11 +77,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('spinner')).toBeInTheDocument();
@@ -101,11 +93,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Subsection is a Timed Exam (30 minutes)');
@@ -120,11 +110,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('exam-instructions-title')).not.toBeInTheDocument();
@@ -133,11 +121,9 @@ describe('SequenceExamWrapper', () => {
 
   it('does not fetch exam data if already loaded and the sequence is not an exam', async () => {
     render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     // assert the exam data is not fetched
@@ -153,11 +139,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     await waitFor(() => expect(getExamAttemptsData).toHaveBeenCalled());
@@ -165,11 +149,9 @@ describe('SequenceExamWrapper', () => {
 
   it('does not take any actions if sequence item is not exam', () => {
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('children');
@@ -180,11 +162,9 @@ describe('SequenceExamWrapper', () => {
       authenticatedUser: null,
     };
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store, appContext },
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('children');
@@ -199,11 +179,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId} isStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId} isStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -220,11 +198,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -243,11 +219,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -267,11 +241,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -292,11 +264,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -305,11 +275,9 @@ describe('SequenceExamWrapper', () => {
 
   it('does not display masquerade alert if sequence is not time gated', () => {
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId} originalUserIsStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId} originalUserIsStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -328,15 +296,13 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper
-          sequence={{ ...sequence, isTimeLimited: false }}
-          courseId={courseId}
-          canAccessProctoredExams={false}
-        >
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper
+        sequence={{ ...sequence, isTimeLimited: false }}
+        courseId={courseId}
+        canAccessProctoredExams={false}
+      >
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('no-access')).toHaveTextContent('You do not have access to proctored exams with your current enrollment.');
@@ -355,15 +321,13 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper
-          sequence={{ ...sequence, isTimeLimited: false }}
-          courseId={courseId}
-          canAccessProctoredExams={false}
-        >
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper
+        sequence={{ ...sequence, isTimeLimited: false }}
+        courseId={courseId}
+        canAccessProctoredExams={false}
+      >
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('no-access')).toBeNull();
@@ -382,15 +346,13 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper
-          sequence={{ ...sequence, isTimeLimited: false }}
-          courseId={courseId}
-          canAccessProctoredExams={false}
-        >
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper
+        sequence={{ ...sequence, isTimeLimited: false }}
+        courseId={courseId}
+        canAccessProctoredExams={false}
+      >
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('no-access')).toBeNull();
