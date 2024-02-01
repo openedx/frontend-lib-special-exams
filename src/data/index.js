@@ -1,4 +1,5 @@
 export {
+  createProctoredExamAttempt,
   getExamAttemptsData,
   getLatestAttemptData,
   getProctoringSettings,

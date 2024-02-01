@@ -1,11 +1,10 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@edx/paragon';
-import ExamStateContext from '../../context';
 
 const StartTimedExamInstructions = () => {
-  const state = useContext(ExamStateContext);
-  const { exam, startTimedExam } = state;
+  const { exam, startTimedExam } = useSelector(state => state.specialExams);
   const examDuration = exam.total_time;
 
   return (

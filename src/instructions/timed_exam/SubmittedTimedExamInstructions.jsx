@@ -1,13 +1,13 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import ExamStateContext from '../../context';
 
 const SubmittedTimedExamInstructions = () => {
-  const state = useContext(ExamStateContext);
+  const { timeIsOver } = useSelector(state => state.specialExams);
 
   return (
     <h3 className="h3" data-testid="exam.submittedExamInstructions.title">
-      {state.timeIsOver
+      {timeIsOver
         ? (
           <FormattedMessage
             id="exam.submittedExamInstructions.overtimeTitle"

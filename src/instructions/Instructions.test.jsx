@@ -3,9 +3,10 @@ import { Factory } from 'rosie';
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from './index';
-import { store, getExamAttemptsData, startTimedExam } from '../data';
+import {
+  store, continueExam, getExamAttemptsData, startProctoredExam, startTimedExam, submitExam,
+} from '../data';
 import { pollExamAttempt, softwareDownloadAttempt } from '../data/api';
-import { continueExam, submitExam } from '../data/thunks';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
 import {
@@ -18,12 +19,11 @@ import {
 
 jest.mock('../data', () => ({
   store: {},
-  getExamAttemptsData: jest.fn(),
-  startTimedExam: jest.fn(),
-}));
-jest.mock('../data/thunks', () => ({
   continueExam: jest.fn(),
+  getExamAttemptsData: jest.fn(),
   getExamReviewPolicy: jest.fn(),
+  startProctoredExam: jest.fn(),
+  startTimedExam: jest.fn(),
   submitExam: jest.fn(),
 }));
 jest.mock('../data/api', () => ({
@@ -33,6 +33,7 @@ jest.mock('../data/api', () => ({
 continueExam.mockReturnValue(jest.fn());
 submitExam.mockReturnValue(jest.fn());
 getExamAttemptsData.mockReturnValue(jest.fn());
+startProctoredExam.mockReturnValue(jest.fn());
 startTimedExam.mockReturnValue(jest.fn());
 pollExamAttempt.mockReturnValue(Promise.resolve({}));
 store.subscribe = jest.fn();

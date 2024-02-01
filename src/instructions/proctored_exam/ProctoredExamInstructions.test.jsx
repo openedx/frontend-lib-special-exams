@@ -3,8 +3,7 @@ import { Factory } from 'rosie';
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from '../index';
-import { store, getExamAttemptsData } from '../../data';
-import { submitExam } from '../../data/thunks';
+import { store, getExamAttemptsData, submitExam } from '../../data';
 import { initializeMockApp, render, screen } from '../../setupTest';
 import ExamStateProvider from '../../core/ExamStateProvider';
 import {
@@ -16,11 +15,10 @@ import {
 jest.mock('../../data', () => ({
   store: {},
   getExamAttemptsData: jest.fn(),
-}));
-jest.mock('../../data/thunks', () => ({
   getExamReviewPolicy: jest.fn(),
   submitExam: jest.fn(),
 }));
+
 submitExam.mockReturnValue(jest.fn());
 getExamAttemptsData.mockReturnValue(jest.fn());
 store.subscribe = jest.fn();
