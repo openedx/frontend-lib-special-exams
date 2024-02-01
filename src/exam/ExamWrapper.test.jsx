@@ -39,7 +39,7 @@ describe('SequenceExamWrapper', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     store.getState = () => ({
-      examState: Factory.build('examState'),
+      specialExams: Factory.build('specialExams'),
       isLoading: false,
     });
   });
@@ -59,7 +59,7 @@ describe('SequenceExamWrapper', () => {
 
   it('is successfully rendered and shows instructions for proctored exam', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
         }),
@@ -78,7 +78,7 @@ describe('SequenceExamWrapper', () => {
 
   it('shows loader if isLoading true', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         isLoading: true,
       }),
     });
@@ -95,7 +95,7 @@ describe('SequenceExamWrapper', () => {
 
   it('shows exam api error component together with other content if there is an error', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         apiErrorMsg: 'Something bad has happened.',
       }),
     });
@@ -114,7 +114,7 @@ describe('SequenceExamWrapper', () => {
 
   it('does not show exam api error component on a non-exam sequence', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         apiErrorMsg: 'Something bad has happened.',
       }),
     });
@@ -147,7 +147,7 @@ describe('SequenceExamWrapper', () => {
   it('does fetch exam data for non exam sequences if not already loaded', async () => {
     // this would only occur if the user deeplinks directly to a non-exam sequence
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         isLoading: true,
       }),
     });
@@ -192,7 +192,7 @@ describe('SequenceExamWrapper', () => {
 
   it('renders exam content without an active attempt if the user is staff', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
         }),
@@ -211,7 +211,7 @@ describe('SequenceExamWrapper', () => {
 
   it('renders exam content for staff masquerading as a learner', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           passed_due_date: false,
@@ -236,7 +236,7 @@ describe('SequenceExamWrapper', () => {
       gated: true,
     };
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
         }),
@@ -255,7 +255,7 @@ describe('SequenceExamWrapper', () => {
 
   it('does not display masquerade alert if specified learner is in the middle of the exam', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           attempt: {
@@ -280,7 +280,7 @@ describe('SequenceExamWrapper', () => {
 
   it('does not display masquerade alert if learner can view the exam after the due date', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.TIMED,
           attempt: {
@@ -318,7 +318,7 @@ describe('SequenceExamWrapper', () => {
 
   it('shows access denied if learner is not accessible to proctoring exams', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           attempt: null,
@@ -345,7 +345,7 @@ describe('SequenceExamWrapper', () => {
 
   it('learner has access to timed exams', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.TIMED,
           attempt: null,
@@ -372,7 +372,7 @@ describe('SequenceExamWrapper', () => {
 
   it('learner has access to content that are not exams', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: '',
           attempt: null,

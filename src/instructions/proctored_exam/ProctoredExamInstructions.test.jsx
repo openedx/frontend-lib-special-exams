@@ -34,7 +34,7 @@ describe('SequenceExamWrapper', () => {
 
   it('Start exam instructions can be successfully rendered', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         allowProctoringOptOut: true,
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
@@ -65,7 +65,7 @@ describe('SequenceExamWrapper', () => {
       attempt_status: ExamStatus.STARTED,
     });
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         activeAttempt: attempt,
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
@@ -88,7 +88,7 @@ describe('SequenceExamWrapper', () => {
 
   it('Shows correct instructions when attempt status is ready_to_start', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
@@ -115,7 +115,7 @@ describe('SequenceExamWrapper', () => {
 
   it('Shows correct instructions when attempt status is ready_to_start and attempt has no total time', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
@@ -144,7 +144,7 @@ describe('SequenceExamWrapper', () => {
 
   it('Instructions are shown when attempt status is submitted', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
@@ -172,7 +172,7 @@ describe('SequenceExamWrapper', () => {
       use_legacy_attempt_api: true,
     });
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         activeAttempt: attempt,
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
@@ -209,7 +209,7 @@ describe('SequenceExamWrapper', () => {
       attempt_id: 1,
     });
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         activeAttempt: attempt,
         exam: Factory.build('exam', {
           is_proctored: true,
@@ -238,7 +238,7 @@ describe('SequenceExamWrapper', () => {
 
   it('Instructions are shown when attempt status is verified', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
@@ -262,7 +262,7 @@ describe('SequenceExamWrapper', () => {
 
   it('Instructions are shown when attempt status is rejected', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,
@@ -287,7 +287,7 @@ describe('SequenceExamWrapper', () => {
 
   it.each(ONBOARDING_ERRORS)('Renders correct onboarding error instructions when status is %s ', (status) => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           is_proctored: true,

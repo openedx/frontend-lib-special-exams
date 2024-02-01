@@ -28,7 +28,7 @@ describe('OuterExamTimer', () => {
       attempt_status: ExamStatus.STARTED,
     });
     store.getState = () => ({
-      examState: {
+      specialExams: {
         activeAttempt: attempt,
         exam: {
           time_limit_mins: 60,
@@ -45,7 +45,7 @@ describe('OuterExamTimer', () => {
 
   it('does not render timer if there is no exam in progress', () => {
     store.getState = () => ({
-      examState: {
+      specialExams: {
         activeAttempt: {},
         exam: {},
       },

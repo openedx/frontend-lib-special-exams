@@ -22,7 +22,7 @@ describe('ExamTimerBlock', () => {
 
   beforeEach(async () => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
         activeAttempt: {
@@ -42,7 +42,7 @@ describe('ExamTimerBlock', () => {
     };
     store = await initializeTestStore(preloadedState);
     examStore.getState = store.getState;
-    attempt = store.getState().examState.activeAttempt;
+    attempt = store.getState().specialExams.activeAttempt;
   });
 
   it('renders items correctly', async () => {
@@ -65,7 +65,7 @@ describe('ExamTimerBlock', () => {
 
   it('renders without activeAttempt return null', async () => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
         activeAttempt: null,
@@ -74,7 +74,7 @@ describe('ExamTimerBlock', () => {
       },
     };
     const testStore = await initializeTestStore(preloadedState);
-    attempt = testStore.getState().examState.activeAttempt;
+    attempt = testStore.getState().specialExams.activeAttempt;
     const { container } = render(
       <ExamTimerBlock
         attempt={attempt}
@@ -103,7 +103,7 @@ describe('ExamTimerBlock', () => {
 
   it('changes behavior when clock time decreases critically low threshold', async () => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
         activeAttempt: {
@@ -123,7 +123,7 @@ describe('ExamTimerBlock', () => {
     };
     const testStore = await initializeTestStore(preloadedState);
     examStore.getState = store.testStore;
-    attempt = testStore.getState().examState.activeAttempt;
+    attempt = testStore.getState().specialExams.activeAttempt;
     render(
       <ExamTimerBlock
         attempt={attempt}
@@ -184,7 +184,7 @@ describe('ExamTimerBlock', () => {
 
   it('submits exam if time reached 00:00 and user clicks end my exam button', async () => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
         activeAttempt: {
@@ -204,7 +204,7 @@ describe('ExamTimerBlock', () => {
     };
     const testStore = await initializeTestStore(preloadedState);
     examStore.getState = store.testStore;
-    attempt = testStore.getState().examState.activeAttempt;
+    attempt = testStore.getState().specialExams.activeAttempt;
 
     render(
       <ExamTimerBlock
@@ -239,7 +239,7 @@ describe('ExamTimerBlock', () => {
 
   it('Update exam timer when attempt time_remaining_seconds is smaller than displayed time', async () => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
         activeAttempt: {
@@ -259,7 +259,7 @@ describe('ExamTimerBlock', () => {
     };
     let testStore = await initializeTestStore(preloadedState);
     examStore.getState = store.testStore;
-    attempt = testStore.getState().examState.activeAttempt;
+    attempt = testStore.getState().specialExams.activeAttempt;
     const { rerender } = render(
       <ExamTimerBlock
         attempt={attempt}
@@ -271,13 +271,13 @@ describe('ExamTimerBlock', () => {
     );
     await waitFor(() => expect(screen.getByText('00:03:59')).toBeInTheDocument());
 
-    preloadedState.examState.activeAttempt = {
+    preloadedState.specialExams.activeAttempt = {
       ...attempt,
       time_remaining_seconds: 20,
     };
     testStore = await initializeTestStore(preloadedState);
     examStore.getState = store.testStore;
-    const updatedAttempt = testStore.getState().examState.activeAttempt;
+    const updatedAttempt = testStore.getState().specialExams.activeAttempt;
 
     expect(updatedAttempt.time_remaining_seconds).toBe(20);
 
@@ -309,7 +309,7 @@ describe('ExamTimerBlock', () => {
     it(`Accessibility time string ${timeString} appears as expected based seconds remaining: ${timesToTest[timeString]}`, async () => {
       // create a state with the respective number of seconds
       const preloadedState = {
-        examState: {
+        specialExams: {
           isLoading: true,
           timeIsOver: false,
           activeAttempt: {
@@ -331,7 +331,7 @@ describe('ExamTimerBlock', () => {
       // Store it in the state
       const testStore = await initializeTestStore(preloadedState);
       examStore.getState = store.testStore;
-      attempt = testStore.getState().examState.activeAttempt;
+      attempt = testStore.getState().specialExams.activeAttempt;
 
       // render an exam timer block with that data
       render(

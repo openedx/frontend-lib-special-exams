@@ -48,13 +48,13 @@ let globalStore;
 export async function initializeTestStore(preloadedState = null, overrideStore = true) {
   let store = configureStore({
     reducer: {
-      examState: examReducer,
+      specialExams: examReducer,
     },
   });
   if (preloadedState) {
     store = configureStore({
       reducer: {
-        examState: examReducer,
+        specialExams: examReducer,
       },
       preloadedState,
     });
