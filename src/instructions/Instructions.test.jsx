@@ -12,7 +12,6 @@ import { TIMER_REACHED_NULL } from '../timer/events';
 import {
   render, screen, act, initializeMockApp,
 } from '../setupTest';
-import ExamStateProvider from '../core/ExamStateProvider';
 import {
   ExamStatus, ExamType, INCOMPLETE_STATUSES,
 } from '../constants';
@@ -48,11 +47,9 @@ describe('SequenceExamWrapper', () => {
     store.getState = () => ({ specialExams: Factory.build('specialExams') });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div data-testid="sequence-content">Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('start-exam-button')).toHaveTextContent('I am ready to start this timed exam.');
@@ -71,11 +68,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div data-testid="sequence-content">Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
@@ -100,11 +95,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -135,11 +128,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('exam-instructions-title')).toHaveTextContent('Try a proctored exam');
@@ -167,11 +158,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -204,11 +193,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -231,11 +218,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div data-testid="sequence-content">Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
@@ -256,11 +241,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div data-testid="sequence-content">Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(screen.getByText('Your exam is ready to be resumed.')).toBeInTheDocument();
@@ -282,11 +265,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -319,11 +300,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('You have submitted your timed exam.');
@@ -342,11 +321,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('The time allotted for this exam has expired.');
@@ -369,11 +346,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -402,11 +377,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -428,11 +401,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -459,11 +430,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -496,11 +465,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -523,11 +490,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -550,11 +515,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -575,11 +538,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -600,11 +561,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -631,11 +590,9 @@ describe('SequenceExamWrapper', () => {
         });
 
         render(
-          <ExamStateProvider>
-            <Instructions>
-              <div>Sequence</div>
-            </Instructions>
-          </ExamStateProvider>,
+          <Instructions>
+            <div>Sequence</div>
+          </Instructions>,
           { store },
         );
 
@@ -660,11 +617,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div data-testid="exam-content">children</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div data-testid="exam-content">children</div>
+      </Instructions>,
       { store },
     );
 
@@ -687,11 +642,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>children</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>children</div>
+      </Instructions>,
       { store },
     );
 
@@ -713,11 +666,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -744,11 +695,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -782,11 +731,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -819,11 +766,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -862,11 +807,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     fireEvent.click(screen.getByText('Start System Check'));
@@ -912,11 +855,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -952,11 +893,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(screen.getByDisplayValue('1234-5678-9012-3456')).toBeInTheDocument();
@@ -979,11 +918,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>children</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>children</div>
+      </Instructions>,
       { store },
     );
 
@@ -1005,11 +942,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -1032,11 +967,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 

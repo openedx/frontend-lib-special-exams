@@ -5,7 +5,6 @@ import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from '../index';
 import { store, getExamAttemptsData, submitExam } from '../../data';
 import { initializeMockApp, render, screen } from '../../setupTest';
-import ExamStateProvider from '../../core/ExamStateProvider';
 import {
   ExamType,
   ExamStatus,
@@ -42,11 +41,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('start-exam-button')).toHaveTextContent('Continue to my proctored exam.');
@@ -74,11 +71,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div data-testid="sequence-content">Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div data-testid="sequence-content">Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
@@ -99,11 +94,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(screen.getByTestId('proctored-exam-instructions-rulesLink')).toHaveTextContent('Rules for Online Proctored Exams');
@@ -128,11 +121,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(screen.getByTestId('proctored-exam-instructions-rulesLink')).toHaveTextContent('Rules for Online Proctored Exams');
@@ -154,11 +145,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('proctored-exam-instructions-title')).toHaveTextContent('You have submitted this proctored exam for review');
@@ -181,11 +170,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -218,11 +205,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
@@ -248,11 +233,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('proctored-exam-instructions-title')).toHaveTextContent('Your proctoring session was reviewed successfully.');
@@ -272,11 +255,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
     expect(getByTestId('proctored-exam-instructions-title'))
@@ -297,11 +278,9 @@ describe('SequenceExamWrapper', () => {
     });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <Instructions>
-          <div>Sequence</div>
-        </Instructions>
-      </ExamStateProvider>,
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
       { store },
     );
 
