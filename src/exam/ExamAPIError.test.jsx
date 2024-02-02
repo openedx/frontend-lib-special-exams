@@ -23,7 +23,7 @@ describe('ExamAPIError', () => {
   const defaultMessage = 'A system error has occurred with your exam.';
 
   it('renders with the default information', () => {
-    store.getState = () => ({ examState: {} });
+    store.getState = () => ({ specialExams: {} });
 
     const tree = render(
       <ExamStateProvider>
@@ -42,7 +42,7 @@ describe('ExamAPIError', () => {
     };
     getConfig.mockImplementation(() => config);
 
-    store.getState = () => ({ examState: {} });
+    store.getState = () => ({ specialExams: {} });
 
     const { getByTestId } = render(
       <ExamStateProvider>
@@ -58,7 +58,7 @@ describe('ExamAPIError', () => {
 
   it('renders error details when provided', () => {
     store.getState = () => ({
-      examState: { apiErrorMsg: 'Something bad has happened' },
+      specialExams: { apiErrorMsg: 'Something bad has happened' },
     });
 
     const { queryByTestId } = render(
@@ -68,12 +68,12 @@ describe('ExamAPIError', () => {
       { store },
     );
 
-    expect(queryByTestId('error-details')).toHaveTextContent(store.getState().examState.apiErrorMsg);
+    expect(queryByTestId('error-details')).toHaveTextContent(store.getState().specialExams.apiErrorMsg);
   });
 
   it('renders default message when error is HTML', () => {
     store.getState = () => ({
-      examState: { apiErrorMsg: '<Response is HTML>' },
+      specialExams: { apiErrorMsg: '<Response is HTML>' },
     });
 
     const { queryByTestId } = render(
@@ -88,7 +88,7 @@ describe('ExamAPIError', () => {
 
   it('renders default message when there is no error message', () => {
     store.getState = () => ({
-      examState: { apiErrorMsg: '' },
+      specialExams: { apiErrorMsg: '' },
     });
 
     const { queryByTestId } = render(

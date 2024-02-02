@@ -1,11 +1,12 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useDispatch } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@edx/paragon';
-import ExamStateContext from '../../context';
+
+import { resetExam } from '../../data';
 
 const ErrorOnboardingExamInstructions = () => {
-  const state = useContext(ExamStateContext);
-  const { resetExam } = state;
+  const dispatch = useDispatch();
 
   return (
     <div>
@@ -25,7 +26,7 @@ const ErrorOnboardingExamInstructions = () => {
       <Button
         data-testid="retry-exam-button"
         variant="primary"
-        onClick={resetExam}
+        onClick={() => dispatch(resetExam())}
       >
         <FormattedMessage
           id="exam.ErrorOnboardingExamInstructions.retryExamButton"

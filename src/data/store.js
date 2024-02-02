@@ -3,6 +3,6 @@ import examReducer from './slice';
 
 export default configureStore({
   reducer: {
-    examState: examReducer,
+    specialExams: examReducer,
   },
 });

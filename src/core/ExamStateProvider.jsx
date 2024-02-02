@@ -24,7 +24,7 @@ const StateProvider = ({ children, ...state }) => {
   );
 };
 
-const mapStateToProps = (state) => ({ ...state.examState });
+const mapStateToProps = (state) => ({ ...state.specialExams });
 
 const ExamStateProvider = withExamStore(
   StateProvider,

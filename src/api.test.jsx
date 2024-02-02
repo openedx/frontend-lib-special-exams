@@ -9,7 +9,7 @@ describe('External API integration tests', () => {
       jest.mock('./data');
       const mockExam = Factory.build('exam', { attempt: Factory.build('attempt') });
       const mockToken = Factory.build('examAccessToken');
-      const mockState = { examState: { exam: mockExam, examAccessToken: mockToken } };
+      const mockState = { specialExams: { exam: mockExam, examAccessToken: mockToken } };
       store.getState = jest.fn().mockReturnValue(mockState);
     });
 
@@ -35,7 +35,7 @@ describe('External API integration tests', () => {
   describe('Test isExam without exam', () => {
     beforeAll(() => {
       jest.mock('./data');
-      const mockState = { examState: { exam: null, examAccessToken: null } };
+      const mockState = { specialExams: { exam: null, examAccessToken: null } };
       store.getState = jest.fn().mockReturnValue(mockState);
     });
 

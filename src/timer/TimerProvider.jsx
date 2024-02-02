@@ -19,7 +19,7 @@ const TIME_LIMIT_LOW_PCT = 0.2;
 export const TimerContext = React.createContext({});
 
 const mapStateToProps = (state) => {
-  const { activeAttempt, exam } = state.examState;
+  const { activeAttempt, exam } = state.specialExams;
   return { attempt: activeAttempt, timeLimitMins: exam.time_limit_mins };
 };
 
