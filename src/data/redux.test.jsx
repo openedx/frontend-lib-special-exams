@@ -53,13 +53,13 @@ describe('Data layer integration tests', () => {
     await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
   };
 
-  beforeEach(async () => {
+  beforeEach(() => {
     initializeTestConfig();
     windowSpy = jest.spyOn(window, 'window', 'get');
     axiosMock.reset();
     loggingService.logError.mockReset();
     loggingService.logInfo.mockReset();
-    store = await initializeTestStore();
+    store = initializeTestStore();
   });
 
   afterEach(() => {
@@ -70,7 +70,7 @@ describe('Data layer integration tests', () => {
     await executeThunk(thunks.getAllowProctoringOptOut(true), store.dispatch);
 
     const state = store.getState();
-    expect(state.examState.allowProctoringOptOut).toEqual(true);
+    expect(state.specialExams.allowProctoringOptOut).toEqual(true);
   });
 
   describe('Test getExamAttemptsData', () => {
@@ -94,7 +94,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
 
       const state = store.getState();
-      expect(state.examState.exam.total_time).toBe('30 minutes');
+      expect(state.specialExams.exam.total_time).toBe('30 minutes');
     });
 
     it('Should fail to fetch if error occurs', async () => {
@@ -103,7 +103,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
 
       const state = store.getState();
-      expect(state.examState.apiErrorMsg).toBe('Network Error');
+      expect(state.specialExams.apiErrorMsg).toBe('Network Error');
     });
   });
 
@@ -123,7 +123,7 @@ describe('Data layer integration tests', () => {
         await executeThunk(thunks.getProctoringSettings(), store.dispatch, store.getState);
 
         const state = store.getState();
-        expect(state.examState.proctoringSettings).toMatchSnapshot();
+        expect(state.specialExams.proctoringSettings).toMatchSnapshot();
       });
     });
 
@@ -134,7 +134,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getProctoringSettings(), store.dispatch, store.getState);
 
       const state = store.getState();
-      expect(state.examState.proctoringSettings).toMatchSnapshot();
+      expect(state.specialExams.proctoringSettings).toMatchSnapshot();
     });
 
     it('Should fail to fetch if error occurs', async () => {
@@ -144,7 +144,7 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state.examState.proctoringSettings).toMatchSnapshot();
+      expect(state.specialExams.proctoringSettings).toMatchSnapshot();
     });
 
     it('Should fail to fetch if error occurs', async () => {
@@ -154,7 +154,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getProctoringSettings(), store.dispatch, store.getState);
 
       const state = store.getState();
-      expect(state.examState.apiErrorMsg).toBe('Network Error');
+      expect(state.specialExams.apiErrorMsg).toBe('Network Error');
     });
   });
 
@@ -174,7 +174,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getExamReviewPolicy(), store.dispatch, store.getState);
 
       const state = store.getState();
-      expect(state.examState.exam.reviewPolicy).toEqual(reviewPolicy);
+      expect(state.specialExams.exam.reviewPolicy).toEqual(reviewPolicy);
     });
 
     it('Should fail to fetch if error occurs', async () => {
@@ -185,7 +185,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getExamReviewPolicy(), store.dispatch, store.getState);
 
       const state = store.getState();
-      expect(state.examState.apiErrorMsg).toBe('Network Error');
+      expect(state.specialExams.apiErrorMsg).toBe('Network Error');
     });
 
     it('Should fail to fetch if no exam id', async () => {
@@ -195,7 +195,7 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state.examState.exam.reviewPolicy).toBeUndefined();
+      expect(state.specialExams.exam.reviewPolicy).toBeUndefined();
     });
   });
 
@@ -212,11 +212,11 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.activeAttempt).toBeNull();
+        expect(state.specialExams.activeAttempt).toBeNull();
 
         await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.activeAttempt).toMatchSnapshot();
+        expect(state.specialExams.activeAttempt).toMatchSnapshot();
         expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
           exam_id: exam.id,
           start_clock: 'true',
@@ -233,7 +233,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
       const state = store.getState();
-      expect(state.examState.activeAttempt).toMatchSnapshot();
+      expect(state.specialExams.activeAttempt).toMatchSnapshot();
       expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
         exam_id: exam.id,
         start_clock: 'true',
@@ -258,7 +258,7 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state.examState.apiErrorMsg).toBe('Failed to start exam. No exam id was found.');
+      expect(state.specialExams.apiErrorMsg).toBe('Failed to start exam. No exam id was found.');
     });
   });
 
@@ -278,11 +278,11 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(state.specialExams.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
 
         await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
         expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
         expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'stop' }));
       });
@@ -299,7 +299,7 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         const state = store.getState();
-        expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(state.specialExams.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
 
         await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
         expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
@@ -312,7 +312,7 @@ describe('Data layer integration tests', () => {
     it('Should stop exam, and update attempt', async () => {
       await initWithExamAttempt();
       let state = store.getState();
-      expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(state.specialExams.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: readyToSubmitExam });
@@ -320,7 +320,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
       state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'stop' }));
     });
@@ -334,7 +334,7 @@ describe('Data layer integration tests', () => {
 
       await initWithExamAttempt({}, attempt);
       const state = store.getState();
-      expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(state.specialExams.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
 
@@ -358,13 +358,13 @@ describe('Data layer integration tests', () => {
     it('Should fail to fetch if error occurs', async () => {
       await initWithExamAttempt();
       let state = store.getState();
-      expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(state.specialExams.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).networkError();
 
       await executeThunk(thunks.stopExam(), store.dispatch, store.getState);
       state = store.getState();
-      expect(state.examState.apiErrorMsg).toBe('Network Error');
+      expect(state.specialExams.apiErrorMsg).toBe('Network Error');
     });
 
     it('Should fail to fetch if no active attempt', async () => {
@@ -374,7 +374,7 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state.examState.apiErrorMsg).toBe('Failed to stop exam. No active attempt was found.');
+      expect(state.specialExams.apiErrorMsg).toBe('Failed to stop exam. No active attempt was found.');
     });
   });
 
@@ -394,11 +394,11 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
 
         await executeThunk(thunks.continueExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
         expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
         expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'start' }));
       });
@@ -407,7 +407,7 @@ describe('Data layer integration tests', () => {
     it('Should return to exam, and update attempt', async () => {
       await initWithExamAttempt(readyToSubmitExam, {});
       let state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam });
       axiosMock.onGet(latestAttemptURL).reply(200, { attempt });
@@ -415,7 +415,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.continueExam(), store.dispatch, store.getState);
       state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'start' }));
     });
@@ -428,7 +428,7 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state.examState.apiErrorMsg).toBe('Failed to continue exam. No attempt id was found.');
+      expect(state.specialExams.apiErrorMsg).toBe('Failed to continue exam. No attempt id was found.');
     });
   });
 
@@ -456,12 +456,12 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
         await executeThunk(thunks.resetExam(), store.dispatch, store.getState);
 
         state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
         expect(state).toMatchSnapshot();
         expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
         expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'reset_attempt' }));
@@ -471,7 +471,7 @@ describe('Data layer integration tests', () => {
     it('Should reset exam attempt', async () => {
       await initWithExamAttempt();
       let state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: examWithCreatedAttempt });
       axiosMock.onGet(latestAttemptURL).reply(200, {});
@@ -480,7 +480,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.resetExam(), store.dispatch, store.getState);
 
       state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
       expect(state).toMatchSnapshot();
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'reset_attempt' }));
@@ -494,7 +494,7 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state.examState.apiErrorMsg).toBe('Failed to reset exam attempt. No attempt id was found.');
+      expect(state.specialExams.apiErrorMsg).toBe('Failed to reset exam attempt. No attempt id was found.');
     });
   });
 
@@ -514,25 +514,25 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
         await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
       });
     });
 
     it('Should submit exam, and update attempt and exam', async () => {
       await initWithExamAttempt();
       let state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam });
       axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
       await executeThunk(thunks.submitExam(), store.dispatch, store.getState);
       state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'submit' }));
     });
@@ -547,7 +547,7 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state.examState.apiErrorMsg).toBe('Failed to submit exam. No active attempt was found.');
+      expect(state.specialExams.apiErrorMsg).toBe('Failed to submit exam. No active attempt was found.');
     });
 
     it('Should submit exam and redirect to sequence if no exam attempt', async () => {
@@ -562,7 +562,7 @@ describe('Data layer integration tests', () => {
 
       await initWithExamAttempt({}, attempt);
       const state = store.getState();
-      expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(state.specialExams.activeAttempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
@@ -600,19 +600,19 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
         await executeThunk(thunks.expireExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
-        expect(state.examState.timeIsOver).toBe(true);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+        expect(state.specialExams.timeIsOver).toBe(true);
       });
     });
 
     it('Should submit expired exam, and update attempt', async () => {
       await initWithExamAttempt();
       let state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam });
       axiosMock.onGet(latestAttemptURL).reply(200, submittedAttempt);
@@ -620,8 +620,8 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.expireExam(), store.dispatch, store.getState);
       state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
-      expect(state.examState.timeIsOver).toBe(true);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+      expect(state.specialExams.timeIsOver).toBe(true);
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'submit' }));
     });
@@ -632,7 +632,7 @@ describe('Data layer integration tests', () => {
 
       const state = store.getState();
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state.examState.apiErrorMsg).toBe('Failed to expire exam. No attempt id was found.');
+      expect(state.specialExams.apiErrorMsg).toBe('Failed to expire exam. No attempt id was found.');
     });
   });
 
@@ -656,11 +656,11 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
         await executeThunk(thunks.startProctoringSoftwareDownload(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DOWNLOAD_SOFTWARE_CLICKED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.DOWNLOAD_SOFTWARE_CLICKED);
       });
     });
 
@@ -672,7 +672,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.startProctoringSoftwareDownload(), store.dispatch, store.getState);
       const state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DOWNLOAD_SOFTWARE_CLICKED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.DOWNLOAD_SOFTWARE_CLICKED);
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${softwareDownloadedAttempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'click_download_software' }));
     });
@@ -694,11 +694,11 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.exam.attempt).toEqual({});
+        expect(state.specialExams.exam.attempt).toEqual({});
 
         await executeThunk(thunks.createProctoredExamAttempt(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
       });
     });
 
@@ -711,7 +711,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.createProctoredExamAttempt(), store.dispatch, store.getState);
       const state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
       expect(axiosMock.history.post.length).toBe(1);
     });
 
@@ -754,18 +754,18 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.CREATED);
+        expect(state.specialExams.activeAttempt.attempt_status).toBe(ExamStatus.CREATED);
 
         await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.activeAttempt).toMatchSnapshot();
+        expect(state.specialExams.activeAttempt).toMatchSnapshot();
       });
     });
 
     it('Should start exam, and update attempt and exam', async () => {
       await initWithExamAttempt(createdExam, createdAttempt);
       let state = store.getState();
-      expect(state.examState.activeAttempt.attempt_status).toBe(ExamStatus.CREATED);
+      expect(state.specialExams.activeAttempt.attempt_status).toBe(ExamStatus.CREATED);
 
       axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: startedAttempt.attempt_id });
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: startedExam });
@@ -773,7 +773,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
       state = store.getState();
-      expect(state.examState.activeAttempt).toMatchSnapshot();
+      expect(state.specialExams.activeAttempt).toMatchSnapshot();
     });
 
     it('Should fail to fetch if no exam id', async () => {
@@ -850,11 +850,11 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.exam.attempt).toEqual({});
+        expect(state.specialExams.exam.attempt).toEqual({});
 
         await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
       });
 
       it('Should change existing attempt status to declined, and update attempt and exam', async () => {
@@ -864,11 +864,11 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
+        expect(state.specialExams.exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
 
         await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+        expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
       });
     });
 
@@ -879,21 +879,21 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
       const state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
       expect(axiosMock.history.post.length).toBe(1);
     });
 
     it('Should change existing attempt status to declined, and update attempt and exam', async () => {
       await initWithExamAttempt(createdExam, {});
       let state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
+      expect(state.specialExams.exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: declinedExam, active_attempt: {} });
       axiosMock.onPut(`${createUpdateAttemptURL}/${declinedAttempt.attempt_id}`).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
 
       await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
       state = store.getState();
-      expect(state.examState.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'decline' }));
     });
 
@@ -921,12 +921,12 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
-        expect(state.examState.exam.attempt).toMatchSnapshot();
+        expect(state.specialExams.exam.attempt).toMatchSnapshot();
 
         await executeThunk(thunks.pollAttempt(attempt.exam_started_poll_url), store.dispatch, store.getState);
         state = store.getState();
         const expectedPollUrl = `${getConfig().LMS_BASE_URL}${attempt.exam_started_poll_url}`;
-        expect(state.examState.exam.attempt).toMatchSnapshot();
+        expect(state.specialExams.exam.attempt).toMatchSnapshot();
         expect(axiosMock.history.get[1].url).toEqual(expectedPollUrl);
       });
     });
@@ -942,7 +942,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.pollAttempt(attempt.exam_started_poll_url), store.dispatch, store.getState);
       const state = store.getState();
-      expect(state.examState.activeAttempt).toMatchSnapshot();
+      expect(state.specialExams.activeAttempt).toMatchSnapshot();
     });
 
     describe('pollAttempt api called directly', () => {
@@ -1028,7 +1028,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
 
       const state = store.getState();
-      expect(state.examState.activeAttempt.attempt_id).toEqual(1234);
+      expect(state.specialExams.activeAttempt.attempt_id).toEqual(1234);
     });
   });
 
@@ -1046,8 +1046,8 @@ describe('Data layer integration tests', () => {
         await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
 
         const state = store.getState();
-        expect(state.examState.exam.id).toBe(exam.id);
-        expect(state.examState.examAccessToken.exam_access_token).toBe('');
+        expect(state.specialExams.exam.id).toBe(exam.id);
+        expect(state.specialExams.examAccessToken.exam_access_token).toBe('');
       });
     });
 
@@ -1059,7 +1059,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
 
       const state = store.getState();
-      expect(state.examState.examAccessToken).toMatchSnapshot();
+      expect(state.specialExams.examAccessToken).toMatchSnapshot();
     });
 
     it('Should fail to fetch if no exam id', async () => {
@@ -1067,7 +1067,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
 
       const state = store.getState();
-      expect(state.examState.examAccessToken.exam_access_token).toBe('');
+      expect(state.specialExams.examAccessToken.exam_access_token).toBe('');
     });
 
     it('Should fail to fetch if API error occurs', async () => {
@@ -1077,7 +1077,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.examRequiresAccessToken(), store.dispatch, store.getState);
 
       const state = store.getState();
-      expect(state.examState.examAccessToken.exam_access_token).toBe('');
+      expect(state.specialExams.examAccessToken.exam_access_token).toBe('');
     });
   });
 

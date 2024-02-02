@@ -1,4 +1,5 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import {
   DownloadSoftwareProctoredExamInstructions,
@@ -13,7 +14,6 @@ import {
   ExamType,
   IS_ONBOARDING_ERROR,
 } from '../constants';
-import ExamStateContext from '../context';
 import EntranceExamInstructions from './EntranceInstructions';
 import SubmitExamInstructions from './SubmitInstructions';
 import RejectedInstructions from './RejectedInstructions';
@@ -24,8 +24,7 @@ import ExpiredInstructions from './ExpiredInstructions';
 import UnknownAttemptStatusError from './UnknownAttemptStatusError';
 
 const Instructions = ({ children }) => {
-  const state = useContext(ExamStateContext);
-  const { exam } = state;
+  const { exam } = useSelector(state => state.specialExams);
   const {
     attempt,
     type: examType,

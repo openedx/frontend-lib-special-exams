@@ -1,15 +1,15 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { injectIntl, intlShape, FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Alert, Spinner } from '@edx/paragon';
 import { Info } from '@edx/paragon/icons';
 import { ExamTimerBlock } from '../timer';
 import Instructions from '../instructions';
-import ExamStateContext from '../context';
 import ExamAPIError from './ExamAPIError';
-import { ExamStatus, ExamType } from '../constants';
+import { ExamStatus, ExamType, IS_STARTED_STATUS } from '../constants';
 import messages from './messages';
+import { getProctoringSettings } from '../data';
 
 /**
  * Exam component is intended to render exam instructions before and after exam.
@@ -23,12 +23,12 @@ import messages from './messages';
 const Exam = ({
   isGated, isTimeLimited, originalUserIsStaff, canAccessProctoredExams, children, intl,
 }) => {
-  const state = useContext(ExamStateContext);
   const {
-    isLoading, activeAttempt, showTimer, stopExam, exam,
-    expireExam, pollAttempt, apiErrorMsg, pingAttempt,
-    getProctoringSettings, submitExam,
-  } = state;
+    isLoading, activeAttempt, exam, apiErrorMsg,
+  } = useSelector(state => state.specialExams);
+  const dispatch = useDispatch();
+
+  const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
 
   const {
     attempt,
@@ -61,7 +61,7 @@ const Exam = ({
     if (proctoredExamTypes.includes(examType)) {
       // only fetch proctoring settings for a proctored exam
       if (examId) {
-        getProctoringSettings();
+        dispatch(getProctoringSettings());
       }
 
       // Only exclude Timed Exam when restricting access to exams
@@ -70,7 +70,8 @@ const Exam = ({
     // this makes sure useEffect gets called only one time after the exam has been fetched
     // we can't leave this empty since initially exam is just an empty object, so
     // API calls above would not get triggered
-  }, [examId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examId, dispatch]);
 
   if (isLoading) {
     return (
@@ -104,14 +105,7 @@ const Exam = ({
         </Alert>
       )}
       {showTimer && (
-        <ExamTimerBlock
-          attempt={activeAttempt}
-          stopExamAttempt={stopExam}
-          submitExam={submitExam}
-          expireExamAttempt={expireExam}
-          pollExamAttempt={pollAttempt}
-          pingAttempt={pingAttempt}
-        />
+        <ExamTimerBlock />
       )}
       { // show the error message only if you are in the exam sequence
         isTimeLimited && apiErrorMsg && <ExamAPIError />

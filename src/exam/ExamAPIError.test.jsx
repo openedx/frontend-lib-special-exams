@@ -1,9 +1,7 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { getConfig } from '@edx/frontend-platform';
-import { store } from '../data';
-import { render } from '../setupTest';
-import ExamStateProvider from '../core/ExamStateProvider';
+import { initializeTestStore, render } from '../setupTest';
 import ExamAPIError from './ExamAPIError';
 
 const originalConfig = jest.requireActual('@edx/frontend-platform').getConfig();
@@ -13,22 +11,20 @@ jest.mock('@edx/frontend-platform', () => ({
 }));
 getConfig.mockImplementation(() => originalConfig);
 
-jest.mock('../data', () => ({
-  store: {},
-}));
-store.subscribe = jest.fn();
-store.dispatch = jest.fn();
-
 describe('ExamAPIError', () => {
   const defaultMessage = 'A system error has occurred with your exam.';
 
+  let store;
+
+  beforeEach(() => {
+    store = initializeTestStore();
+  });
+
   it('renders with the default information', () => {
-    store.getState = () => ({ examState: {} });
+    store.getState = () => ({ specialExams: {} });
 
     const tree = render(
-      <ExamStateProvider>
-        <ExamAPIError />
-      </ExamStateProvider>,
+      <ExamAPIError />,
       { store },
     );
 
@@ -42,12 +38,10 @@ describe('ExamAPIError', () => {
     };
     getConfig.mockImplementation(() => config);
 
-    store.getState = () => ({ examState: {} });
+    store.getState = () => ({ specialExams: {} });
 
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <ExamAPIError />
-      </ExamStateProvider>,
+      <ExamAPIError />,
       { store },
     );
 
@@ -58,28 +52,24 @@ describe('ExamAPIError', () => {
 
   it('renders error details when provided', () => {
     store.getState = () => ({
-      examState: { apiErrorMsg: 'Something bad has happened' },
+      specialExams: { apiErrorMsg: 'Something bad has happened' },
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <ExamAPIError />
-      </ExamStateProvider>,
+      <ExamAPIError />,
       { store },
     );
 
-    expect(queryByTestId('error-details')).toHaveTextContent(store.getState().examState.apiErrorMsg);
+    expect(queryByTestId('error-details')).toHaveTextContent(store.getState().specialExams.apiErrorMsg);
   });
 
   it('renders default message when error is HTML', () => {
     store.getState = () => ({
-      examState: { apiErrorMsg: '<Response is HTML>' },
+      specialExams: { apiErrorMsg: '<Response is HTML>' },
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <ExamAPIError />
-      </ExamStateProvider>,
+      <ExamAPIError />,
       { store },
     );
 
@@ -88,13 +78,11 @@ describe('ExamAPIError', () => {
 
   it('renders default message when there is no error message', () => {
     store.getState = () => ({
-      examState: { apiErrorMsg: '' },
+      specialExams: { apiErrorMsg: '' },
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <ExamAPIError />
-      </ExamStateProvider>,
+      <ExamAPIError />,
       { store },
     );
 

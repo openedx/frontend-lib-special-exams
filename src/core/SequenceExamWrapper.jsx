@@ -1,6 +1,5 @@
 import React from 'react';
 import ExamWrapper from '../exam/ExamWrapper';
-import ExamStateProvider from './ExamStateProvider';
 
 /**
  * SequenceExamWrapper is the component responsible for handling special exams.
@@ -14,9 +13,7 @@ import ExamStateProvider from './ExamStateProvider';
  * </SequenceExamWrapper>
  */
 const SequenceExamWrapper = (props) => (
-  <ExamStateProvider>
-    <ExamWrapper {...props} />
-  </ExamStateProvider>
+  <ExamWrapper {...props} />
 );
 
 export default SequenceExamWrapper;

@@ -2,32 +2,21 @@ import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
-import { store, startTimedExam } from '../data';
-import { getExamAttemptsData } from '../data/thunks';
-import { render, waitFor } from '../setupTest';
-import ExamStateProvider from '../core/ExamStateProvider';
+import { getExamAttemptsData, startTimedExam } from '../data';
+import { render, waitFor, initializeTestStore } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
 
-jest.mock('../data', () => ({
-  store: {},
-  startTimedExam: jest.fn(),
-}));
-
-// because of the way ExamStateProvider and other locations inconsistantly import from
-// thunks directly instead of using the data module we need to mock the underlying
-// thunk file. It would be nice to clean this up in the future.
-jest.mock('../data/thunks', () => {
+jest.mock('../data', () => {
   const originalModule = jest.requireActual('../data/thunks');
   return {
     ...originalModule,
     getExamAttemptsData: jest.fn(),
+    startTimedExam: jest.fn(),
   };
 });
 
 getExamAttemptsData.mockReturnValue(jest.fn());
 startTimedExam.mockReturnValue(jest.fn());
-store.subscribe = jest.fn();
-store.dispatch = jest.fn();
 
 describe('SequenceExamWrapper', () => {
   const sequence = {
@@ -35,22 +24,21 @@ describe('SequenceExamWrapper', () => {
     isTimeLimited: true,
   };
   const courseId = 'course-v1:test+test+test';
+  let store;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    store.getState = () => ({
-      examState: Factory.build('examState'),
+    store = initializeTestStore({
+      specialExams: Factory.build('specialExams'),
       isLoading: false,
     });
   });
 
   it('is successfully rendered and shows instructions if the user is not staff', () => {
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Subsection is a Timed Exam (30 minutes)');
@@ -59,18 +47,16 @@ describe('SequenceExamWrapper', () => {
 
   it('is successfully rendered and shows instructions for proctored exam', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
         }),
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('proctored-exam-instructions-title')).toHaveTextContent('This exam is proctored');
@@ -78,16 +64,14 @@ describe('SequenceExamWrapper', () => {
 
   it('shows loader if isLoading true', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         isLoading: true,
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('spinner')).toBeInTheDocument();
@@ -95,17 +79,15 @@ describe('SequenceExamWrapper', () => {
 
   it('shows exam api error component together with other content if there is an error', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         apiErrorMsg: 'Something bad has happened.',
       }),
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Subsection is a Timed Exam (30 minutes)');
@@ -114,17 +96,15 @@ describe('SequenceExamWrapper', () => {
 
   it('does not show exam api error component on a non-exam sequence', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         apiErrorMsg: 'Something bad has happened.',
       }),
     });
 
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('exam-instructions-title')).not.toBeInTheDocument();
@@ -133,11 +113,9 @@ describe('SequenceExamWrapper', () => {
 
   it('does not fetch exam data if already loaded and the sequence is not an exam', async () => {
     render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     // assert the exam data is not fetched
@@ -147,17 +125,15 @@ describe('SequenceExamWrapper', () => {
   it('does fetch exam data for non exam sequences if not already loaded', async () => {
     // this would only occur if the user deeplinks directly to a non-exam sequence
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         isLoading: true,
       }),
     });
 
     render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div>children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div>children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     await waitFor(() => expect(getExamAttemptsData).toHaveBeenCalled());
@@ -165,11 +141,9 @@ describe('SequenceExamWrapper', () => {
 
   it('does not take any actions if sequence item is not exam', () => {
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('children');
@@ -180,11 +154,9 @@ describe('SequenceExamWrapper', () => {
       authenticatedUser: null,
     };
     const { getByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store, appContext },
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('children');
@@ -192,18 +164,16 @@ describe('SequenceExamWrapper', () => {
 
   it('renders exam content without an active attempt if the user is staff', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
         }),
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId} isStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId} isStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -211,7 +181,7 @@ describe('SequenceExamWrapper', () => {
 
   it('renders exam content for staff masquerading as a learner', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           passed_due_date: false,
@@ -220,11 +190,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -236,18 +204,16 @@ describe('SequenceExamWrapper', () => {
       gated: true,
     };
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
         }),
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId}>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId}>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -255,7 +221,7 @@ describe('SequenceExamWrapper', () => {
 
   it('does not display masquerade alert if specified learner is in the middle of the exam', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           attempt: {
@@ -267,11 +233,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -280,7 +244,7 @@ describe('SequenceExamWrapper', () => {
 
   it('does not display masquerade alert if learner can view the exam after the due date', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.TIMED,
           attempt: {
@@ -292,11 +256,9 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={sequence} courseId={courseId} originalUserIsStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -305,11 +267,9 @@ describe('SequenceExamWrapper', () => {
 
   it('does not display masquerade alert if sequence is not time gated', () => {
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId} originalUserIsStaff>
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId} originalUserIsStaff>
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('sequence-content')).toHaveTextContent('children');
@@ -318,7 +278,7 @@ describe('SequenceExamWrapper', () => {
 
   it('shows access denied if learner is not accessible to proctoring exams', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.PROCTORED,
           attempt: null,
@@ -328,15 +288,13 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper
-          sequence={{ ...sequence, isTimeLimited: false }}
-          courseId={courseId}
-          canAccessProctoredExams={false}
-        >
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper
+        sequence={{ ...sequence, isTimeLimited: false }}
+        courseId={courseId}
+        canAccessProctoredExams={false}
+      >
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('no-access')).toHaveTextContent('You do not have access to proctored exams with your current enrollment.');
@@ -345,7 +303,7 @@ describe('SequenceExamWrapper', () => {
 
   it('learner has access to timed exams', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.TIMED,
           attempt: null,
@@ -355,15 +313,13 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper
-          sequence={{ ...sequence, isTimeLimited: false }}
-          courseId={courseId}
-          canAccessProctoredExams={false}
-        >
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper
+        sequence={{ ...sequence, isTimeLimited: false }}
+        courseId={courseId}
+        canAccessProctoredExams={false}
+      >
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('no-access')).toBeNull();
@@ -372,7 +328,7 @@ describe('SequenceExamWrapper', () => {
 
   it('learner has access to content that are not exams', () => {
     store.getState = () => ({
-      examState: Factory.build('examState', {
+      specialExams: Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: '',
           attempt: null,
@@ -382,15 +338,13 @@ describe('SequenceExamWrapper', () => {
       }),
     });
     const { queryByTestId } = render(
-      <ExamStateProvider>
-        <SequenceExamWrapper
-          sequence={{ ...sequence, isTimeLimited: false }}
-          courseId={courseId}
-          canAccessProctoredExams={false}
-        >
-          <div data-testid="sequence-content">children</div>
-        </SequenceExamWrapper>
-      </ExamStateProvider>,
+      <SequenceExamWrapper
+        sequence={{ ...sequence, isTimeLimited: false }}
+        courseId={courseId}
+        canAccessProctoredExams={false}
+      >
+        <div data-testid="sequence-content">children</div>
+      </SequenceExamWrapper>,
       { store },
     );
     expect(queryByTestId('no-access')).toBeNull();
