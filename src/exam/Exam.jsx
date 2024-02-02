@@ -25,9 +25,7 @@ const Exam = ({
 }) => {
   const state = useContext(ExamStateContext);
   const {
-    isLoading, activeAttempt, showTimer, stopExam, exam,
-    expireExam, pollAttempt, apiErrorMsg, pingAttempt,
-    getProctoringSettings, submitExam,
+    isLoading, showTimer, exam, apiErrorMsg, getProctoringSettings,
   } = state;
 
   const {
@@ -104,14 +102,7 @@ const Exam = ({
         </Alert>
       )}
       {showTimer && (
-        <ExamTimerBlock
-          attempt={activeAttempt}
-          stopExamAttempt={stopExam}
-          submitExam={submitExam}
-          expireExamAttempt={expireExam}
-          pollExamAttempt={pollAttempt}
-          pingAttempt={pingAttempt}
-        />
+        <ExamTimerBlock />
       )}
       { // show the error message only if you are in the exam sequence
         isTimeLimited && apiErrorMsg && <ExamAPIError />

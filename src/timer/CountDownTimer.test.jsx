@@ -4,21 +4,30 @@ import { ExamTimerBlock } from './index';
 import {
   render, screen, initializeTestStore, fireEvent,
 } from '../setupTest';
-import examStore from '../data/store';
+import { stopExam, submitExam } from '../data';
+import specialExams from '../data/store';
 
 jest.mock('../data/store', () => ({
-  examStore: {},
+  specialExams: {},
 }));
+
+// We do a partial mock to avoid mocking out other exported values (e.g. the store and the Emitter).
+jest.mock('../data', () => {
+  const originalModule = jest.requireActual('../data');
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    stopExam: jest.fn(),
+    submitExam: jest.fn(),
+  };
+});
 
 describe('ExamTimerBlock', () => {
   let attempt;
   let store;
-  const stopExamAttempt = jest.fn();
-  const expireExamAttempt = () => { };
-  const pollAttempt = () => { };
-  const submitAttempt = jest.fn();
-  submitAttempt.mockReturnValue(jest.fn());
-  stopExamAttempt.mockReturnValue(jest.fn());
+  submitExam.mockReturnValue(jest.fn());
+  stopExam.mockReturnValue(jest.fn());
 
   beforeEach(async () => {
     const preloadedState = {
@@ -41,19 +50,13 @@ describe('ExamTimerBlock', () => {
       },
     };
     store = await initializeTestStore(preloadedState);
-    examStore.getState = store.getState;
+    specialExams.getState = store.getState;
     attempt = store.getState().specialExams.activeAttempt;
   });
 
   it('renders items correctly', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
 
     expect(screen.getByRole('alert')).toBeInTheDocument();
@@ -76,26 +79,14 @@ describe('ExamTimerBlock', () => {
     const testStore = await initializeTestStore(preloadedState);
     attempt = testStore.getState().specialExams.activeAttempt;
     const { container } = render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
     expect(container.firstChild).not.toBeInTheDocument();
   });
 
   it('changes behavior when clock time decreases low threshold', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
     await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
     expect(screen.getByRole('alert')).toHaveClass('alert-warning');
@@ -122,16 +113,10 @@ describe('ExamTimerBlock', () => {
       },
     };
     const testStore = await initializeTestStore(preloadedState);
-    examStore.getState = store.testStore;
+    specialExams.getState = store.testStore;
     attempt = testStore.getState().specialExams.activeAttempt;
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
     await waitFor(() => expect(screen.getByText('00:00:05')).toBeInTheDocument());
     expect(screen.getByRole('alert')).toHaveClass('alert-danger');
@@ -139,13 +124,7 @@ describe('ExamTimerBlock', () => {
 
   it('toggles timer visibility correctly', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
     await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
     expect(screen.getByRole('alert')).toBeInTheDocument();
@@ -162,13 +141,7 @@ describe('ExamTimerBlock', () => {
 
   it('toggles long text visibility on show more/less', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
     await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
     expect(screen.getByRole('alert')).toBeInTheDocument();
@@ -203,38 +176,26 @@ describe('ExamTimerBlock', () => {
       },
     };
     const testStore = await initializeTestStore(preloadedState);
-    examStore.getState = store.testStore;
+    specialExams.getState = store.testStore;
     attempt = testStore.getState().specialExams.activeAttempt;
 
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
     await waitFor(() => expect(screen.getByText('00:00:00')).toBeInTheDocument());
 
     fireEvent.click(screen.getByTestId('end-button', { name: 'Show more' }));
-    expect(submitAttempt).toHaveBeenCalledTimes(1);
+    expect(submitExam).toHaveBeenCalledTimes(1);
   });
 
   it('stops exam if time has not reached 00:00 and user clicks end my exam button', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
     await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
 
     fireEvent.click(screen.getByTestId('end-button'));
-    expect(stopExamAttempt).toHaveBeenCalledTimes(1);
+    expect(stopExam).toHaveBeenCalledTimes(1);
   });
 
   it('Update exam timer when attempt time_remaining_seconds is smaller than displayed time', async () => {
@@ -258,16 +219,10 @@ describe('ExamTimerBlock', () => {
       },
     };
     let testStore = await initializeTestStore(preloadedState);
-    examStore.getState = store.testStore;
+    specialExams.getState = store.testStore;
     attempt = testStore.getState().specialExams.activeAttempt;
     const { rerender } = render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
     await waitFor(() => expect(screen.getByText('00:03:59')).toBeInTheDocument());
 
@@ -276,19 +231,13 @@ describe('ExamTimerBlock', () => {
       time_remaining_seconds: 20,
     };
     testStore = await initializeTestStore(preloadedState);
-    examStore.getState = store.testStore;
+    specialExams.getState = store.testStore;
     const updatedAttempt = testStore.getState().specialExams.activeAttempt;
 
     expect(updatedAttempt.time_remaining_seconds).toBe(20);
 
     rerender(
-      <ExamTimerBlock
-        attempt={updatedAttempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
 
     await waitFor(() => expect(screen.getByText('00:00:19')).toBeInTheDocument());
@@ -330,18 +279,12 @@ describe('ExamTimerBlock', () => {
 
       // Store it in the state
       const testStore = await initializeTestStore(preloadedState);
-      examStore.getState = store.testStore;
+      specialExams.getState = store.testStore;
       attempt = testStore.getState().specialExams.activeAttempt;
 
       // render an exam timer block with that data
       render(
-        <ExamTimerBlock
-          attempt={attempt}
-          stopExamAttempt={stopExamAttempt}
-          expireExamAttempt={expireExamAttempt}
-          pollExamAttempt={pollAttempt}
-          submitExam={submitAttempt}
-        />,
+        <ExamTimerBlock />,
       );
 
       // expect the a11y string to be a certain output
