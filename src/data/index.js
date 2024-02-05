@@ -19,6 +19,8 @@ export {
   checkExamEntry,
 } from './thunks';
 
+export { default as reducer } from './slice';
+
 export {
   expireExamAttempt,
 } from './slice';
