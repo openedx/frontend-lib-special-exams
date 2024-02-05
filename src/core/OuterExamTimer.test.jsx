@@ -22,8 +22,8 @@ describe('OuterExamTimer', () => {
 
   let store;
 
-  beforeEach(async () => {
-    store = await initializeTestStore();
+  beforeEach(() => {
+    store = initializeTestStore();
   });
 
   it('is successfully rendered and shows timer if there is an exam in progress', () => {

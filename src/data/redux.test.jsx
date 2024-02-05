@@ -53,13 +53,13 @@ describe('Data layer integration tests', () => {
     await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
   };
 
-  beforeEach(async () => {
+  beforeEach(() => {
     initializeTestConfig();
     windowSpy = jest.spyOn(window, 'window', 'get');
     axiosMock.reset();
     loggingService.logError.mockReset();
     loggingService.logInfo.mockReset();
-    store = await initializeTestStore();
+    store = initializeTestStore();
   });
 
   afterEach(() => {

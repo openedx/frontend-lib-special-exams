@@ -34,9 +34,9 @@ describe('SequenceExamWrapper', () => {
   const courseId = 'course-v1:test+test+test';
   let store;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    store = await initializeTestStore({
+    store = initializeTestStore({
       specialExams: Factory.build('specialExams'),
       isLoading: false,
     });
