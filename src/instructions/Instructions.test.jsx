@@ -4,20 +4,19 @@ import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from './index';
 import {
-  store, continueExam, getExamAttemptsData, startProctoredExam, startTimedExam, submitExam,
+  continueExam, getExamAttemptsData, startProctoredExam, startTimedExam, submitExam,
 } from '../data';
 import { pollExamAttempt, softwareDownloadAttempt } from '../data/api';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
 import {
-  render, screen, act, initializeMockApp,
+  render, screen, act, initializeMockApp, initializeTestStore,
 } from '../setupTest';
 import {
   ExamStatus, ExamType, INCOMPLETE_STATUSES,
 } from '../constants';
 
 jest.mock('../data', () => ({
-  store: {},
   continueExam: jest.fn(),
   getExamAttemptsData: jest.fn(),
   getExamReviewPolicy: jest.fn(),
@@ -35,12 +34,15 @@ getExamAttemptsData.mockReturnValue(jest.fn());
 startProctoredExam.mockReturnValue(jest.fn());
 startTimedExam.mockReturnValue(jest.fn());
 pollExamAttempt.mockReturnValue(Promise.resolve({}));
-store.subscribe = jest.fn();
-store.dispatch = jest.fn();
 
 describe('SequenceExamWrapper', () => {
-  beforeEach(() => {
+  let store;
+
+  beforeEach(async () => {
     initializeMockApp();
+    store = await initializeTestStore();
+    store.subscribe = jest.fn();
+    store.dispatch = jest.fn();
   });
 
   it('Start exam instructions can be successfully rendered', () => {

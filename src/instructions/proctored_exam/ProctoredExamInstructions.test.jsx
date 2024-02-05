@@ -3,8 +3,13 @@ import { Factory } from 'rosie';
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from '../index';
-import { store, getExamAttemptsData, submitExam } from '../../data';
-import { initializeMockApp, render, screen } from '../../setupTest';
+import { getExamAttemptsData, submitExam } from '../../data';
+import {
+  initializeMockApp,
+  initializeTestStore,
+  render,
+  screen,
+} from '../../setupTest';
 import {
   ExamType,
   ExamStatus,
@@ -12,7 +17,6 @@ import {
 } from '../../constants';
 
 jest.mock('../../data', () => ({
-  store: {},
   getExamAttemptsData: jest.fn(),
   getExamReviewPolicy: jest.fn(),
   submitExam: jest.fn(),
@@ -20,13 +24,16 @@ jest.mock('../../data', () => ({
 
 submitExam.mockReturnValue(jest.fn());
 getExamAttemptsData.mockReturnValue(jest.fn());
-store.subscribe = jest.fn();
-store.dispatch = jest.fn();
 
 describe('SequenceExamWrapper', () => {
-  beforeEach(() => {
+  let store;
+
+  beforeEach(async () => {
     initializeMockApp();
     jest.clearAllMocks();
+    store = await initializeTestStore();
+    store.subscribe = jest.fn();
+    store.dispatch = jest.fn();
   });
 
   it('Start exam instructions can be successfully rendered', () => {
