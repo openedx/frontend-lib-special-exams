@@ -66,6 +66,7 @@ export const examSlice = createSlice({
       exam_access_token: '',
       exam_access_token_expiration: '',
     },
+    // showTimer: !!(state.activeAttempt && IS_STARTED_STATUS(state.activeAttempt.attempt_status)),
   },
   reducers: {
     setAllowProctoringOptOut: (state, { payload }) => {
