@@ -24,9 +24,19 @@ jest.mock('../data/thunks', () => {
   };
 });
 
+// TODO: Make changes to what's mocked. should only be API functions and react/redux initialState stuff.
+
+// When we mock out the thunks below, we stamp out a lot of the non-async stuff
+// Like loading states and other redux goodness. We can't ever change the loading state if
+// The function it's in has been mocked away.
+// The ONLY thing we should need to mock out in this app are API REST calls.
 getExamAttemptsData.mockReturnValue(jest.fn());
 startTimedExam.mockReturnValue(jest.fn());
+// No idea what "subscribe" does but it probably shouldn't be mocked
 store.subscribe = jest.fn();
+// We should not mock this. This makes the dispatch function useless. It just needs the right setup to work.
+// Things were mocked, then broke, then they mocked other things that didn't need to be mocked.
+// This all can work out of the box with the right set up
 store.dispatch = jest.fn();
 
 describe('SequenceExamWrapper', () => {

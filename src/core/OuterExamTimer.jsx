@@ -1,19 +1,32 @@
 import React, { useEffect, useContext } from 'react';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { AppContext } from '@edx/frontend-platform/react';
-import ExamStateContext from '../context';
+
+// new imports
+// import ExamStateContext from '../context';
+import { IS_STARTED_STATUS } from '../constants';
+import { stopExam, submitExam, expireExam, pollAttempt, pingAttempt, getLatestAttemptData } from '../data/thunks';
+import * as selectors from '../data/selectors';
+
 import { ExamTimerBlock } from '../timer';
 import ExamAPIError from '../exam/ExamAPIError';
-import ExamStateProvider from './ExamStateProvider';
+// import ExamStateProvider from './ExamStateProvider';
 
 const ExamTimer = ({ courseId }) => {
-  const state = useContext(ExamStateContext);
+  // const state = useContext(ExamStateContext);
   const { authenticatedUser } = useContext(AppContext);
-  const {
-    activeAttempt, showTimer, stopExam, submitExam,
-    expireExam, pollAttempt, apiErrorMsg, pingAttempt,
-    getLatestAttemptData,
-  } = state;
+
+  // const {
+  //   activeAttempt, showTimer, apiErrorMsg,
+  // } = state;
+  const activeAttempt = useSelector(selectors.activeAttempt);
+  // TODO: The logic surrounding this showTimer var is WEIRD.
+  //TODO:Move this boolean to some file to encapsulate. Probably best in constants also there's no hooks file.
+  const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
+  // console.log(showTimer);
+  console.log(activeAttempt);
+  const apiErrorMsg = useSelector(selectors.apiErrorMsg);
 
   useEffect(() => {
     getLatestAttemptData(courseId);
@@ -53,9 +66,9 @@ ExamTimer.propTypes = {
  * will be shown.
  */
 const OuterExamTimer = ({ courseId }) => (
-  <ExamStateProvider>
-    <ExamTimer courseId={courseId} />
-  </ExamStateProvider>
+  // <ExamStateProvider>
+  <ExamTimer courseId={courseId} />
+  // </ExamStateProvider>
 );
 
 OuterExamTimer.propTypes = {
