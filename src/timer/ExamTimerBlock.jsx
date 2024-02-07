@@ -6,7 +6,7 @@ import CountDownTimer from './CountDownTimer';
 import { ExamStatus, IS_STARTED_STATUS } from '../constants';
 import TimerProvider from './TimerProvider';
 import {
-  Emitter, expireExamAttempt, stopExam, submitExam,
+  Emitter, expireExam, stopExam, submitExam,
 } from '../data';
 import {
   TIMER_IS_CRITICALLY_LOW,
@@ -46,17 +46,17 @@ const ExamTimerBlock = injectIntl(({ intl }) => {
   useEffect(() => {
     Emitter.once(TIMER_IS_LOW, onLowTime);
     Emitter.once(TIMER_IS_CRITICALLY_LOW, onCriticalLowTime);
-    Emitter.once(TIMER_LIMIT_REACHED, () => dispatch(expireExamAttempt));
+    Emitter.once(TIMER_LIMIT_REACHED, () => dispatch(expireExam()));
     Emitter.once(TIMER_REACHED_NULL, onTimeReachedNull);
 
     return () => {
       Emitter.off(TIMER_IS_LOW, onLowTime);
       Emitter.off(TIMER_IS_CRITICALLY_LOW, onCriticalLowTime);
-      Emitter.off(TIMER_LIMIT_REACHED, () => dispatch(expireExamAttempt));
+      Emitter.off(TIMER_LIMIT_REACHED, () => dispatch(expireExam()));
       Emitter.off(TIMER_REACHED_NULL, onTimeReachedNull);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch]);
 
   return (
     <TimerProvider>

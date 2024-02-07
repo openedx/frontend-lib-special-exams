@@ -21,8 +21,4 @@ export {
 
 export { default as reducer } from './slice';
 
-export {
-  expireExamAttempt,
-} from './slice';
-
 export { default as Emitter } from './emitter';

@@ -100,7 +100,7 @@ const TimerProvider = ({
         liveInterval = null;
       }
     };
-  }, [timeRemaining]);
+  }, [timeRemaining, dispatch]);
 
   return (
     // eslint-disable-next-line react/jsx-no-constructed-context-values
