@@ -38,9 +38,9 @@ pollExamAttempt.mockReturnValue(Promise.resolve({}));
 describe('SequenceExamWrapper', () => {
   let store;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     initializeMockApp();
-    store = await initializeTestStore();
+    store = initializeTestStore();
     store.subscribe = jest.fn();
     store.dispatch = jest.fn();
   });

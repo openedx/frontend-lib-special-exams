@@ -1,23 +1,28 @@
-import { examRequiresAccessToken, store } from './data';
+import { useDispatch, useSelector } from 'react-redux';
+import { examRequiresAccessToken } from './data';
 
-export function isExam() {
-  const { exam } = store.getState().specialExams;
+export const useIsExam = () => {
+  const { exam } = useSelector(state => state.specialExams);
+
   return !!exam?.id;
-}
+};
 
-export function getExamAccess() {
-  const { exam, examAccessToken } = store.getState().specialExams;
+export const useExamAccessToken = () => {
+  const { exam, examAccessToken } = useSelector(state => state.specialExams);
+
   if (!exam) {
     return '';
   }
-  return examAccessToken.exam_access_token;
-}
 
-export async function fetchExamAccess() {
-  const { exam } = store.getState().specialExams;
-  const { dispatch } = store;
+  return examAccessToken.exam_access_token;
+};
+
+export const useFetchExamAccessToken = () => {
+  const { exam } = useSelector(state => state.specialExams);
+  const dispatch = useDispatch();
+
   if (!exam) {
     return Promise.resolve();
   }
-  return dispatch(examRequiresAccessToken());
-}
+  return () => dispatch(examRequiresAccessToken());
+};

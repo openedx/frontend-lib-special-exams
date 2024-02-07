@@ -45,7 +45,7 @@ export function initializeMockApp() {
 
 let globalStore;
 
-export async function initializeTestStore(preloadedState = null, overrideStore = true) {
+export function initializeTestStore(preloadedState = null, overrideStore = true) {
   let store = configureStore({
     reducer: {
       specialExams: examReducer,

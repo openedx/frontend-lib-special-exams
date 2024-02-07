@@ -28,10 +28,10 @@ getExamAttemptsData.mockReturnValue(jest.fn());
 describe('SequenceExamWrapper', () => {
   let store;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     initializeMockApp();
     jest.clearAllMocks();
-    store = await initializeTestStore();
+    store = initializeTestStore();
     store.subscribe = jest.fn();
     store.dispatch = jest.fn();
   });

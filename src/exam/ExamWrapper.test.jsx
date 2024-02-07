@@ -2,24 +2,16 @@ import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
-import { startTimedExam } from '../data';
-import { getExamAttemptsData } from '../data/thunks';
+import { getExamAttemptsData, startTimedExam } from '../data';
 import { render, waitFor, initializeTestStore } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
 
-jest.mock('../data', () => ({
-  store: {},
-  startTimedExam: jest.fn(),
-}));
-
-// because of the way ExamStateProvider and other locations inconsistantly import from
-// thunks directly instead of using the data module we need to mock the underlying
-// thunk file. It would be nice to clean this up in the future.
-jest.mock('../data/thunks', () => {
+jest.mock('../data', () => {
   const originalModule = jest.requireActual('../data/thunks');
   return {
     ...originalModule,
     getExamAttemptsData: jest.fn(),
+    startTimedExam: jest.fn(),
   };
 });
 
@@ -34,9 +26,9 @@ describe('SequenceExamWrapper', () => {
   const courseId = 'course-v1:test+test+test';
   let store;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-    store = await initializeTestStore({
+    store = initializeTestStore({
       specialExams: Factory.build('specialExams'),
       isLoading: false,
     });

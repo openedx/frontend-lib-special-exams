@@ -2,7 +2,8 @@
 export { default } from './core/SequenceExamWrapper';
 export { default as OuterExamTimer } from './core/OuterExamTimer';
 export {
-  getExamAccess,
-  isExam,
-  fetchExamAccess,
+  useExamAccessToken,
+  useFetchExamAccessToken,
+  useIsExam,
 } from './api';
+export { reducer } from './data';

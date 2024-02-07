@@ -16,8 +16,8 @@ describe('ExamAPIError', () => {
 
   let store;
 
-  beforeEach(async () => {
-    store = await initializeTestStore();
+  beforeEach(() => {
+    store = initializeTestStore();
   });
 
   it('renders with the default information', () => {
