@@ -11,9 +11,7 @@ const ExamTimer = ({ courseId }) => {
   const { activeAttempt } = useSelector(state => state.specialExams);
   const { authenticatedUser } = useContext(AppContext);
   const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
-
   const { apiErrorMsg } = useSelector(state => state.specialExams);
-
   const dispatch = useDispatch();
 
   useEffect(() => {
