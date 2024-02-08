@@ -1,31 +1,30 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { getConfig } from '@edx/frontend-platform';
 import { Button, Container, Spinner } from '@edx/paragon';
-import ExamStateContext from '../../context';
 import Footer from './Footer';
 
+import { getExamReviewPolicy, startProctoredExam } from '../../data';
+
 const ReadyToStartProctoredExamInstructions = () => {
-  const state = useContext(ExamStateContext);
-  const {
-    exam,
-    getExamReviewPolicy,
-    startProctoredExam,
-  } = state;
+  const { exam } = useSelector(state => state.specialExams);
   const { attempt, reviewPolicy } = exam;
+
+  const dispatch = useDispatch();
+
   const examDuration = attempt.total_time ? attempt.total_time : exam.total_time;
   const platformName = getConfig().SITE_NAME;
   const rulesUrl = getConfig().PROCTORED_EXAM_RULES_URL;
   const [beginExamClicked, setBeginExamClicked] = useState(false);
 
   useEffect(() => {
-    getExamReviewPolicy();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    dispatch(getExamReviewPolicy());
+  }, [dispatch]);
 
   const handleStart = () => {
     setBeginExamClicked(true);
-    startProctoredExam();
+    dispatch(startProctoredExam());
   };
 
   return (

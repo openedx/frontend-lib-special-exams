@@ -1,13 +1,14 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { MailtoLink } from '@edx/paragon';
-import ExamStateContext from '../../context';
 
 const VerifiedOnboardingExamInstructions = () => {
-  const state = useContext(ExamStateContext);
+  const { proctoringSettings } = useSelector(state => state.specialExams);
+
   const {
     integration_specific_email: integrationSpecificEmail,
-  } = state.proctoringSettings || {};
+  } = proctoringSettings || {};
 
   return (
     <div>
