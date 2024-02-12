@@ -1,4 +1,5 @@
 export {
+  createProctoredExamAttempt,
   getExamAttemptsData,
   getLatestAttemptData,
   getProctoringSettings,
@@ -15,7 +16,9 @@ export {
   resetExam,
   getAllowProctoringOptOut,
   examRequiresAccessToken,
+  checkExamEntry,
 } from './thunks';
 
-export { default as store } from './store';
+export { default as reducer } from './slice';
+
 export { default as Emitter } from './emitter';

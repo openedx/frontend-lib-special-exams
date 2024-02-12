@@ -1,14 +1,14 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { getConfig } from '@edx/frontend-platform';
 import { Hyperlink, MailtoLink } from '@openedx/paragon';
-import ExamStateContext from '../../context';
 
 const ErrorProctoredExamInstructions = () => {
-  const state = useContext(ExamStateContext);
-  const {
-    proctoring_escalation_email: proctoringEscalationEmail,
-  } = state.proctoringSettings || {};
+  const { proctoring_escalation_email: proctoringEscalationEmail } = useSelector(
+    state => state.specialExams?.proctoringSettings,
+  ) || {};
+
   const platformName = getConfig().SITE_NAME;
   const contactUsUrl = getConfig().CONTACT_URL;
 

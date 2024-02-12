@@ -1,11 +1,12 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
-import ExamStateContext from '../../context';
+import { startTimedExam } from '../../data';
 
 const StartTimedExamInstructions = () => {
-  const state = useContext(ExamStateContext);
-  const { exam, startTimedExam } = state;
+  const { exam } = useSelector(state => state.specialExams);
+  const dispatch = useDispatch();
   const examDuration = exam.total_time;
 
   return (
@@ -38,7 +39,7 @@ const StartTimedExamInstructions = () => {
       <Button
         data-testid="start-exam-button"
         variant="outline-primary"
-        onClick={startTimedExam}
+        onClick={() => dispatch(startTimedExam())}
       >
         <FormattedMessage
           id="exam.startExamInstructions.startExamButtonText"

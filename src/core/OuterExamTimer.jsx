@@ -1,22 +1,21 @@
 import React, { useEffect, useContext } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { AppContext } from '@edx/frontend-platform/react';
-import ExamStateContext from '../context';
 import { ExamTimerBlock } from '../timer';
 import ExamAPIError from '../exam/ExamAPIError';
-import ExamStateProvider from './ExamStateProvider';
+import { getLatestAttemptData } from '../data';
+import { IS_STARTED_STATUS } from '../constants';
 
 const ExamTimer = ({ courseId }) => {
-  const state = useContext(ExamStateContext);
+  const { activeAttempt } = useSelector(state => state.specialExams);
   const { authenticatedUser } = useContext(AppContext);
-  const {
-    activeAttempt, showTimer, stopExam, submitExam,
-    expireExam, pollAttempt, apiErrorMsg, pingAttempt,
-    getLatestAttemptData,
-  } = state;
+  const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
+  const { apiErrorMsg } = useSelector(state => state.specialExams);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    getLatestAttemptData(courseId);
+    dispatch(getLatestAttemptData(courseId));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
@@ -29,14 +28,7 @@ const ExamTimer = ({ courseId }) => {
   return (
     <div className="d-flex flex-column justify-content-center">
       {showTimer && (
-        <ExamTimerBlock
-          attempt={activeAttempt}
-          stopExamAttempt={stopExam}
-          submitExam={submitExam}
-          expireExamAttempt={expireExam}
-          pollExamAttempt={pollAttempt}
-          pingAttempt={pingAttempt}
-        />
+        <ExamTimerBlock />
       )}
       {apiErrorMsg && <ExamAPIError />}
     </div>
@@ -53,9 +45,7 @@ ExamTimer.propTypes = {
  * will be shown.
  */
 const OuterExamTimer = ({ courseId }) => (
-  <ExamStateProvider>
-    <ExamTimer courseId={courseId} />
-  </ExamStateProvider>
+  <ExamTimer courseId={courseId} />
 );
 
 OuterExamTimer.propTypes = {

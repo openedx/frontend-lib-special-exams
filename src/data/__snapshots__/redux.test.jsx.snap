@@ -9,7 +9,7 @@ Object {
 
 exports[`Data layer integration tests Test getExamAttemptsData Should get, and save exam and attempt 1`] = `
 Object {
-  "examState": Object {
+  "specialExams": Object {
     "activeAttempt": Object {
       "attempt_code": "",
       "attempt_id": 1,
@@ -93,7 +93,7 @@ Object {
 
 exports[`Data layer integration tests Test getLatestAttemptData with edx-proctoring as a backend (no EXAMS_BASE_URL) Should get, and save latest attempt 1`] = `
 Object {
-  "examState": Object {
+  "specialExams": Object {
     "activeAttempt": Object {
       "attempt_code": "",
       "attempt_id": 1,
@@ -245,7 +245,7 @@ Object {
 
 exports[`Data layer integration tests Test resetExam Should reset exam attempt 1`] = `
 Object {
-  "examState": Object {
+  "specialExams": Object {
     "activeAttempt": null,
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
@@ -314,7 +314,7 @@ Object {
 
 exports[`Data layer integration tests Test resetExam with edx-proctoring as backend (no EXAMS_BASE_URL) Should reset exam attempt 1`] = `
 Object {
-  "examState": Object {
+  "specialExams": Object {
     "activeAttempt": null,
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",

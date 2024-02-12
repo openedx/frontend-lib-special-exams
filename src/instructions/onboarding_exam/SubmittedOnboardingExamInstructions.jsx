@@ -1,12 +1,17 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button, MailtoLink, useToggle } from '@openedx/paragon';
-import ExamStateContext from '../../context';
+
+import { resetExam } from '../../data';
 
 const SubmittedOnboardingExamInstructions = () => {
   const [isConfirm, confirm] = useToggle(false);
-  const state = useContext(ExamStateContext);
-  const { proctoringSettings, resetExam } = state;
+
+  const { proctoringSettings } = useSelector(state => state.specialExams);
+
+  const dispatch = useDispatch();
+
   const {
     learner_notification_from_email: learnerNotificationFromEmail,
     integration_specific_email: integrationSpecificEmail,
@@ -70,7 +75,7 @@ const SubmittedOnboardingExamInstructions = () => {
       <Button
         data-testid="retry-exam-button"
         variant="primary"
-        onClick={resetExam}
+        onClick={() => dispatch(resetExam())}
         disabled={!isConfirm}
       >
         <FormattedMessage

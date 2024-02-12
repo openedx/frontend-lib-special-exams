@@ -1,11 +1,12 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useDispatch } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
-import ExamStateContext from '../../context';
+
+import { submitExam } from '../../data';
 
 const SubmitTimedExamInstructions = () => {
-  const state = useContext(ExamStateContext);
-  const { submitExam } = state;
+  const dispatch = useDispatch();
 
   return (
     <>
@@ -27,7 +28,7 @@ const SubmitTimedExamInstructions = () => {
           defaultMessage="After you submit your exam, your exam will be graded."
         />
       </p>
-      <Button variant="primary" onClick={submitExam} className="mr-2" data-testid="end-exam-button">
+      <Button variant="primary" onClick={() => dispatch(submitExam())} className="mr-2" data-testid="end-exam-button">
         <FormattedMessage
           id="exam.submitExamInstructions.submit"
           defaultMessage="Yes, submit my timed exam."

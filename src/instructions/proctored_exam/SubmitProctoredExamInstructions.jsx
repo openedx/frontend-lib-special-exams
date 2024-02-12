@@ -1,17 +1,16 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
-import ExamStateContext from '../../context';
 import { ExamType } from '../../constants';
+import { submitExam } from '../../data';
 
 const SubmitProctoredExamInstructions = () => {
-  const state = useContext(ExamStateContext);
-  const {
-    submitExam,
-    exam,
-    activeAttempt,
-  } = state;
+  const { exam, activeAttempt } = useSelector(state => state.specialExams);
+
+  const dispatch = useDispatch();
+
   const { type: examType, attempt } = exam || {};
   const { exam_display_name: examName } = activeAttempt;
   const examHasLtiProvider = !attempt.use_legacy_attempt_api;
@@ -21,7 +20,7 @@ const SubmitProctoredExamInstructions = () => {
     if (examHasLtiProvider) {
       window.location.assign(submitLtiAttemptUrl);
     } else {
-      submitExam();
+      dispatch(submitExam());
     }
   };
 

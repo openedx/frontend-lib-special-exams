@@ -1,10 +1,11 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage, injectIntl, intlShape } from '@edx/frontend-platform/i18n';
 import { Container } from '@openedx/paragon';
-import ExamStateContext from '../../../context';
 import { ExamStatus } from '../../../constants';
+import { getExamAttemptsData } from '../../../data';
 import WarningModal from '../WarningModal';
 import { pollExamAttempt, softwareDownloadAttempt } from '../../../data/api';
 import messages from '../messages';
@@ -16,18 +17,20 @@ import Footer from '../Footer';
 import SkipProctoredExamButton from '../SkipProctoredExamButton';
 
 const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) => {
-  const state = useContext(ExamStateContext);
   const {
     proctoringSettings,
     exam,
-    getExamAttemptsData,
     allowProctoringOptOut,
-  } = state;
+  } = useSelector(state => state.specialExams);
+
+  const dispatch = useDispatch();
+
   const {
     attempt,
     course_id: courseId,
     content_id: sequenceId,
   } = exam;
+
   const {
     exam_started_poll_url: pollUrl,
     attempt_code: examCode,
@@ -35,6 +38,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
     software_download_url: downloadUrl,
     use_legacy_attempt_api: useLegacyAttemptApi,
   } = attempt;
+
   const {
     provider_name: providerName,
     provider_tech_support_email: supportEmail,
@@ -42,6 +46,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
     provider_tech_support_url: supportURL,
     exam_proctoring_backend: proctoringBackend,
   } = proctoringSettings;
+
   const examHasLtiProvider = !useLegacyAttemptApi;
   const { instructions } = proctoringBackend || {};
   const [systemCheckStatus, setSystemCheckStatus] = useState('');
@@ -70,7 +75,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
     pollExamAttempt(pollUrl, sequenceId)
       .then((data) => (
         data.status === ExamStatus.READY_TO_START
-          ? getExamAttemptsData(courseId, sequenceId)
+          ? dispatch(getExamAttemptsData(courseId, sequenceId))
           : setSystemCheckStatus('failure')
       ));
   };
