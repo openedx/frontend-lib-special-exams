@@ -453,6 +453,7 @@ export function expireExam() {
 export function pingAttempt(timeoutInSeconds, workerUrl) {
   return async (dispatch, getState) => {
     const { exam, activeAttempt } = getState().specialExams;
+    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     await pingApplication(timeoutInSeconds, activeAttempt.external_id, workerUrl)
       .catch(async (error) => {
         const message = error?.message || 'Worker failed to respond.';
@@ -473,7 +474,10 @@ export function pingAttempt(timeoutInSeconds, workerUrl) {
 
         // eslint-disable-next-line function-paren-newline
         await updateAttemptAfter(
-          exam.course_id, exam.content_id, endExamWithFailure(activeAttempt.attempt_id, message))(dispatch);
+          exam.course_id,
+          exam.content_id,
+          endExamWithFailure(activeAttempt.attempt_id, message, useLegacyAttemptAPI),
+        )(dispatch);
       });
   };
 }
@@ -537,6 +541,7 @@ export function getAllowProctoringOptOut(allowProctoringOptOut) {
 export function checkExamEntry() {
   return async (dispatch, getState) => {
     const { exam } = getState().specialExams;
+    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     // Check only applies to LTI exams
     if (
       !exam?.attempt
@@ -552,7 +557,7 @@ export function checkExamEntry() {
         }),
       ]).catch(() => {
         dispatch(setApiError({ errorMsg: 'Something has gone wrong with your exam. Proctoring application not detected.' }));
-        updateAttemptAfter(exam.course_id, exam.content_id, endExamWithFailure(exam.attempt.attempt_id, 'exam reentry disallowed'))(dispatch);
+        updateAttemptAfter(exam.course_id, exam.content_id, endExamWithFailure(exam.attempt.attempt_id, 'exam reentry disallowed', useLegacyAttemptAPI))(dispatch);
       });
     }
   };
