@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useToggle } from '@edx/paragon';
@@ -15,6 +15,7 @@ const GRACE_PERIOD_SECS = 5;
 const POLL_INTERVAL = 60;
 const TIME_LIMIT_CRITICAL_PCT = 0.05;
 const TIME_LIMIT_LOW_PCT = 0.2;
+const LIMIT = GRACE_PERIOD_SECS ? 0 - GRACE_PERIOD_SECS : 0;
 
 export const TimerContext = React.createContext({});
 
@@ -28,20 +29,16 @@ const TimerProvider = ({
   children,
 }) => {
   const { activeAttempt: attempt, exam } = useSelector(state => state.specialExams);
-  const { time_limit_mins: timeLimitMins } = exam;
   const [timeState, setTimeState] = useState({});
   const [limitReached, setLimitReached] = useToggle(false);
+  const dispatch = useDispatch();
+  const { time_limit_mins: timeLimitMins } = exam;
   const {
     desktop_application_js_url: workerUrl,
     ping_interval: pingInterval,
-    time_remaining_seconds: timeRemaining,
+    time_remaining_seconds: initSecondsLeft,
+    timer_ends: timerEnds,
   } = attempt;
-  const LIMIT = GRACE_PERIOD_SECS ? 0 - GRACE_PERIOD_SECS : 0;
-  const CRITICAL_LOW_TIME = timeLimitMins * 60 * TIME_LIMIT_CRITICAL_PCT;
-  const LOW_TIME = timeLimitMins * 60 * TIME_LIMIT_LOW_PCT;
-  let liveInterval = null;
-
-  const dispatch = useDispatch();
 
   const getTimeString = () => Object.values(timeState).map(
     item => {
@@ -52,15 +49,19 @@ const TimerProvider = ({
     },
   ).join(':');
 
-  const pollExam = () => {
+  const pollExam = useCallback(() => {
     // poll url may be null if this is an LTI exam
-    dispatch(pollAttempt(attempt.exam_started_poll_url));
-  };
+    if (attempt?.exam_started_poll_url) {
+      dispatch(pollAttempt(attempt.exam_started_poll_url));
+    }
+  }, [attempt.exam_started_poll_url, dispatch]);
+  const processTimeLeft = useCallback(() => (secondsLeft) => {
+    const criticalLowTime = timeLimitMins * 60 * TIME_LIMIT_CRITICAL_PCT;
+    const lowTime = timeLimitMins * 60 * TIME_LIMIT_LOW_PCT;
 
-  const processTimeLeft = (timer, secondsLeft) => {
-    if (secondsLeft <= CRITICAL_LOW_TIME) {
+    if (secondsLeft <= criticalLowTime) {
       Emitter.emit(TIMER_IS_CRITICALLY_LOW);
-    } else if (secondsLeft <= LOW_TIME) {
+    } else if (secondsLeft <= lowTime) {
       Emitter.emit(TIMER_IS_LOW);
     }
     // Used to hide continue exam button on submit exam pages.
@@ -69,22 +70,35 @@ const TimerProvider = ({
     if (secondsLeft <= 0) {
       Emitter.emit(TIMER_REACHED_NULL);
     }
+
     if (!limitReached && secondsLeft < LIMIT) {
-      clearInterval(timer);
       setLimitReached();
       Emitter.emit(TIMER_LIMIT_REACHED);
+
+      return false; // Stop the time ticker.
     }
-  };
+
+    return true;
+  }, [
+    timeLimitMins,
+    limitReached,
+    setLimitReached,
+  ]);
 
   useEffect(() => {
+    let timerHandler = null;
     let timerTick = 0;
-    let secondsLeft = Math.floor(timeRemaining);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    liveInterval = setInterval(() => {
-      secondsLeft -= 1;
-      timerTick += 1;
+    const deadline = new Date(timerEnds);
+
+    let timerRef = null;
+
+    timerHandler = setInterval(() => {
+      timerTick++;
+      const now = new Date();
+      const remainingTime = (deadline.getTime() - now.getTime()) / 1000;
+      const secondsLeft = Math.floor(remainingTime);
+
       setTimeState(getFormattedRemainingTime(secondsLeft));
-      processTimeLeft(liveInterval, secondsLeft);
       // no polling during grace period
       if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
         pollExam();
@@ -93,14 +107,28 @@ const TimerProvider = ({
       if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
         dispatch(pingAttempt(pingInterval, workerUrl));
       }
+
+      const keepRunning = processTimeLeft(secondsLeft);
+      if (!keepRunning) {
+        clearInterval(timerHandler);
+      }
     }, 1000);
+
     return () => {
-      if (liveInterval) {
-        clearInterval(liveInterval);
-        liveInterval = null;
+      if (timerRef) {
+        clearInterval(timerHandler);
+        timerRef = null;
       }
     };
-  }, [timeRemaining, dispatch]);
+  }, [
+    initSecondsLeft,
+    timerEnds,
+    pingInterval,
+    workerUrl,
+    processTimeLeft,
+    pollExam,
+    dispatch,
+  ]);
 
   return (
     // eslint-disable-next-line react/jsx-no-constructed-context-values

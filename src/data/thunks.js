@@ -272,6 +272,9 @@ export function pollAttempt(url) {
 
     try {
       const data = await pollExamAttempt(url);
+      if (!data) {
+        throw new Error('Poll Exam failed to fetch.');
+      }
       const updatedAttempt = {
         ...currentAttempt,
         time_remaining_seconds: data.time_remaining_seconds,
