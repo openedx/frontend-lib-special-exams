@@ -271,7 +271,8 @@ export function pollAttempt(url) {
     }
 
     try {
-      const data = await pollExamAttempt(url);
+      const { exam } = getState().specialExams;
+      const data = await pollExamAttempt(url, exam.content_id);
       if (!data) {
         throw new Error('Poll Exam failed to fetch.');
       }
