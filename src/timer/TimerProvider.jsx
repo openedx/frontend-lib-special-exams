@@ -50,10 +50,9 @@ const TimerProvider = ({
 
   const pollExam = useCallback(() => {
     // poll url may be null if this is an LTI exam
-    if (attempt?.exam_started_poll_url) {
-      dispatch(pollAttempt(attempt.exam_started_poll_url));
-    }
+    dispatch(pollAttempt(attempt.exam_started_poll_url));
   }, [attempt.exam_started_poll_url, dispatch]);
+
   const processTimeLeft = useCallback(() => (secondsLeft) => {
     const criticalLowTime = timeLimitMins * 60 * TIME_LIMIT_CRITICAL_PCT;
     const lowTime = timeLimitMins * 60 * TIME_LIMIT_LOW_PCT;
@@ -107,8 +106,8 @@ const TimerProvider = ({
         dispatch(pingAttempt(pingInterval, workerUrl));
       }
 
-      const keepRunning = processTimeLeft(secondsLeft);
-      if (!keepRunning) {
+      const keepTimerRunning = processTimeLeft(secondsLeft);
+      if (!keepTimerRunning) {
         clearInterval(timerHandler);
       }
     }, 1000);

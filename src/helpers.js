@@ -40,7 +40,7 @@ export const generateHumanizedTime = (timeRemainingSeconds) => {
 // The only information we get on the remaining time on the active exam attempt
 // from the endpoint is the remaining seconds. We need to have a fixed time reference
 // on the time limit to be able to calculate the remaining time accurately.
-export const aggregateActiveAttemptData = (activeAttempt) => {
+export const appendTimerEnd = (activeAttempt) => {
   if (!activeAttempt?.time_remaining_seconds) {
     return activeAttempt;
   }

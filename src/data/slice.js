@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { aggregateActiveAttemptData } from '../helpers';
+import { appendTimerEnd } from '../helpers';
 
 /* eslint-disable no-param-reassign */
 export const examSlice = createSlice({
@@ -77,10 +77,10 @@ export const examSlice = createSlice({
     },
     setExamState: (state, { payload }) => {
       state.exam = payload.exam;
-      state.activeAttempt = aggregateActiveAttemptData(payload.activeAttempt);
+      state.activeAttempt = appendTimerEnd(payload.activeAttempt);
     },
     setActiveAttempt: (state, { payload }) => {
-      state.activeAttempt = aggregateActiveAttemptData(payload.activeAttempt);
+      state.activeAttempt = appendTimerEnd(payload.activeAttempt);
       state.apiErrorMsg = '';
     },
     setProctoringSettings: (state, { payload }) => {
