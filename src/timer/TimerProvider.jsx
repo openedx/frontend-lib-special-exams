@@ -36,7 +36,6 @@ const TimerProvider = ({
   const {
     desktop_application_js_url: workerUrl,
     ping_interval: pingInterval,
-    time_remaining_seconds: initSecondsLeft,
     timer_ends: timerEnds,
   } = attempt;
 
@@ -121,7 +120,6 @@ const TimerProvider = ({
       }
     };
   }, [
-    initSecondsLeft,
     timerEnds,
     pingInterval,
     workerUrl,
