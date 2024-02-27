@@ -24,7 +24,7 @@ Object {
       "software_download_url": "",
       "taking_as_proctored": false,
       "time_remaining_seconds": 1799.9,
-      "timer_ends": "2024-02-27T14:28:58.245Z",
+      "timer_ends": "2024-02-27T14:39:11.213Z",
       "total_time": "30 minutes",
     },
     "allowProctoringOptOut": false,
@@ -109,7 +109,7 @@ Object {
       "software_download_url": "",
       "taking_as_proctored": false,
       "time_remaining_seconds": 1799.9,
-      "timer_ends": "2024-02-27T14:28:58.401Z",
+      "timer_ends": "2024-02-27T14:39:11.381Z",
       "total_time": "30 minutes",
     },
     "allowProctoringOptOut": false,
@@ -203,7 +203,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
-  "timer_ends": "2024-02-27T14:28:58.395Z",
+  "timer_ends": "2024-02-27T14:39:11.372Z",
   "total_time": "30 minutes",
 }
 `;
@@ -399,7 +399,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
-  "timer_ends": "2024-02-27T14:28:58.373Z",
+  "timer_ends": "2024-02-27T14:39:11.346Z",
   "total_time": "30 minutes",
 }
 `;
@@ -419,7 +419,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
-  "timer_ends": "2024-02-27T14:28:58.370Z",
+  "timer_ends": "2024-02-27T14:39:11.343Z",
   "total_time": "30 minutes",
 }
 `;
@@ -439,7 +439,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
-  "timer_ends": "2024-02-27T14:28:58.283Z",
+  "timer_ends": "2024-02-27T14:39:11.255Z",
   "total_time": "30 minutes",
 }
 `;
@@ -459,7 +459,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
-  "timer_ends": "2024-02-27T14:28:58.279Z",
+  "timer_ends": "2024-02-27T14:39:11.246Z",
   "total_time": "30 minutes",
 }
 `;
