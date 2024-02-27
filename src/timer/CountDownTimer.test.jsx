@@ -2,9 +2,10 @@ import React from 'react';
 import { waitFor } from '@testing-library/dom';
 import { ExamTimerBlock } from './index';
 import {
-  render, screen, initializeTestStore, fireEvent,
+  render, screen, initializeTestStore, fireEvent, act,
 } from '../setupTest';
 import { stopExam, submitExam } from '../data';
+import { appendTimerEnd } from '../helpers';
 
 // We do a partial mock to avoid mocking out other exported values (e.g. the store and the Emitter).
 jest.mock('../data', () => {
@@ -29,7 +30,7 @@ describe('ExamTimerBlock', () => {
       specialExams: {
         isLoading: true,
         timeIsOver: false,
-        activeAttempt: {
+        activeAttempt: appendTimerEnd({
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
@@ -37,7 +38,7 @@ describe('ExamTimerBlock', () => {
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
-        },
+        }),
         proctoringSettings: {},
         exam: {
           time_limit_mins: 2,
@@ -53,7 +54,9 @@ describe('ExamTimerBlock', () => {
       <ExamTimerBlock />,
     );
 
-    expect(screen.getByRole('alert')).toBeInTheDocument();
+    await act(async () => {
+      await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    });
     expect(screen.getByText(attempt.exam_display_name)).toBeInTheDocument();
     expect(screen.getByText('Show more')).toBeInTheDocument();
     expect(screen.getAllByRole('button').length).toEqual(1);
@@ -82,7 +85,9 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    });
     expect(screen.getByRole('alert')).toHaveClass('alert-warning');
   });
 
@@ -91,7 +96,7 @@ describe('ExamTimerBlock', () => {
       specialExams: {
         isLoading: true,
         timeIsOver: false,
-        activeAttempt: {
+        activeAttempt: appendTimerEnd({
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
@@ -99,7 +104,7 @@ describe('ExamTimerBlock', () => {
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
-        },
+        }),
         proctoringSettings: {},
         exam: {
           time_limit_mins: 2,
@@ -111,7 +116,9 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:05')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:05')).toBeInTheDocument());
+    });
     expect(screen.getByRole('alert')).toHaveClass('alert-danger');
   });
 
@@ -119,7 +126,9 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    });
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByLabelText('Hide Timer')).toBeInTheDocument();
 
@@ -136,7 +145,9 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    });
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Show more'));
@@ -153,7 +164,7 @@ describe('ExamTimerBlock', () => {
       specialExams: {
         isLoading: true,
         timeIsOver: false,
-        activeAttempt: {
+        activeAttempt: appendTimerEnd({
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
@@ -161,7 +172,7 @@ describe('ExamTimerBlock', () => {
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
-        },
+        }),
         proctoringSettings: {},
         exam: {
           time_limit_mins: 30,
@@ -174,9 +185,11 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:00')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:00')).toBeInTheDocument());
+      fireEvent.click(screen.getByTestId('end-button', { name: 'Show more' }));
+    });
 
-    fireEvent.click(screen.getByTestId('end-button', { name: 'Show more' }));
     expect(submitExam).toHaveBeenCalledTimes(1);
   });
 
@@ -184,9 +197,12 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByTestId('end-button'));
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+      fireEvent.click(screen.getByTestId('end-button'));
+    });
+
     expect(stopExam).toHaveBeenCalledTimes(1);
   });
 
@@ -195,7 +211,7 @@ describe('ExamTimerBlock', () => {
       specialExams: {
         isLoading: true,
         timeIsOver: false,
-        activeAttempt: {
+        activeAttempt: appendTimerEnd({
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
@@ -203,7 +219,7 @@ describe('ExamTimerBlock', () => {
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
-        },
+        }),
         proctoringSettings: {},
         exam: {
           time_limit_mins: 30,
@@ -215,12 +231,15 @@ describe('ExamTimerBlock', () => {
     const { rerender } = render(
       <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:03:59')).toBeInTheDocument());
 
-    preloadedState.specialExams.activeAttempt = {
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:03:59')).toBeInTheDocument());
+    });
+
+    preloadedState.specialExams.activeAttempt = appendTimerEnd({
       ...attempt,
       time_remaining_seconds: 20,
-    };
+    });
     testStore = initializeTestStore(preloadedState);
     const updatedAttempt = testStore.getState().specialExams.activeAttempt;
 
@@ -230,7 +249,9 @@ describe('ExamTimerBlock', () => {
       <ExamTimerBlock />,
     );
 
-    await waitFor(() => expect(screen.getByText('00:00:19')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:19')).toBeInTheDocument());
+    });
   });
 
   const timesToTest = {
@@ -251,7 +272,7 @@ describe('ExamTimerBlock', () => {
         specialExams: {
           isLoading: true,
           timeIsOver: false,
-          activeAttempt: {
+          activeAttempt: appendTimerEnd({
             attempt_status: 'started',
             exam_url_path: 'exam_url_path',
             exam_display_name: 'exam name',
@@ -259,7 +280,7 @@ describe('ExamTimerBlock', () => {
             exam_started_poll_url: '',
             taking_as_proctored: false,
             exam_type: 'a timed exam',
-          },
+          }),
           proctoringSettings: {},
           exam: {
             time_limit_mins: 30,

@@ -53,7 +53,7 @@ const TimerProvider = ({
     dispatch(pollAttempt(attempt.exam_started_poll_url));
   }, [attempt.exam_started_poll_url, dispatch]);
 
-  const processTimeLeft = useCallback(() => (secondsLeft) => {
+  const processTimeLeft = useCallback((secondsLeft) => {
     const criticalLowTime = timeLimitMins * 60 * TIME_LIMIT_CRITICAL_PCT;
     const lowTime = timeLimitMins * 60 * TIME_LIMIT_LOW_PCT;
 
@@ -84,13 +84,12 @@ const TimerProvider = ({
   ]);
 
   useEffect(() => {
-    let timerHandler = null;
-    let timerTick = 0;
+    let timerHandler = true;
+    let timerTick = -1;
     const deadline = new Date(timerEnds);
-
     let timerRef = null;
 
-    timerHandler = setInterval(() => {
+    const ticker = () => {
       timerTick++;
       const now = new Date();
       const remainingTime = (deadline.getTime() - now.getTime()) / 1000;
@@ -109,8 +108,21 @@ const TimerProvider = ({
       const keepTimerRunning = processTimeLeft(secondsLeft);
       if (!keepTimerRunning) {
         clearInterval(timerHandler);
+        timerHandler = null;
       }
-    }, 1000);
+    };
+
+    // We delay the first ticker execution to give time for the emmiter
+    // subscribers to hook up, otherwise immediate emissions will miss their purpose.
+    setTimeout(() => {
+      ticker();
+
+      // If the timer handler is not true it means that it was stopped in the first run.
+      if (timerHandler === true) {
+        // After the first run, we start the ticker.
+        timerHandler = setInterval(ticker, 1000);
+      }
+    });
 
     return () => {
       if (timerRef) {
