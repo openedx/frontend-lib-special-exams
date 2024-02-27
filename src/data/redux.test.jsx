@@ -53,6 +53,18 @@ describe('Data layer integration tests', () => {
     await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
   };
 
+  const expectSpecialExamAttemptToMatchSnapshot = (data) => expect(data).toMatchSnapshot({
+    timer_ends: expect.any(String),
+  });
+
+  const expectStoreToMatchSnapshot = (data) => expect(data).toMatchSnapshot({
+    specialExams: {
+      activeAttempt: {
+        timer_ends: expect.any(String),
+      },
+    },
+  });
+
   beforeEach(() => {
     initializeTestConfig();
     windowSpy = jest.spyOn(window, 'window', 'get');
@@ -81,7 +93,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
 
       const state = store.getState();
-      expect(state).toMatchSnapshot();
+      expectStoreToMatchSnapshot(state);
     });
 
     it('Should translate total time correctly', async () => {
@@ -216,7 +228,7 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.specialExams.activeAttempt).toMatchSnapshot();
+        expectSpecialExamAttemptToMatchSnapshot(state.specialExams.activeAttempt);
         expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
           exam_id: exam.id,
           start_clock: 'true',
@@ -233,7 +245,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
       const state = store.getState();
-      expect(state.specialExams.activeAttempt).toMatchSnapshot();
+      expectSpecialExamAttemptToMatchSnapshot(state.specialExams.activeAttempt);
       expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
         exam_id: exam.id,
         start_clock: 'true',
@@ -758,7 +770,7 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.specialExams.activeAttempt).toMatchSnapshot();
+        expectSpecialExamAttemptToMatchSnapshot(state.specialExams.activeAttempt);
       });
     });
 
@@ -773,7 +785,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
       state = store.getState();
-      expect(state.specialExams.activeAttempt).toMatchSnapshot();
+      expectSpecialExamAttemptToMatchSnapshot(state.specialExams.activeAttempt);
     });
 
     it('Should fail to fetch if no exam id', async () => {
@@ -942,7 +954,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.pollAttempt(attempt.exam_started_poll_url), store.dispatch, store.getState);
       const state = store.getState();
-      expect(state.specialExams.activeAttempt).toMatchSnapshot();
+      expectSpecialExamAttemptToMatchSnapshot(state.specialExams.activeAttempt);
     });
 
     describe('pollAttempt api called directly', () => {
@@ -1015,8 +1027,7 @@ describe('Data layer integration tests', () => {
         await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
 
         const state = store.getState();
-        expect(state)
-          .toMatchSnapshot();
+        expectStoreToMatchSnapshot(state);
       });
     });
 
