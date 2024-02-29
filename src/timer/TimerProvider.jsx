@@ -57,7 +57,7 @@ const TimerProvider = ({
   const processTimeLeft = useCallback((secondsLeft) => {
     const emit = (signal) => {
       // This prevents spamming
-      if (lastSignal.current === lastSignal) {
+      if (lastSignal.current === signal) {
         return;
       }
       Emitter.emit(signal);
@@ -108,6 +108,7 @@ const TimerProvider = ({
 
       setTimeState(getFormattedRemainingTime(secondsLeft));
       // no polling during grace period
+
       if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
         pollExam();
       }
