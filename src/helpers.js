@@ -45,9 +45,7 @@ export const appendTimerEnd = (activeAttempt) => {
     return activeAttempt;
   }
 
-  const timerEnds = new Date();
-  timerEnds.setSeconds(timerEnds.getSeconds() + activeAttempt.time_remaining_seconds);
-
+  const timerEnds = new Date(Date.now() + activeAttempt.time_remaining_seconds * 1000);
   const updatedActiveAttempt = {
     ...activeAttempt,
     timer_ends: timerEnds.toISOString(),

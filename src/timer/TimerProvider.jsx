@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, {
+  useEffect, useState, useCallback, useRef,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import { useToggle } from '@edx/paragon';
 import { Emitter, pollAttempt, pingAttempt } from '../data';
 import {
   TIMER_IS_CRITICALLY_LOW,
@@ -30,7 +31,7 @@ const TimerProvider = ({
 }) => {
   const { activeAttempt: attempt, exam } = useSelector(state => state.specialExams);
   const [timeState, setTimeState] = useState({});
-  const [limitReached, setLimitReached] = useToggle(false);
+  const lastSignal = useRef(null);
   const dispatch = useDispatch();
   const { time_limit_mins: timeLimitMins } = exam;
   const {
@@ -54,45 +55,55 @@ const TimerProvider = ({
   }, [attempt.exam_started_poll_url, dispatch]);
 
   const processTimeLeft = useCallback((secondsLeft) => {
+    const emit = (signal) => {
+      // This prevents spamming
+      if (lastSignal.current === lastSignal) {
+        return;
+      }
+      Emitter.emit(signal);
+      lastSignal.current = signal;
+    };
+
     const criticalLowTime = timeLimitMins * 60 * TIME_LIMIT_CRITICAL_PCT;
     const lowTime = timeLimitMins * 60 * TIME_LIMIT_LOW_PCT;
 
-    if (secondsLeft <= criticalLowTime) {
-      Emitter.emit(TIMER_IS_CRITICALLY_LOW);
-    } else if (secondsLeft <= lowTime) {
-      Emitter.emit(TIMER_IS_LOW);
+    if (secondsLeft <= LIMIT) {
+      emit(TIMER_LIMIT_REACHED);
+      return true; // Kill the timer.
     }
-    // Used to hide continue exam button on submit exam pages.
-    // Since TIME_LIMIT_REACHED is fired after the grace period we
-    // need to emit separate event when timer reaches 00:00
+
     if (secondsLeft <= 0) {
-      Emitter.emit(TIMER_REACHED_NULL);
+      // Used to hide continue exam button on submit exam pages.
+      // Since TIME_LIMIT_REACHED is fired after the grace period we
+      // need to emit separate event when timer reaches 00:00
+      emit(TIMER_REACHED_NULL);
+      return false;
     }
 
-    if (!limitReached && secondsLeft < LIMIT) {
-      setLimitReached();
-      Emitter.emit(TIMER_LIMIT_REACHED);
-
-      return false; // Stop the time ticker.
+    if (secondsLeft <= criticalLowTime) {
+      emit(TIMER_IS_CRITICALLY_LOW);
+      return false;
     }
 
-    return true;
+    if (secondsLeft <= lowTime) {
+      emit(TIMER_IS_LOW);
+      return false;
+    }
+
+    return false;
   }, [
     timeLimitMins,
-    limitReached,
-    setLimitReached,
   ]);
 
   useEffect(() => {
-    let timerHandler = true;
+    const timerRef = { current: true };
     let timerTick = -1;
     const deadline = new Date(timerEnds);
-    let timerRef = null;
 
     const ticker = () => {
       timerTick++;
-      const now = new Date();
-      const remainingTime = (deadline.getTime() - now.getTime()) / 1000;
+      const now = Date.now();
+      const remainingTime = (deadline.getTime() - now) / 1000;
       const secondsLeft = Math.floor(remainingTime);
 
       setTimeState(getFormattedRemainingTime(secondsLeft));
@@ -105,10 +116,10 @@ const TimerProvider = ({
         dispatch(pingAttempt(pingInterval, workerUrl));
       }
 
-      const keepTimerRunning = processTimeLeft(secondsLeft);
-      if (!keepTimerRunning) {
-        clearInterval(timerHandler);
-        timerHandler = null;
+      const killTimer = processTimeLeft(secondsLeft);
+      if (killTimer) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
 
@@ -117,18 +128,17 @@ const TimerProvider = ({
     setTimeout(() => {
       ticker();
 
-      // If the timer handler is not true it means that it was stopped in the first run.
-      if (timerHandler === true) {
+      // If the timer handler is not true at this point, it means that it was stopped in the first run.
+      // So we don't need to start the timer.
+      if (timerRef.current === true) {
         // After the first run, we start the ticker.
-        timerHandler = setInterval(ticker, 1000);
+        timerRef.current = setInterval(ticker, 1000);
       }
     });
 
     return () => {
-      if (timerRef) {
-        clearInterval(timerHandler);
-        timerRef = null;
-      }
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     };
   }, [
     timerEnds,
