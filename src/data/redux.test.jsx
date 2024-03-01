@@ -53,10 +53,12 @@ describe('Data layer integration tests', () => {
     await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
   };
 
+  // This is a shorthand to check snapshots with an asymmetric matcher every time.
   const expectSpecialExamAttemptToMatchSnapshot = (data) => expect(data).toMatchSnapshot({
     timer_ends: expect.any(String),
   });
 
+  // This is a shorthand to check snapshots with an asymmetric matcher every time.
   const expectStoreToMatchSnapshot = (data) => expect(data).toMatchSnapshot({
     specialExams: {
       activeAttempt: {
