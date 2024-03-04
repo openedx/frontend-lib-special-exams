@@ -24,6 +24,7 @@ Object {
       "software_download_url": "",
       "taking_as_proctored": false,
       "time_remaining_seconds": 1799.9,
+      "timer_ends": Any<String>,
       "total_time": "30 minutes",
     },
     "allowProctoringOptOut": false,
@@ -108,6 +109,7 @@ Object {
       "software_download_url": "",
       "taking_as_proctored": false,
       "time_remaining_seconds": 1799.9,
+      "timer_ends": Any<String>,
       "total_time": "30 minutes",
     },
     "allowProctoringOptOut": false,
@@ -201,6 +203,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;
@@ -396,6 +399,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;
@@ -415,6 +419,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;
@@ -434,6 +439,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;
@@ -453,6 +459,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;
