@@ -11,7 +11,7 @@ import {
   TIMER_REACHED_NULL,
 } from './events';
 
-/* give an extra 5 seconds where the timer holds at 00:00 before page refreshes */
+// Give an extra 5 seconds where the timer holds at 00:00 before page refreshes
 const GRACE_PERIOD_SECS = 5;
 const POLL_INTERVAL = 60;
 const TIME_LIMIT_CRITICAL_PCT = 0.05;
@@ -50,13 +50,13 @@ const TimerProvider = ({
   ).join(':');
 
   const pollExam = useCallback(() => {
-    // poll url may be null if this is an LTI exam
+    // Poll url may be null if this is an LTI exam.
     dispatch(pollAttempt(attempt.exam_started_poll_url));
   }, [attempt.exam_started_poll_url, dispatch]);
 
   const processTimeLeft = useCallback((secondsLeft) => {
     const emit = (signal) => {
-      // This prevents spamming
+      // This prevents spamming.
       if (lastSignal.current === signal) {
         return;
       }
@@ -107,12 +107,13 @@ const TimerProvider = ({
       const secondsLeft = Math.floor(remainingTime);
 
       setTimeState(getFormattedRemainingTime(secondsLeft));
-      // no polling during grace period
 
+      // No polling during grace period.
       if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
         pollExam();
       }
-      // if exam is proctored ping provider app
+
+      // If exam is proctored ping provider app.
       if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
         dispatch(pingAttempt(pingInterval, workerUrl));
       }
