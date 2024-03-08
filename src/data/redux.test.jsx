@@ -950,22 +950,16 @@ describe('Data layer integration tests', () => {
       // Reset history so we can get url at index 0 later
       axiosMock.resetHistory();
 
-      const attemptToPollURL = latestAttemptURL + '?content_id=block-v1%3Atest%2Bspecial%2Bexam%2Btype%40sequential%2Bblock%40abc123';
+      const attemptToPollURL = `${latestAttemptURL}?content_id=block-v1%3Atest%2Bspecial%2Bexam%2Btype%40sequential%2Bblock%40abc123`;
       axiosMock.onGet(attemptToPollURL).reply(200, {
         time_remaining_seconds: 1739.9,
         accessibility_time_string: 'you have 29 minutes remaining',
         attempt_status: ExamStatus.STARTED,
       });
-      
-      // ADD TEST HERE
+
+      // Make sure the thunk eventually calls the right URL
       await executeThunk(thunks.pollAttempt(null, exam.content_id), store.dispatch, store.getState);
       const state = store.getState();
-
-
-
-      // the api request
-      console.log("attemptToPollURL:", attemptToPollURL);
-      console.log(axiosMock.history.get);
       expect(axiosMock.history.get[0].url).toEqual(attemptToPollURL);
       expect(state.specialExams.activeAttempt).toMatchSnapshot();
     });

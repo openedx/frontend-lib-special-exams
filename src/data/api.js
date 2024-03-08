@@ -19,7 +19,6 @@ async function fetchLatestExamAttempt(sequenceId) {
   // even if it is not 'active' (timer is not running)
   const attemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   attemptUrl.searchParams.append('content_id', sequenceId);
-  console.log("attemptUrl:", attemptUrl.href);
   const response = await getAuthenticatedHttpClient().get(attemptUrl.href);
   return response.data;
 }
