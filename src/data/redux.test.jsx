@@ -945,7 +945,7 @@ describe('Data layer integration tests', () => {
       });
     });
 
-    it.only('Should poll and update active attempt with new proctoring backend', async () => {
+    it('Should poll and update active attempt with new proctoring backend', async () => {
       await initWithExamAttempt(exam, attempt);
       // Reset history so we can get url at index 0 later
       axiosMock.resetHistory();
@@ -961,7 +961,11 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.pollAttempt(null, exam.content_id), store.dispatch, store.getState);
       const state = store.getState();
       expect(axiosMock.history.get[0].url).toEqual(attemptToPollURL);
-      expect(state.specialExams.activeAttempt).toMatchSnapshot();
+      expect(state.specialExams.activeAttempt).toMatchSnapshot({
+        // Allow for the timer_ends value to be any string, as it varies by milliseconds depending
+        // on how fast this test runs just about every time.
+        timer_ends: expect.any(String),
+      });
     });
 
     describe('pollAttempt api called directly', () => {
