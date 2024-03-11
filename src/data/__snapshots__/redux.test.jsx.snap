@@ -188,7 +188,7 @@ Object {
 }
 `;
 
-exports[`Data layer integration tests Test pollAttempt Should poll and update active attempt 1`] = `
+exports[`Data layer integration tests Test pollAttempt Should poll and update active attempt with new proctoring backend 1`] = `
 Object {
   "attempt_code": "",
   "attempt_id": 1,
@@ -202,13 +202,13 @@ Object {
   "in_timed_exam": true,
   "software_download_url": "",
   "taking_as_proctored": false,
-  "time_remaining_seconds": 1799.9,
+  "time_remaining_seconds": 1739.9,
   "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;
 
-exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt 1`] = `
+exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt with legacy proctoring backend 1`] = `
 Object {
   "attempt_code": "",
   "attempt_id": 1,
@@ -227,7 +227,7 @@ Object {
 }
 `;
 
-exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt 2`] = `
+exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt with legacy proctoring backend 2`] = `
 Object {
   "attempt_code": "",
   "attempt_id": 1,

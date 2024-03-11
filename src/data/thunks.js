@@ -271,7 +271,10 @@ export function pollAttempt(url) {
     }
 
     try {
-      const data = await pollExamAttempt(url);
+      // TODO: make sure sequenceId pulled here is correct both in-exam-sequence and in outline
+      // test w/ timed exam
+      const { exam } = getState().specialExams;
+      const data = await pollExamAttempt(url, exam.content_id);
       if (!data) {
         throw new Error('Poll Exam failed to fetch.');
       }
