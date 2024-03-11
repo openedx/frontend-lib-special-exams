@@ -203,6 +203,7 @@ Object {
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1739.9,
+  "timer_ends": "2024-03-11T17:31:55.297Z",
   "total_time": "30 minutes",
 }
 `;
