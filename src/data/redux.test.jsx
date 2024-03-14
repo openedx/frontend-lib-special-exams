@@ -53,6 +53,20 @@ describe('Data layer integration tests', () => {
     await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
   };
 
+  // This is a shorthand to check snapshots with an asymmetric matcher every time.
+  const expectSpecialExamAttemptToMatchSnapshot = (data) => expect(data).toMatchSnapshot({
+    timer_ends: expect.any(String),
+  });
+
+  // This is a shorthand to check snapshots with an asymmetric matcher every time.
+  const expectStoreToMatchSnapshot = (data) => expect(data).toMatchSnapshot({
+    specialExams: {
+      activeAttempt: {
+        timer_ends: expect.any(String),
+      },
+    },
+  });
+
   beforeEach(() => {
     initializeTestConfig();
     windowSpy = jest.spyOn(window, 'window', 'get');
@@ -81,7 +95,7 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
 
       const state = store.getState();
-      expect(state).toMatchSnapshot();
+      expectStoreToMatchSnapshot(state);
     });
 
     it('Should translate total time correctly', async () => {
@@ -216,7 +230,7 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.specialExams.activeAttempt).toMatchSnapshot();
+        expectSpecialExamAttemptToMatchSnapshot(state.specialExams.activeAttempt);
         expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
           exam_id: exam.id,
           start_clock: 'true',
@@ -233,7 +247,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.startTimedExam(), store.dispatch, store.getState);
       const state = store.getState();
-      expect(state.specialExams.activeAttempt).toMatchSnapshot();
+      expectSpecialExamAttemptToMatchSnapshot(state.specialExams.activeAttempt);
       expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
         exam_id: exam.id,
         start_clock: 'true',
@@ -758,7 +772,7 @@ describe('Data layer integration tests', () => {
 
         await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
         state = store.getState();
-        expect(state.specialExams.activeAttempt).toMatchSnapshot();
+        expectSpecialExamAttemptToMatchSnapshot(state.specialExams.activeAttempt);
       });
     });
 
@@ -773,7 +787,7 @@ describe('Data layer integration tests', () => {
 
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
       state = store.getState();
-      expect(state.specialExams.activeAttempt).toMatchSnapshot();
+      expectSpecialExamAttemptToMatchSnapshot(state.specialExams.activeAttempt);
     });
 
     it('Should fail to fetch if no exam id', async () => {
@@ -911,7 +925,7 @@ describe('Data layer integration tests', () => {
         mergeConfig({ EXAMS_BASE_URL: null });
       });
 
-      it('Should poll and update active attempt', async () => {
+      it('Should poll and update active attempt with legacy proctoring backend', async () => {
         axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: attempt });
         axiosMock.onGet(pollExamAttemptUrl).reply(200, {
           time_remaining_seconds: 1739.9,
@@ -931,22 +945,31 @@ describe('Data layer integration tests', () => {
       });
     });
 
-    it('Should poll and update active attempt', async () => {
+    it('Should poll and update active attempt with new proctoring backend', async () => {
       await initWithExamAttempt(exam, attempt);
+      // Reset history so we can get url at index 0 later
+      axiosMock.resetHistory();
 
-      axiosMock.onGet(latestAttemptURL).reply(200, {
+      const attemptToPollURL = `${latestAttemptURL}?content_id=block-v1%3Atest%2Bspecial%2Bexam%2Btype%40sequential%2Bblock%40abc123`;
+      axiosMock.onGet(attemptToPollURL).reply(200, {
         time_remaining_seconds: 1739.9,
         accessibility_time_string: 'you have 29 minutes remaining',
         attempt_status: ExamStatus.STARTED,
       });
 
-      await executeThunk(thunks.pollAttempt(attempt.exam_started_poll_url), store.dispatch, store.getState);
+      // Make sure the thunk eventually calls the right URL
+      await executeThunk(thunks.pollAttempt(null, exam.content_id), store.dispatch, store.getState);
       const state = store.getState();
-      expect(state.specialExams.activeAttempt).toMatchSnapshot();
+      expect(axiosMock.history.get[0].url).toEqual(attemptToPollURL);
+      expect(state.specialExams.activeAttempt).toMatchSnapshot({
+        // Allow for the timer_ends value to be any string, as it varies by milliseconds depending
+        // on how fast this test runs just about every time.
+        timer_ends: expect.any(String),
+      });
     });
 
     describe('pollAttempt api called directly', () => {
-      // in the download view we call this function directly withough invoking the wrapping thunk
+      // in the download view we call this function directly without invoking the wrapping thunk
       it('should call pollUrl if one is provided', async () => {
         const pollExamAttemptUrl = `${getConfig().LMS_BASE_URL}${attempt.exam_started_poll_url}`;
         axiosMock.onGet(pollExamAttemptUrl).reply(200, {
@@ -1015,8 +1038,7 @@ describe('Data layer integration tests', () => {
         await executeThunk(thunks.getLatestAttemptData(courseId), store.dispatch);
 
         const state = store.getState();
-        expect(state)
-          .toMatchSnapshot();
+        expectStoreToMatchSnapshot(state);
       });
     });
 
