@@ -271,8 +271,7 @@ export function pollAttempt(url) {
     }
 
     try {
-      // TODO: make sure sequenceId pulled here is correct both in-exam-sequence and in outline
-      // test w/ timed exam
+      // Why is this undefined in the course view? Let's see how it's called there...
       const { exam } = getState().specialExams;
       const data = await pollExamAttempt(url, exam.content_id);
       if (!data) {
