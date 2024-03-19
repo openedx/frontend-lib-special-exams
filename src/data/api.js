@@ -18,6 +18,17 @@ async function fetchActiveAttempt(sequenceId = null) {
   return activeAttemptResponse.data;
 }
 
+async function fetchAttemptForExamSequnceId() {
+    // fetch 'active' (timer is running) attempt if it exists
+    const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
+    const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
+    // the calls the same endpoint as fetchActiveAttempt but it behaves slightly different
+    // with an exam's section specified. The attempt for that requested exam is always returned
+    // even if it is not 'active' (timer is not running)
+    activeAttemptUrl.searchParams.append('content_id', sequenceId);
+    return activeAttemptResponse.data;
+}
+
 export async function fetchExamAttemptsData(courseId, sequenceId) {
   let data;
   if (!getConfig().EXAMS_BASE_URL) {

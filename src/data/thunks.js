@@ -273,6 +273,23 @@ export function pollAttempt(url) {
     try {
       // Why is this undefined in the course view? Let's see how it's called there...
       const { exam } = getState().specialExams;
+
+      // The content_id might accidentally come from another open sequence that is ALSO an exam
+      // but not the current exam
+      // How do we ensure the content_id is coming from the active_attempt?
+
+      // Need sequence id when there are multiple exams in a course so we don't get the attempt for another exam.
+      // Maybe we don't need sequence ID if we have an active attempts
+
+      // We just need to make sure we have the right content_id. Maybe we can get it from the
+      // attempt itself or from some other place???
+
+      // As a nuke option is don't call this outside sequence, wait until you get back to it???
+      // don't make this a situation that this is never called
+
+      // 1. Try and see what's in the attempt obj, see what can match the active attempt/current sequence id
+      // 2. Test edge cases in that doc
+      console.log({currentAttempt});
       const data = await pollExamAttempt(url, exam.content_id);
       if (!data) {
         throw new Error('Poll Exam failed to fetch.');
