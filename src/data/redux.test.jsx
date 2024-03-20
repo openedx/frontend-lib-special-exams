@@ -950,7 +950,6 @@ describe('Data layer integration tests', () => {
       // Reset history so we can get url at index 0 later
       axiosMock.resetHistory();
 
-      // FIXME: Have sequenceId initialized
       const attemptToPollURL = `${latestAttemptURL}?content_id=block-v1%3Atest%2Bspecial%2Bexam%2Btype%40sequential%2Bblock%40abc123`;
       axiosMock.onGet(attemptToPollURL).reply(200, {
         time_remaining_seconds: 1739.9,
@@ -1005,7 +1004,6 @@ describe('Data layer integration tests', () => {
 
   describe('Test pingAttempt', () => {
     it('Should send attempt to error state on ping failure', async () => {
-      // FIXME:
       const startedWorkerAttempt = Factory.build('attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' });
       const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
       await initWithExamAttempt(startedWorkerExam, startedWorkerAttempt);
@@ -1034,7 +1032,6 @@ describe('Data layer integration tests', () => {
       });
 
       it('Should get, and save latest attempt', async () => {
-        // FIXME:
         const attemptDataUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}?is_learning_mfe=true`;
         axiosMock.onGet(attemptDataUrl)
           .reply(200, {
