@@ -5,28 +5,21 @@ import { generateHumanizedTime } from '../helpers';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 
-async function fetchActiveAttempt(sequenceId = null) {
+async function fetchActiveAttempt() {
   // fetch 'active' (timer is running) attempt if it exists
   const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
-  if (sequenceId) {
-    // the calls the same endpoint as fetchActiveAttempt but it behaves slightly different
-    // with an exam's section specified. The attempt for that requested exam is always returned
-    // even if it is not 'active' (timer is not running)
-    activeAttemptUrl.searchParams.append('content_id', sequenceId);
-  }
   return activeAttemptResponse.data;
 }
 
-async function fetchAttemptForExamSequnceId() {
-    // fetch 'active' (timer is running) attempt if it exists
-    const activeAttemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
-    const activeAttemptResponse = await getAuthenticatedHttpClient().get(activeAttemptUrl.href);
-    // the calls the same endpoint as fetchActiveAttempt but it behaves slightly different
-    // with an exam's section specified. The attempt for that requested exam is always returned
-    // even if it is not 'active' (timer is not running)
-    activeAttemptUrl.searchParams.append('content_id', sequenceId);
-    return activeAttemptResponse.data;
+async function fetchAttemptForExamSequnceId(sequenceId) {
+  const attemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
+  // the calls the same endpoint as fetchActiveAttempt but it behaves slightly different
+  // with an exam's section specified. The attempt for that requested exam is always returned
+  // even if it is not 'active' (timer is not running)
+  attemptUrl.searchParams.append('content_id', sequenceId);
+  const attemptResponse = await getAuthenticatedHttpClient().get(attemptUrl.href);
+  return attemptResponse.data;
 }
 
 export async function fetchExamAttemptsData(courseId, sequenceId) {
@@ -85,16 +78,20 @@ export async function pollExamAttempt(pollUrl, sequenceId) {
     const urlResponse = await getAuthenticatedHttpClient().get(edxProctoringURL.href);
     data = urlResponse.data;
 
-  // sites configured with edx-exams expect sequenceId if pollUrl is not set
-  // and the learner is viewing the exam sequence
-  // (the exam sequence is not consumed outside the exam sequence, e.g. in the course view)
+    return data;
+
+  // exams configured with edx-exams expect sequenceId if pollUrl is not set when viewing the exam sequence
+  } if (sequenceId) {
+    data = await fetchAttemptForExamSequnceId(sequenceId);
+  // outside the exam sequence, we can't get the sequenceId easily, so here we just call the last active attempt
   } else {
-    data = await fetchActiveAttempt(sequenceId);
-    // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
-    if (data.attempt_status) {
-      data.status = data.attempt_status;
-      delete data.attempt_status;
-    }
+    data = await fetchActiveAttempt();
+  }
+
+  // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
+  if (data.attempt_status) {
+    data.status = data.attempt_status;
+    delete data.attempt_status;
   }
 
   return data;

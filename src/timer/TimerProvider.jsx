@@ -142,8 +142,7 @@ const TimerProvider = ({
       clearInterval(timerRef.current);
       timerRef.current = null;
     };
-  }, [
-    timerEnds,
+  }, [ // eslint-disable-line react-hooks/exhaustive-deps
     pingInterval,
     workerUrl,
     processTimeLeft,

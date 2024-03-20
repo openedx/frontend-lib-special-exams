@@ -950,6 +950,7 @@ describe('Data layer integration tests', () => {
       // Reset history so we can get url at index 0 later
       axiosMock.resetHistory();
 
+      // FIXME: Have sequenceId initialized
       const attemptToPollURL = `${latestAttemptURL}?content_id=block-v1%3Atest%2Bspecial%2Bexam%2Btype%40sequential%2Bblock%40abc123`;
       axiosMock.onGet(attemptToPollURL).reply(200, {
         time_remaining_seconds: 1739.9,
@@ -990,16 +991,21 @@ describe('Data layer integration tests', () => {
         await api.pollExamAttempt(null, sequenceId);
         expect(axiosMock.history.get[0].url).toEqual(expectedUrl);
       });
-      test('pollUrl is required if edx-exams in not enabled, an error should be logged', async () => {
-        mergeConfig({ EXAMS_BASE_URL: null });
-        api.pollExamAttempt(null, null);
-        expect(loggingService.logError).toHaveBeenCalled();
+      test('should call the latest attempt w/o a sequence if if neither a pollUrl or sequence id is provided', async () => {
+        const expectedUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+        axiosMock.onGet(expectedUrl).reply(200, {
+          time_remaining_seconds: 1739.9,
+          status: ExamStatus.STARTED,
+        });
+        await api.pollExamAttempt(null);
+        expect(axiosMock.history.get[0].url).toEqual(expectedUrl);
       });
     });
   });
 
   describe('Test pingAttempt', () => {
     it('Should send attempt to error state on ping failure', async () => {
+      // FIXME:
       const startedWorkerAttempt = Factory.build('attempt', { attempt_status: ExamStatus.STARTED, desktop_application_js_url: 'http://proctortest.com' });
       const startedWorkerExam = Factory.build('exam', { attempt: startedWorkerAttempt });
       await initWithExamAttempt(startedWorkerExam, startedWorkerAttempt);
@@ -1028,6 +1034,7 @@ describe('Data layer integration tests', () => {
       });
 
       it('Should get, and save latest attempt', async () => {
+        // FIXME:
         const attemptDataUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}?is_learning_mfe=true`;
         axiosMock.onGet(attemptDataUrl)
           .reply(200, {
