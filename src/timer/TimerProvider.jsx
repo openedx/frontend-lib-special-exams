@@ -95,15 +95,20 @@ const TimerProvider = ({
     timeLimitMins,
   ]);
 
+  // Set deadline as a reference to timerEnds that updates when it changes
+  const deadline = useRef(new Date(timerEnds));
+  useEffect(() => {
+    deadline.current = new Date(timerEnds);
+  }, [timerEnds]);
+
   useEffect(() => {
     const timerRef = { current: true };
     let timerTick = -1;
-    const deadline = new Date(timerEnds);
 
     const ticker = () => {
       timerTick++;
       const now = Date.now();
-      const remainingTime = (deadline.getTime() - now) / 1000;
+      const remainingTime = (deadline.current.getTime() - now) / 1000;
       const secondsLeft = Math.floor(remainingTime);
 
       setTimeState(getFormattedRemainingTime(secondsLeft));
@@ -142,7 +147,7 @@ const TimerProvider = ({
       clearInterval(timerRef.current);
       timerRef.current = null;
     };
-  }, [ // eslint-disable-line react-hooks/exhaustive-deps
+  }, [
     pingInterval,
     workerUrl,
     processTimeLeft,
