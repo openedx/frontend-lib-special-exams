@@ -990,10 +990,14 @@ describe('Data layer integration tests', () => {
         await api.pollExamAttempt(null, sequenceId);
         expect(axiosMock.history.get[0].url).toEqual(expectedUrl);
       });
-      test('pollUrl is required if edx-exams in not enabled, an error should be logged', async () => {
-        mergeConfig({ EXAMS_BASE_URL: null });
-        api.pollExamAttempt(null, null);
-        expect(loggingService.logError).toHaveBeenCalled();
+      test('should call the latest attempt w/o a sequence if if neither a pollUrl or sequence id is provided', async () => {
+        const expectedUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+        axiosMock.onGet(expectedUrl).reply(200, {
+          time_remaining_seconds: 1739.9,
+          status: ExamStatus.STARTED,
+        });
+        await api.pollExamAttempt(null);
+        expect(axiosMock.history.get[0].url).toEqual(expectedUrl);
       });
     });
   });
