@@ -26,6 +26,7 @@ class MockLoggingService {
 
 export function initializeTestConfig() {
   mergeConfig({
+    ...process.env,
     EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
   });
 }

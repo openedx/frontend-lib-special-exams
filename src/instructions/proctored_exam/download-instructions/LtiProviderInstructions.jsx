@@ -7,7 +7,7 @@ const LtiProviderExamInstructions = ({
   providerName, supportEmail, supportPhone, supportURL,
 }) => {
   const supportURLHyperlink = (chunks) => (
-    <Hyperlink destination={chunks} target="_blank">
+    <Hyperlink destination={chunks[0]} target="_blank">
       {chunks}
     </Hyperlink>
   );

@@ -31,7 +31,7 @@ const ErrorProctoredExamInstructions = () => {
         defaultMessage={'A system error has occurred with your proctored exam. '
         + 'Please reach out to {supportLink} for assistance, and return to '
         + 'the exam once you receive further instructions.'}
-        values={{ supportLink: <Hyperlink href={contactUsUrl} target="_blank">{platformName} Support</Hyperlink> }}
+        values={{ supportLink: <Hyperlink destination={contactUsUrl} target="_blank">{platformName} Support</Hyperlink> }}
       />
     );
   };

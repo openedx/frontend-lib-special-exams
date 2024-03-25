@@ -8,6 +8,8 @@ const WarningModal = ({
   <ModalDialog
     isOpen={isOpen}
     hasCloseButton={false}
+    title={title}
+    onClose={handleClose}
   >
 
     <ModalDialog.Header>
