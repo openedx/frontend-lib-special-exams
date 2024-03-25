@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button, Container } from '@edx/paragon';
+import { Button, Container } from '@openedx/paragon';
 import Footer from './Footer';
 
 import { skipProctoringExam } from '../../data';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Container } from '@edx/paragon';
+import { Container } from '@openedx/paragon';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import PendingPrerequisitesProctoredExamInstructions from './Pending';
 import FailedPrerequisitesProctoredExamInstructions from './Failed';

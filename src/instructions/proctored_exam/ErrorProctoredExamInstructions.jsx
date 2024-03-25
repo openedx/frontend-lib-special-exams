@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { getConfig } from '@edx/frontend-platform';
-import { Hyperlink, MailtoLink } from '@edx/paragon';
+import { Hyperlink, MailtoLink } from '@openedx/paragon';
 
 const ErrorProctoredExamInstructions = () => {
   const { proctoring_escalation_email: proctoringEscalationEmail } = useSelector(

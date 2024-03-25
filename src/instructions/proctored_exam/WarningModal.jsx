@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { ActionRow, ModalDialog, Button } from '@edx/paragon';
+import { ActionRow, ModalDialog, Button } from '@openedx/paragon';
 
 const WarningModal = ({
   isOpen, handleClose, title, body,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button, MailtoLink, useToggle } from '@edx/paragon';
+import { Button, MailtoLink, useToggle } from '@openedx/paragon';
 
 import { resetExam } from '../../data';
 

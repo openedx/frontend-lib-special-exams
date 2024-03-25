@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Container } from '@edx/paragon';
+import { Button, Container } from '@openedx/paragon';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import Emitter from '../data/emitter';
 import { ExamType } from '../constants';

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage, injectIntl, intlShape } from '@edx/frontend-platform/i18n';
-import { Container } from '@edx/paragon';
+import { Container } from '@openedx/paragon';
 import { ExamStatus } from '../../../constants';
 import { getExamAttemptsData } from '../../../data';
 import WarningModal from '../WarningModal';
