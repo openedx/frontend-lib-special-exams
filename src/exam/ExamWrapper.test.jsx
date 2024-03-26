@@ -29,8 +29,9 @@ describe('SequenceExamWrapper', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     store = initializeTestStore({
-      specialExams: Factory.build('specialExams'),
-      isLoading: false,
+      specialExams: Factory.build('specialExams', {
+        isLoading: false,
+      }),
     });
   });
 

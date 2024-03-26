@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FormattedMessage, injectIntl } from '@edx/frontend-platform/i18n';
-import { Button, Alert, useToggle } from '@edx/paragon';
+import { Button, Alert, useToggle } from '@openedx/paragon';
 import CountDownTimer from './CountDownTimer';
 import { ExamStatus, IS_STARTED_STATUS } from '../constants';
 import TimerProvider from './TimerProvider';

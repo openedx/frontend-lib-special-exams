@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import { Icon, useToggle } from '@edx/paragon';
-import { Visibility, VisibilityOff } from '@edx/paragon/icons';
+import { Icon, useToggle } from '@openedx/paragon';
+import { Visibility, VisibilityOff } from '@openedx/paragon/icons';
 import { injectIntl } from '@edx/frontend-platform/i18n';
 import { TimerContext } from './TimerProvider';
 import { generateHumanizedTime } from '../helpers';

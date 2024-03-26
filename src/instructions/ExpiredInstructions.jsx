@@ -1,6 +1,6 @@
 import React from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Container } from '@edx/paragon';
+import { Container } from '@openedx/paragon';
 
 const ExpiredExamInstructions = () => (
   <Container className="border py-5 mb-4 bg-warning-100">

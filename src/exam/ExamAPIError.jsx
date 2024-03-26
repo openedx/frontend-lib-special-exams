@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { getConfig } from '@edx/frontend-platform';
-import { Alert, Hyperlink, Icon } from '@edx/paragon';
-import { Info } from '@edx/paragon/icons';
+import { Alert, Hyperlink, Icon } from '@openedx/paragon';
+import { Info } from '@openedx/paragon/icons';
 import { injectIntl, intlShape, FormattedMessage } from '@edx/frontend-platform/i18n';
 import messages from './messages';
 

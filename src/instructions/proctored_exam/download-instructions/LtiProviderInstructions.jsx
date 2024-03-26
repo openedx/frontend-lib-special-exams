@@ -1,13 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Hyperlink } from '@edx/paragon';
+import { Hyperlink } from '@openedx/paragon';
 
 const LtiProviderExamInstructions = ({
   providerName, supportEmail, supportPhone, supportURL,
 }) => {
   const supportURLHyperlink = (chunks) => (
-    <Hyperlink destination={chunks} target="_blank">
+    <Hyperlink destination={chunks[0]} target="_blank">
       {chunks}
     </Hyperlink>
   );

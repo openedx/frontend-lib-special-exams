@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { getConfig } from '@edx/frontend-platform';
-import { Button, Container, Spinner } from '@edx/paragon';
+import { Button, Container, Spinner } from '@openedx/paragon';
 import Footer from './Footer';
 
 import { getExamReviewPolicy, startProctoredExam } from '../../data';

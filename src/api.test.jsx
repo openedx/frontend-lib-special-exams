@@ -1,7 +1,7 @@
 import { Factory } from 'rosie';
 
 import { useExamAccessToken, useFetchExamAccessToken, useIsExam } from './api';
-import { initializeTestStore, render } from './setupTest';
+import { initializeMockApp, initializeTestStore, render } from './setupTest';
 
 /**
  * Hooks must be run in the scope of a component. To run the hook, wrap it in a test component whose sole
@@ -25,6 +25,7 @@ describe('External API integration tests', () => {
     let store;
 
     beforeAll(() => {
+      initializeMockApp();
       const mockExam = Factory.build('exam', { attempt: Factory.build('attempt') });
       const mockToken = Factory.build('examAccessToken');
       const mockState = { specialExams: { exam: mockExam, examAccessToken: mockToken } };
