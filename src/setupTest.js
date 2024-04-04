@@ -10,7 +10,7 @@ import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
 import { render as rtlRender } from '@testing-library/react';
 import { configureStore } from '@reduxjs/toolkit';
-import { IntlProvider } from 'react-intl';
+import { IntlProvider } from '@edx/frontend-platform/i18n';
 import examReducer from './data/slice';
 
 window.getComputedStyle = jest.fn(() => ({
@@ -26,6 +26,7 @@ class MockLoggingService {
 
 export function initializeTestConfig() {
   mergeConfig({
+    ...process.env,
     EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
   });
 }
@@ -45,16 +46,16 @@ export function initializeMockApp() {
 
 let globalStore;
 
-export async function initializeTestStore(preloadedState = null, overrideStore = true) {
+export function initializeTestStore(preloadedState = null, overrideStore = true) {
   let store = configureStore({
     reducer: {
-      examState: examReducer,
+      specialExams: examReducer,
     },
   });
   if (preloadedState) {
     store = configureStore({
       reducer: {
-        examState: examReducer,
+        specialExams: examReducer,
       },
       preloadedState,
     });

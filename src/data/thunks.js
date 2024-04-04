@@ -101,7 +101,7 @@ export function getLatestAttemptData(courseId) {
 
 export function getProctoringSettings() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     if (!exam.id) {
       logError('Failed to get exam settings. No exam id.');
       handleAPIError(
@@ -124,7 +124,7 @@ export function examRequiresAccessToken() {
     if (!getConfig().EXAMS_BASE_URL) {
       return;
     }
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     if (!exam.id) {
       logError('Failed to get exam access token. No exam id.');
       return;
@@ -143,7 +143,7 @@ export function examRequiresAccessToken() {
  */
 export function startTimedExam() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     if (!exam.id) {
       logError('Failed to start exam. No exam id.');
       handleAPIError(
@@ -162,7 +162,7 @@ export function startTimedExam() {
 
 export function createProctoredExamAttempt() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     if (!exam.id) {
       logError('Failed to create exam attempt. No exam id.');
       return;
@@ -180,7 +180,7 @@ export function createProctoredExamAttempt() {
  */
 export function startProctoredExam() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     const { attempt } = exam || {};
     if (!exam.id) {
       logError('Failed to start proctored exam. No exam id.');
@@ -231,7 +231,7 @@ export function startProctoredExam() {
 
 export function skipProctoringExam() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     if (!exam.id) {
       logError('Failed to skip proctored exam. No exam id.');
       return;
@@ -260,7 +260,7 @@ export function skipProctoringExam() {
  */
 export function pollAttempt(url) {
   return async (dispatch, getState) => {
-    const currentAttempt = getState().examState.activeAttempt;
+    const currentAttempt = getState().specialExams.activeAttempt;
 
     // If the learner is in a state where they've finished the exam
     // and the attempt can be submitted (i.e. they are "ready_to_submit"),
@@ -271,7 +271,11 @@ export function pollAttempt(url) {
     }
 
     try {
-      const data = await pollExamAttempt(url);
+      const { exam } = getState().specialExams;
+      const data = await pollExamAttempt(url, exam.content_id);
+      if (!data) {
+        throw new Error('Poll Exam failed to fetch.');
+      }
       const updatedAttempt = {
         ...currentAttempt,
         time_remaining_seconds: data.time_remaining_seconds,
@@ -291,7 +295,7 @@ export function pollAttempt(url) {
 
 export function stopExam() {
   return async (dispatch, getState) => {
-    const { exam, activeAttempt } = getState().examState;
+    const { exam, activeAttempt } = getState().specialExams;
 
     if (!activeAttempt) {
       logError('Failed to stop exam. No active attempt.');
@@ -323,7 +327,7 @@ export function stopExam() {
 
 export function continueExam() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     const attemptId = exam.attempt.attempt_id;
     const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     if (!attemptId) {
@@ -344,7 +348,7 @@ export function continueExam() {
 
 export function resetExam() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     const attemptId = exam.attempt.attempt_id;
     const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     if (!attemptId) {
@@ -361,7 +365,7 @@ export function resetExam() {
 
 export function submitExam() {
   return async (dispatch, getState) => {
-    const { exam, activeAttempt } = getState().examState;
+    const { exam, activeAttempt } = getState().specialExams;
     const { desktop_application_js_url: workerUrl, external_id: attemptExternalId } = activeAttempt || {};
     const useWorker = window.Worker && activeAttempt && workerUrl;
 
@@ -409,7 +413,7 @@ export function submitExam() {
 
 export function expireExam() {
   return async (dispatch, getState) => {
-    const { exam, activeAttempt } = getState().examState;
+    const { exam, activeAttempt } = getState().specialExams;
     const {
       desktop_application_js_url: workerUrl,
       attempt_id: attemptId,
@@ -452,7 +456,8 @@ export function expireExam() {
  */
 export function pingAttempt(timeoutInSeconds, workerUrl) {
   return async (dispatch, getState) => {
-    const { exam, activeAttempt } = getState().examState;
+    const { exam, activeAttempt } = getState().specialExams;
+    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     await pingApplication(timeoutInSeconds, activeAttempt.external_id, workerUrl)
       .catch(async (error) => {
         const message = error?.message || 'Worker failed to respond.';
@@ -473,14 +478,17 @@ export function pingAttempt(timeoutInSeconds, workerUrl) {
 
         // eslint-disable-next-line function-paren-newline
         await updateAttemptAfter(
-          exam.course_id, exam.content_id, endExamWithFailure(activeAttempt.attempt_id, message))(dispatch);
+          exam.course_id,
+          exam.content_id,
+          endExamWithFailure(activeAttempt.attempt_id, message, useLegacyAttemptAPI),
+        )(dispatch);
       });
   };
 }
 
 export function startProctoringSoftwareDownload() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     const attemptId = exam.attempt.attempt_id;
     const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     if (!attemptId) {
@@ -501,7 +509,7 @@ export function startProctoringSoftwareDownload() {
 
 export function getExamReviewPolicy() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
     if (!exam.id) {
       logError('Failed to fetch exam review policy. No exam id.');
       handleAPIError(
@@ -536,7 +544,8 @@ export function getAllowProctoringOptOut(allowProctoringOptOut) {
  */
 export function checkExamEntry() {
   return async (dispatch, getState) => {
-    const { exam } = getState().examState;
+    const { exam } = getState().specialExams;
+    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
     // Check only applies to LTI exams
     if (
       !exam?.attempt
@@ -552,7 +561,7 @@ export function checkExamEntry() {
         }),
       ]).catch(() => {
         dispatch(setApiError({ errorMsg: 'Something has gone wrong with your exam. Proctoring application not detected.' }));
-        updateAttemptAfter(exam.course_id, exam.content_id, endExamWithFailure(exam.attempt.attempt_id, 'exam reentry disallowed'))(dispatch);
+        updateAttemptAfter(exam.course_id, exam.content_id, endExamWithFailure(exam.attempt.attempt_id, 'exam reentry disallowed', useLegacyAttemptAPI))(dispatch);
       });
     }
   };

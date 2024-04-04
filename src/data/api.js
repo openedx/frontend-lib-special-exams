@@ -1,6 +1,5 @@
 import { getConfig } from '@edx/frontend-platform';
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import { logError } from '@edx/frontend-platform/logging';
 import { ExamAction } from '../constants';
 import { generateHumanizedTime } from '../helpers';
 
@@ -13,14 +12,14 @@ async function fetchActiveAttempt() {
   return activeAttemptResponse.data;
 }
 
-async function fetchLatestExamAttempt(sequenceId) {
+async function fetchAttemptForExamSequnceId(sequenceId) {
+  const attemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   // the calls the same endpoint as fetchActiveAttempt but it behaves slightly different
   // with an exam's section specified. The attempt for that requested exam is always returned
   // even if it is not 'active' (timer is not running)
-  const attemptUrl = new URL(`${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`);
   attemptUrl.searchParams.append('content_id', sequenceId);
-  const response = await getAuthenticatedHttpClient().get(attemptUrl.href);
-  return response.data;
+  const attemptResponse = await getAuthenticatedHttpClient().get(attemptUrl.href);
+  return attemptResponse.data;
 }
 
 export async function fetchExamAttemptsData(courseId, sequenceId) {
@@ -70,25 +69,31 @@ export async function fetchLatestAttempt(courseId) {
 
 export async function pollExamAttempt(pollUrl, sequenceId) {
   let data;
+
+  // sites configured with only edx-proctoring must have pollUrl set
   if (pollUrl) {
     const edxProctoringURL = new URL(
       `${getConfig().LMS_BASE_URL}${pollUrl}`,
     );
     const urlResponse = await getAuthenticatedHttpClient().get(edxProctoringURL.href);
     data = urlResponse.data;
-  } else if (sequenceId && getConfig().EXAMS_BASE_URL) {
-    data = await fetchLatestExamAttempt(sequenceId);
 
-    // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
-    if (data.attempt_status) {
-      data.status = data.attempt_status;
-      delete data.attempt_status;
-    }
+    return data;
+
+  // exams configured with edx-exams expect sequenceId if pollUrl is not set when viewing the exam sequence
+  } if (sequenceId) {
+    data = await fetchAttemptForExamSequnceId(sequenceId);
+  // outside the exam sequence, we can't get the sequenceId easily, so here we just call the last active attempt
   } else {
-    // sites configured with only edx-proctoring must have pollUrl set
-    // sites configured with edx-exams expect sequenceId if pollUrl is not set
-    logError(`pollExamAttempt recieved unexpected parameters pollUrl=${pollUrl} sequenceId=${sequenceId}`);
+    data = await fetchActiveAttempt();
   }
+
+  // Update dictionaries returned by edx-exams to have correct status key for legacy compatibility
+  if (data.attempt_status) {
+    data.status = data.attempt_status;
+    delete data.attempt_status;
+  }
+
   return data;
 }
 

@@ -1,11 +1,12 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useDispatch } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button } from '@edx/paragon';
-import ExamStateContext from '../../context';
+import { Button } from '@openedx/paragon';
+
+import { createProctoredExamAttempt } from '../../data';
 
 const EntrancePracticeExamInstructions = () => {
-  const state = useContext(ExamStateContext);
-  const { createProctoredExamAttempt } = state;
+  const dispatch = useDispatch();
 
   return (
     <>
@@ -26,7 +27,7 @@ const EntrancePracticeExamInstructions = () => {
         <Button
           data-testid="start-exam-button"
           variant="primary"
-          onClick={createProctoredExamAttempt}
+          onClick={() => dispatch(createProctoredExamAttempt())}
         >
           <FormattedMessage
             id="exam.EntrancePracticeExamInstructions.startExamButtonText"

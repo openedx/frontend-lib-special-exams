@@ -1,13 +1,14 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useDispatch } from 'react-redux';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button, Container } from '@edx/paragon';
-import ExamStateContext from '../../context';
+import { Button, Container } from '@openedx/paragon';
 import Footer from './Footer';
 
+import { skipProctoringExam } from '../../data';
+
 const SkipProctoredExamInstruction = ({ cancelSkipProctoredExam }) => {
-  const state = useContext(ExamStateContext);
-  const { skipProctoringExam } = state;
+  const dispatch = useDispatch();
 
   return (
     <>
@@ -30,7 +31,7 @@ const SkipProctoredExamInstruction = ({ cancelSkipProctoredExam }) => {
             data-testid="skip-confirm-exam-button"
             variant="primary"
             className="mr-3 mb-2"
-            onClick={skipProctoringExam}
+            onClick={() => dispatch(skipProctoringExam())}
           >
             <FormattedMessage
               id="exam.entranceExamInstructions.skipConfirmExamButtonText1"

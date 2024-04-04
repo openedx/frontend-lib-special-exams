@@ -8,9 +8,9 @@ exports[`Data layer integration tests Test examRequiresAccessToken Should get ex
 `;
 
 exports[`Data layer integration tests Test getExamAttemptsData Should get, and save exam and attempt 1`] = `
-{
-  "examState": {
-    "activeAttempt": {
+Object {
+  "specialExams": Object {
+    "activeAttempt": Object {
       "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "started",
@@ -24,6 +24,7 @@ exports[`Data layer integration tests Test getExamAttemptsData Should get, and s
       "software_download_url": "",
       "taking_as_proctored": false,
       "time_remaining_seconds": 1799.9,
+      "timer_ends": Any<String>,
       "total_time": "30 minutes",
     },
     "allowProctoringOptOut": false,
@@ -92,9 +93,9 @@ exports[`Data layer integration tests Test getExamAttemptsData Should get, and s
 `;
 
 exports[`Data layer integration tests Test getLatestAttemptData with edx-proctoring as a backend (no EXAMS_BASE_URL) Should get, and save latest attempt 1`] = `
-{
-  "examState": {
-    "activeAttempt": {
+Object {
+  "specialExams": Object {
+    "activeAttempt": Object {
       "attempt_code": "",
       "attempt_id": 1,
       "attempt_status": "started",
@@ -108,6 +109,7 @@ exports[`Data layer integration tests Test getLatestAttemptData with edx-proctor
       "software_download_url": "",
       "taking_as_proctored": false,
       "time_remaining_seconds": 1799.9,
+      "timer_ends": Any<String>,
       "total_time": "30 minutes",
     },
     "allowProctoringOptOut": false,
@@ -186,8 +188,28 @@ exports[`Data layer integration tests Test getProctoringSettings Test legacy URL
 }
 `;
 
-exports[`Data layer integration tests Test pollAttempt Should poll and update active attempt 1`] = `
-{
+exports[`Data layer integration tests Test pollAttempt Should poll and update active attempt with new proctoring backend 1`] = `
+Object {
+  "attempt_code": "",
+  "attempt_id": 1,
+  "attempt_status": "started",
+  "course_id": "course-v1:test+special+exam",
+  "desktop_application_js_url": "",
+  "exam_display_name": "a timed exam",
+  "exam_started_poll_url": "/api/edx_proctoring/v1/proctored_exam/attempt/1",
+  "exam_type": "timed",
+  "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
+  "in_timed_exam": true,
+  "software_download_url": "",
+  "taking_as_proctored": false,
+  "time_remaining_seconds": 1739.9,
+  "timer_ends": Any<String>,
+  "total_time": "30 minutes",
+}
+`;
+
+exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt with legacy proctoring backend 1`] = `
+Object {
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -205,27 +227,8 @@ exports[`Data layer integration tests Test pollAttempt Should poll and update ac
 }
 `;
 
-exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt 1`] = `
-{
-  "attempt_code": "",
-  "attempt_id": 1,
-  "attempt_status": "started",
-  "course_id": "course-v1:test+special+exam",
-  "desktop_application_js_url": "",
-  "exam_display_name": "a timed exam",
-  "exam_started_poll_url": "/api/edx_proctoring/v1/proctored_exam/attempt/1",
-  "exam_type": "timed",
-  "exam_url_path": "http://localhost:2000/course/course-v1:test+special+exam/block-v1:test+special+exam+type@sequential+block@abc123",
-  "in_timed_exam": true,
-  "software_download_url": "",
-  "taking_as_proctored": false,
-  "time_remaining_seconds": 1799.9,
-  "total_time": "30 minutes",
-}
-`;
-
-exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt 2`] = `
-{
+exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a backend (no EXAMS_BASE_URL) Should poll and update active attempt with legacy proctoring backend 2`] = `
+Object {
   "attempt_code": "",
   "attempt_id": 1,
   "attempt_status": "started",
@@ -244,8 +247,8 @@ exports[`Data layer integration tests Test pollAttempt with edx-proctoring as a 
 `;
 
 exports[`Data layer integration tests Test resetExam Should reset exam attempt 1`] = `
-{
-  "examState": {
+Object {
+  "specialExams": Object {
     "activeAttempt": null,
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
@@ -313,8 +316,8 @@ exports[`Data layer integration tests Test resetExam Should reset exam attempt 1
 `;
 
 exports[`Data layer integration tests Test resetExam with edx-proctoring as backend (no EXAMS_BASE_URL) Should reset exam attempt 1`] = `
-{
-  "examState": {
+Object {
+  "specialExams": Object {
     "activeAttempt": null,
     "allowProctoringOptOut": false,
     "apiErrorMsg": "",
@@ -396,6 +399,7 @@ exports[`Data layer integration tests Test startProctoredExam Should start exam,
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;
@@ -415,6 +419,7 @@ exports[`Data layer integration tests Test startProctoredExam with edx-proctorin
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;
@@ -434,6 +439,7 @@ exports[`Data layer integration tests Test startTimedExam Should create and star
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;
@@ -453,6 +459,7 @@ exports[`Data layer integration tests Test startTimedExam with edx-proctoring as
   "software_download_url": "",
   "taking_as_proctored": false,
   "time_remaining_seconds": 1799.9,
+  "timer_ends": Any<String>,
   "total_time": "30 minutes",
 }
 `;

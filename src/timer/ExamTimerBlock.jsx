@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
+import { useDispatch, useSelector } from 'react-redux';
 import { FormattedMessage, injectIntl } from '@edx/frontend-platform/i18n';
-import { Button, Alert, useToggle } from '@edx/paragon';
+import { Button, Alert, useToggle } from '@openedx/paragon';
 import CountDownTimer from './CountDownTimer';
 import { ExamStatus, IS_STARTED_STATUS } from '../constants';
 import TimerProvider from './TimerProvider';
-import { Emitter } from '../data';
+import {
+  Emitter, expireExam, stopExam, submitExam,
+} from '../data';
 import {
   TIMER_IS_CRITICALLY_LOW,
   TIMER_IS_LOW,
@@ -16,13 +18,12 @@ import {
 /**
  * Exam timer block component.
  */
-const ExamTimerBlock = injectIntl(({
-  attempt, stopExamAttempt, expireExamAttempt, pollExamAttempt,
-  intl, pingAttempt, submitExam,
-}) => {
+const ExamTimerBlock = injectIntl(({ intl }) => {
+  const { activeAttempt: attempt } = useSelector(state => state.specialExams);
   const [isShowMore, showMore, showLess] = useToggle(false);
   const [alertVariant, setAlertVariant] = useState('info');
   const [timeReachedNull, setTimeReachedNull] = useState(false);
+  const dispatch = useDispatch();
 
   if (!attempt || !IS_STARTED_STATUS(attempt.attempt_status)) {
     return null;
@@ -36,29 +37,29 @@ const ExamTimerBlock = injectIntl(({
     // if timer reached 00:00 submit exam right away
     // instead of trying to move user to ready_to_submit page
     if (timeReachedNull) {
-      submitExam();
+      dispatch(submitExam());
     } else {
-      stopExamAttempt();
+      dispatch(stopExam());
     }
   };
 
   useEffect(() => {
     Emitter.once(TIMER_IS_LOW, onLowTime);
     Emitter.once(TIMER_IS_CRITICALLY_LOW, onCriticalLowTime);
-    Emitter.once(TIMER_LIMIT_REACHED, expireExamAttempt);
+    Emitter.once(TIMER_LIMIT_REACHED, () => dispatch(expireExam()));
     Emitter.once(TIMER_REACHED_NULL, onTimeReachedNull);
 
     return () => {
       Emitter.off(TIMER_IS_LOW, onLowTime);
       Emitter.off(TIMER_IS_CRITICALLY_LOW, onCriticalLowTime);
-      Emitter.off(TIMER_LIMIT_REACHED, expireExamAttempt);
+      Emitter.off(TIMER_LIMIT_REACHED, () => dispatch(expireExam()));
       Emitter.off(TIMER_REACHED_NULL, onTimeReachedNull);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch]);
 
   return (
-    <TimerProvider attempt={attempt} pollHandler={pollExamAttempt} pingHandler={pingAttempt}>
+    <TimerProvider>
       <Alert variant={alertVariant}>
         <div
           className="d-flex justify-content-between flex-column flex-lg-row align-items-start"
@@ -132,15 +133,6 @@ const ExamTimerBlock = injectIntl(({
   );
 });
 
-ExamTimerBlock.propTypes = {
-  attempt: PropTypes.shape({
-    exam_url_path: PropTypes.string.isRequired,
-    exam_display_name: PropTypes.string.isRequired,
-    time_remaining_seconds: PropTypes.number.isRequired,
-  }),
-  stopExamAttempt: PropTypes.func.isRequired,
-  expireExamAttempt: PropTypes.func.isRequired,
-  submitExam: PropTypes.func.isRequired,
-};
+ExamTimerBlock.propTypes = {};
 
 export default ExamTimerBlock;

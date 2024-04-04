@@ -1,15 +1,15 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Container } from '@edx/paragon';
+import { Container } from '@openedx/paragon';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import ExamStateContext from '../../../context';
 import PendingPrerequisitesProctoredExamInstructions from './Pending';
 import FailedPrerequisitesProctoredExamInstructions from './Failed';
 import Footer from '../Footer';
 
 const PrerequisitesProctoredExamInstructions = ({ skipProctoredExam }) => {
-  const state = useContext(ExamStateContext);
-  const { exam, allowProctoringOptOut } = state;
+  const { exam, allowProctoringOptOut } = useSelector(state => state.specialExams);
+
   const { prerequisite_status: prerequisitesData } = exam;
   const { pending_prerequisites: pending, failed_prerequisites: failed } = prerequisitesData;
 

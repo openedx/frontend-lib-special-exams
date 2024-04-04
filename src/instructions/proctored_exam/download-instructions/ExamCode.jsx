@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { StatefulButton, Form } from '@edx/paragon';
-import { Check } from '@edx/paragon/icons';
+import { StatefulButton, Form } from '@openedx/paragon';
+import { Check } from '@openedx/paragon/icons';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 
 const ExamCode = ({ code }) => {

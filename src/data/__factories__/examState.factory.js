@@ -4,7 +4,7 @@ import './exam.factory';
 import './proctoringSettings.factory';
 import './examAccessToken.factory';
 
-Factory.define('examState')
+Factory.define('specialExams')
   .attr('proctoringSettings', Factory.build('proctoringSettings'))
   .attr('exam', Factory.build('exam'))
   .attr('examAccessToken', Factory.build('examAccessToken'))

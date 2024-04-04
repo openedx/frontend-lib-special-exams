@@ -1,13 +1,17 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { Button } from '@edx/paragon';
-import ExamStateContext from '../../context';
+import { Button } from '@openedx/paragon';
+
+import { createProctoredExamAttempt } from '../../data';
 import SkipProctoredExamButton from './SkipProctoredExamButton';
 
 const EntranceProctoredExamInstructions = ({ skipProctoredExam }) => {
-  const state = useContext(ExamStateContext);
-  const { exam, createProctoredExamAttempt, allowProctoringOptOut } = state;
+  const { exam, allowProctoringOptOut } = useSelector(state => state.specialExams);
+
+  const dispatch = useDispatch();
+
   const { attempt } = exam || {};
   const { total_time: totalTime = 0 } = attempt;
 
@@ -54,7 +58,7 @@ const EntranceProctoredExamInstructions = ({ skipProctoredExam }) => {
         <Button
           data-testid="start-exam-button"
           variant="primary"
-          onClick={createProctoredExamAttempt}
+          onClick={() => dispatch(createProctoredExamAttempt())}
         >
           <FormattedMessage
             id="exam.startExamInstructions.startExamButtonText"

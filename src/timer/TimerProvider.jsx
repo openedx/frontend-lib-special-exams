@@ -1,27 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, {
+  useEffect, useState, useCallback, useRef,
+} from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import { useToggle } from '@edx/paragon';
-import { Emitter } from '../data';
+import { Emitter, pollAttempt, pingAttempt } from '../data';
 import {
   TIMER_IS_CRITICALLY_LOW,
   TIMER_IS_LOW,
   TIMER_LIMIT_REACHED,
   TIMER_REACHED_NULL,
 } from './events';
-import { withExamStore } from '../hocs';
 
-/* give an extra 5 seconds where the timer holds at 00:00 before page refreshes */
+// Give an extra 5 seconds where the timer holds at 00:00 before page refreshes
 const GRACE_PERIOD_SECS = 5;
 const POLL_INTERVAL = 60;
 const TIME_LIMIT_CRITICAL_PCT = 0.05;
 const TIME_LIMIT_LOW_PCT = 0.2;
+const LIMIT = GRACE_PERIOD_SECS ? 0 - GRACE_PERIOD_SECS : 0;
 
 export const TimerContext = React.createContext({});
-
-const mapStateToProps = (state) => {
-  const { activeAttempt, exam } = state.examState;
-  return { attempt: activeAttempt, timeLimitMins: exam.time_limit_mins };
-};
 
 const getFormattedRemainingTime = (timeLeft) => ({
   hours: Math.floor(timeLeft / (60 * 60)),
@@ -29,20 +26,19 @@ const getFormattedRemainingTime = (timeLeft) => ({
   seconds: Math.floor(timeLeft % 60),
 });
 
-const TimerServiceProvider = ({
-  children, attempt, timeLimitMins, pollHandler, pingHandler,
+const TimerProvider = ({
+  children,
 }) => {
+  const { activeAttempt: attempt, exam } = useSelector(state => state.specialExams);
   const [timeState, setTimeState] = useState({});
-  const [limitReached, setLimitReached] = useToggle(false);
+  const lastSignal = useRef(null);
+  const dispatch = useDispatch();
+  const { time_limit_mins: timeLimitMins } = exam;
   const {
     desktop_application_js_url: workerUrl,
     ping_interval: pingInterval,
-    time_remaining_seconds: timeRemaining,
+    timer_ends: timerEnds,
   } = attempt;
-  const LIMIT = GRACE_PERIOD_SECS ? 0 - GRACE_PERIOD_SECS : 0;
-  const CRITICAL_LOW_TIME = timeLimitMins * 60 * TIME_LIMIT_CRITICAL_PCT;
-  const LOW_TIME = timeLimitMins * 60 * TIME_LIMIT_LOW_PCT;
-  let liveInterval = null;
 
   const getTimeString = () => Object.values(timeState).map(
     item => {
@@ -53,55 +49,111 @@ const TimerServiceProvider = ({
     },
   ).join(':');
 
-  const pollExam = () => {
-    // poll url may be null if this is an LTI exam
-    pollHandler(attempt.exam_started_poll_url);
-  };
+  const pollExam = useCallback(() => {
+    // Poll url may be null if this is an LTI exam.
+    dispatch(pollAttempt(attempt.exam_started_poll_url));
+  }, [attempt.exam_started_poll_url, dispatch]);
 
-  const processTimeLeft = (timer, secondsLeft) => {
-    if (secondsLeft <= CRITICAL_LOW_TIME) {
-      Emitter.emit(TIMER_IS_CRITICALLY_LOW);
-    } else if (secondsLeft <= LOW_TIME) {
-      Emitter.emit(TIMER_IS_LOW);
+  const processTimeLeft = useCallback((secondsLeft) => {
+    const emit = (signal) => {
+      // This prevents spamming.
+      if (lastSignal.current === signal) {
+        return;
+      }
+      Emitter.emit(signal);
+      lastSignal.current = signal;
+    };
+
+    const criticalLowTime = timeLimitMins * 60 * TIME_LIMIT_CRITICAL_PCT;
+    const lowTime = timeLimitMins * 60 * TIME_LIMIT_LOW_PCT;
+
+    if (secondsLeft <= LIMIT) {
+      emit(TIMER_LIMIT_REACHED);
+      return true; // Kill the timer.
     }
-    // Used to hide continue exam button on submit exam pages.
-    // Since TIME_LIMIT_REACHED is fired after the grace period we
-    // need to emit separate event when timer reaches 00:00
+
     if (secondsLeft <= 0) {
-      Emitter.emit(TIMER_REACHED_NULL);
+      // Used to hide continue exam button on submit exam pages.
+      // Since TIME_LIMIT_REACHED is fired after the grace period we
+      // need to emit separate event when timer reaches 00:00
+      emit(TIMER_REACHED_NULL);
+      return false;
     }
-    if (!limitReached && secondsLeft < LIMIT) {
-      clearInterval(timer);
-      setLimitReached();
-      Emitter.emit(TIMER_LIMIT_REACHED);
+
+    if (secondsLeft <= criticalLowTime) {
+      emit(TIMER_IS_CRITICALLY_LOW);
+      return false;
     }
-  };
+
+    if (secondsLeft <= lowTime) {
+      emit(TIMER_IS_LOW);
+      return false;
+    }
+
+    return false;
+  }, [
+    timeLimitMins,
+  ]);
+
+  // Set deadline as a reference to timerEnds that updates when it changes
+  const deadline = useRef(new Date(timerEnds));
+  useEffect(() => {
+    deadline.current = new Date(timerEnds);
+  }, [timerEnds]);
 
   useEffect(() => {
-    let timerTick = 0;
-    let secondsLeft = Math.floor(timeRemaining);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    liveInterval = setInterval(() => {
-      secondsLeft -= 1;
-      timerTick += 1;
+    const timerRef = { current: true };
+    let timerTick = -1;
+
+    const ticker = () => {
+      timerTick++;
+      const now = Date.now();
+      const remainingTime = (deadline.current.getTime() - now) / 1000;
+      const secondsLeft = Math.floor(remainingTime);
+
       setTimeState(getFormattedRemainingTime(secondsLeft));
-      processTimeLeft(liveInterval, secondsLeft);
-      // no polling during grace period
+
+      // No polling during grace period.
       if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
         pollExam();
       }
-      // if exam is proctored ping provider app
+
+      // If exam is proctored ping provider app.
       if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
-        pingHandler(pingInterval, workerUrl);
+        dispatch(pingAttempt(pingInterval, workerUrl));
       }
-    }, 1000);
-    return () => {
-      if (liveInterval) {
-        clearInterval(liveInterval);
-        liveInterval = null;
+
+      const killTimer = processTimeLeft(secondsLeft);
+      if (killTimer) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
       }
     };
-  }, [timeRemaining]);
+
+    // We delay the first ticker execution to give time for the emmiter
+    // subscribers to hook up, otherwise immediate emissions will miss their purpose.
+    setTimeout(() => {
+      ticker();
+
+      // If the timer handler is not true at this point, it means that it was stopped in the first run.
+      // So we don't need to start the timer.
+      if (timerRef.current === true) {
+        // After the first run, we start the ticker.
+        timerRef.current = setInterval(ticker, 1000);
+      }
+    });
+
+    return () => {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [
+    pingInterval,
+    workerUrl,
+    processTimeLeft,
+    pollExam,
+    dispatch,
+  ]);
 
   return (
     // eslint-disable-next-line react/jsx-no-constructed-context-values
@@ -115,24 +167,7 @@ const TimerServiceProvider = ({
   );
 };
 
-TimerServiceProvider.propTypes = {
-  attempt: PropTypes.shape({
-    time_remaining_seconds: PropTypes.number.isRequired,
-    exam_started_poll_url: PropTypes.string,
-    desktop_application_js_url: PropTypes.string,
-    ping_interval: PropTypes.number,
-    taking_as_proctored: PropTypes.bool,
-    attempt_status: PropTypes.string.isRequired,
-  }).isRequired,
-  timeLimitMins: PropTypes.number.isRequired,
+TimerProvider.propTypes = {
   children: PropTypes.element.isRequired,
-  pollHandler: PropTypes.func,
-  pingHandler: PropTypes.func,
 };
-
-TimerServiceProvider.defaultProps = {
-  pollHandler: () => {},
-  pingHandler: () => {},
-};
-
-export default withExamStore(TimerServiceProvider, mapStateToProps);
+export default TimerProvider;

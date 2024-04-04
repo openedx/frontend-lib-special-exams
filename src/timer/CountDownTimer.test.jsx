@@ -2,30 +2,35 @@ import React from 'react';
 import { waitFor } from '@testing-library/dom';
 import { ExamTimerBlock } from './index';
 import {
-  render, screen, initializeTestStore, fireEvent,
+  render, screen, initializeTestStore, fireEvent, act,
 } from '../setupTest';
-import examStore from '../data/store';
+import { stopExam, submitExam } from '../data';
+import { appendTimerEnd } from '../helpers';
 
-jest.mock('../data/store', () => ({
-  examStore: {},
-}));
+// We do a partial mock to avoid mocking out other exported values (e.g. the store and the Emitter).
+jest.mock('../data', () => {
+  const originalModule = jest.requireActual('../data');
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    stopExam: jest.fn(),
+    submitExam: jest.fn(),
+  };
+});
 
 describe('ExamTimerBlock', () => {
   let attempt;
   let store;
-  const stopExamAttempt = jest.fn();
-  const expireExamAttempt = () => { };
-  const pollAttempt = () => { };
-  const submitAttempt = jest.fn();
-  submitAttempt.mockReturnValue(jest.fn());
-  stopExamAttempt.mockReturnValue(jest.fn());
+  submitExam.mockReturnValue(jest.fn());
+  stopExam.mockReturnValue(jest.fn());
 
-  beforeEach(async () => {
+  beforeEach(() => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
-        activeAttempt: {
+        activeAttempt: appendTimerEnd({
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
@@ -33,39 +38,34 @@ describe('ExamTimerBlock', () => {
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
-        },
+        }),
         proctoringSettings: {},
         exam: {
           time_limit_mins: 2,
         },
       },
     };
-    store = await initializeTestStore(preloadedState);
-    examStore.getState = store.getState;
-    attempt = store.getState().examState.activeAttempt;
+    store = initializeTestStore(preloadedState);
+    attempt = store.getState().specialExams.activeAttempt;
   });
 
   it('renders items correctly', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
 
-    expect(screen.getByRole('alert')).toBeInTheDocument();
+    await act(async () => {
+      await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
+    });
     expect(screen.getByText(attempt.exam_display_name)).toBeInTheDocument();
     expect(screen.getByText('Show more')).toBeInTheDocument();
     expect(screen.getAllByRole('button').length).toEqual(1);
     expect(screen.getByRole('button', { name: 'End My Exam' })).toBeInTheDocument();
   });
 
-  it('renders without activeAttempt return null', async () => {
+  it('renders without activeAttempt return null', () => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
         activeAttempt: null,
@@ -73,40 +73,30 @@ describe('ExamTimerBlock', () => {
         exam: {},
       },
     };
-    const testStore = await initializeTestStore(preloadedState);
-    attempt = testStore.getState().examState.activeAttempt;
+    const testStore = initializeTestStore(preloadedState);
+    attempt = testStore.getState().specialExams.activeAttempt;
     const { container } = render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
     expect(container.firstChild).not.toBeInTheDocument();
   });
 
   it('changes behavior when clock time decreases low threshold', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    });
     expect(screen.getByRole('alert')).toHaveClass('alert-warning');
   });
 
   it('changes behavior when clock time decreases critically low threshold', async () => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
-        activeAttempt: {
+        activeAttempt: appendTimerEnd({
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
@@ -114,40 +104,31 @@ describe('ExamTimerBlock', () => {
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
-        },
+        }),
         proctoringSettings: {},
         exam: {
           time_limit_mins: 2,
         },
       },
     };
-    const testStore = await initializeTestStore(preloadedState);
-    examStore.getState = store.testStore;
-    attempt = testStore.getState().examState.activeAttempt;
+    const testStore = initializeTestStore(preloadedState);
+    attempt = testStore.getState().specialExams.activeAttempt;
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:05')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:05')).toBeInTheDocument());
+    });
     expect(screen.getByRole('alert')).toHaveClass('alert-danger');
   });
 
   it('toggles timer visibility correctly', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    });
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByLabelText('Hide Timer')).toBeInTheDocument();
 
@@ -162,15 +143,11 @@ describe('ExamTimerBlock', () => {
 
   it('toggles long text visibility on show more/less', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+    });
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Show more'));
@@ -184,10 +161,10 @@ describe('ExamTimerBlock', () => {
 
   it('submits exam if time reached 00:00 and user clicks end my exam button', async () => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
-        activeAttempt: {
+        activeAttempt: appendTimerEnd({
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
@@ -195,54 +172,46 @@ describe('ExamTimerBlock', () => {
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
-        },
+        }),
         proctoringSettings: {},
         exam: {
           time_limit_mins: 30,
         },
       },
     };
-    const testStore = await initializeTestStore(preloadedState);
-    examStore.getState = store.testStore;
-    attempt = testStore.getState().examState.activeAttempt;
+    const testStore = initializeTestStore(preloadedState);
+    attempt = testStore.getState().specialExams.activeAttempt;
 
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:00')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:00')).toBeInTheDocument());
+      fireEvent.click(screen.getByTestId('end-button', { name: 'Show more' }));
+    });
 
-    fireEvent.click(screen.getByTestId('end-button', { name: 'Show more' }));
-    expect(submitAttempt).toHaveBeenCalledTimes(1);
+    expect(submitExam).toHaveBeenCalledTimes(1);
   });
 
   it('stops exam if time has not reached 00:00 and user clicks end my exam button', async () => {
     render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByTestId('end-button'));
-    expect(stopExamAttempt).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
+      fireEvent.click(screen.getByTestId('end-button'));
+    });
+
+    expect(stopExam).toHaveBeenCalledTimes(1);
   });
 
   it('Update exam timer when attempt time_remaining_seconds is smaller than displayed time', async () => {
     const preloadedState = {
-      examState: {
+      specialExams: {
         isLoading: true,
         timeIsOver: false,
-        activeAttempt: {
+        activeAttempt: appendTimerEnd({
           attempt_status: 'started',
           exam_url_path: 'exam_url_path',
           exam_display_name: 'exam name',
@@ -250,48 +219,39 @@ describe('ExamTimerBlock', () => {
           exam_started_poll_url: '',
           taking_as_proctored: false,
           exam_type: 'a timed exam',
-        },
+        }),
         proctoringSettings: {},
         exam: {
           time_limit_mins: 30,
         },
       },
     };
-    let testStore = await initializeTestStore(preloadedState);
-    examStore.getState = store.testStore;
-    attempt = testStore.getState().examState.activeAttempt;
+    let testStore = initializeTestStore(preloadedState);
+    attempt = testStore.getState().specialExams.activeAttempt;
     const { rerender } = render(
-      <ExamTimerBlock
-        attempt={attempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
-    await waitFor(() => expect(screen.getByText('00:03:59')).toBeInTheDocument());
 
-    preloadedState.examState.activeAttempt = {
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:03:59')).toBeInTheDocument());
+    });
+
+    preloadedState.specialExams.activeAttempt = appendTimerEnd({
       ...attempt,
       time_remaining_seconds: 20,
-    };
-    testStore = await initializeTestStore(preloadedState);
-    examStore.getState = store.testStore;
-    const updatedAttempt = testStore.getState().examState.activeAttempt;
+    });
+    testStore = initializeTestStore(preloadedState);
+    const updatedAttempt = testStore.getState().specialExams.activeAttempt;
 
     expect(updatedAttempt.time_remaining_seconds).toBe(20);
 
     rerender(
-      <ExamTimerBlock
-        attempt={updatedAttempt}
-        stopExamAttempt={stopExamAttempt}
-        expireExamAttempt={expireExamAttempt}
-        pollExamAttempt={pollAttempt}
-        submitExam={submitAttempt}
-      />,
+      <ExamTimerBlock />,
     );
 
-    await waitFor(() => expect(screen.getByText('00:00:19')).toBeInTheDocument());
+    await act(async () => {
+      await waitFor(() => expect(screen.getByText('00:00:19')).toBeInTheDocument());
+    });
   });
 
   const timesToTest = {
@@ -306,13 +266,13 @@ describe('ExamTimerBlock', () => {
     '30 minutes': 1800,
   };
   Object.keys(timesToTest).forEach((timeString) => {
-    it(`Accessibility time string ${timeString} appears as expected based seconds remaining: ${timesToTest[timeString]}`, async () => {
+    it(`Accessibility time string ${timeString} appears as expected based seconds remaining: ${timesToTest[timeString]}`, () => {
       // create a state with the respective number of seconds
       const preloadedState = {
-        examState: {
+        specialExams: {
           isLoading: true,
           timeIsOver: false,
-          activeAttempt: {
+          activeAttempt: appendTimerEnd({
             attempt_status: 'started',
             exam_url_path: 'exam_url_path',
             exam_display_name: 'exam name',
@@ -320,7 +280,7 @@ describe('ExamTimerBlock', () => {
             exam_started_poll_url: '',
             taking_as_proctored: false,
             exam_type: 'a timed exam',
-          },
+          }),
           proctoringSettings: {},
           exam: {
             time_limit_mins: 30,
@@ -329,23 +289,16 @@ describe('ExamTimerBlock', () => {
       };
 
       // Store it in the state
-      const testStore = await initializeTestStore(preloadedState);
-      examStore.getState = store.testStore;
-      attempt = testStore.getState().examState.activeAttempt;
+      const testStore = initializeTestStore(preloadedState);
+      attempt = testStore.getState().specialExams.activeAttempt;
 
       // render an exam timer block with that data
       render(
-        <ExamTimerBlock
-          attempt={attempt}
-          stopExamAttempt={stopExamAttempt}
-          expireExamAttempt={expireExamAttempt}
-          pollExamAttempt={pollAttempt}
-          submitExam={submitAttempt}
-        />,
+        <ExamTimerBlock />,
       );
 
       // expect the a11y string to be a certain output
-      await waitFor(() => expect(screen.getByText(`you have ${timeString} remaining`)).toBeInTheDocument());
+      expect(screen.getByText(`you have ${timeString} remaining`)).toBeInTheDocument();
     });
   });
 });
