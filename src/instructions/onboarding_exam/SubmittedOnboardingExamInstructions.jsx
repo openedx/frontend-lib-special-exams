@@ -27,7 +27,7 @@ const SubmittedOnboardingExamInstructions = () => {
       </h3>
       <p>
         <FormattedMessage
-          id="exam.SubmittedProctoredExamInstructions.text1"
+          id="exam.SubmittedProctoredExamInstructions.text4"
           defaultMessage={'If you do not have an onboarding profile with the system, Verificient '
           + 'will review your submission and create an onboarding profile to grant you access to '
           + 'proctored exams. Onboarding profile review can take 2+ business days.'}
@@ -46,14 +46,6 @@ const SubmittedOnboardingExamInstructions = () => {
           id="exam.SubmittedProctoredExamInstructions.text3"
           defaultMessage={', so make sure this email has been added '
           + 'to your inbox filter.'}
-        />
-      </p>
-      <p>
-        <FormattedMessage
-          id="exam.SubmittedProctoredExamInstructions.text4"
-          defaultMessage={'If you do not have an onboarding profile with the system, Verificient '
-          + 'will review your submission and create an onboarding profile to grant you access to '
-          + 'proctored exams. Onboarding profile review can take 2+ business days.'}
         />
       </p>
       <p>
