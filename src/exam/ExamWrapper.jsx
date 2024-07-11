@@ -28,8 +28,8 @@ const ExamWrapper = ({ children, ...props }) => {
 
   const loadInitialData = async () => {
     await dispatch(getExamAttemptsData(courseId, sequence.id));
-    await getAllowProctoringOptOut(sequence.allowProctoringOptOut);
-    await checkExamEntry();
+    await dispatch(getAllowProctoringOptOut(sequence.allowProctoringOptOut));
+    await dispatch(checkExamEntry());
   };
 
   const isGated = sequence && sequence.gatedContent !== undefined && sequence.gatedContent.gated;
