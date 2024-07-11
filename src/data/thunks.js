@@ -284,8 +284,9 @@ export function pollAttempt(url) {
       dispatch(setActiveAttempt({
         activeAttempt: updatedAttempt,
       }));
-      if (data.status === ExamStatus.SUBMITTED) {
+      if ([ExamStatus.SUBMITTED, ExamStatus.ERROR].includes(data.status)) {
         dispatch(expireExamAttempt());
+        updateAttemptAfter(exam.course_id, exam.content_id)(dispatch);
       }
     } catch (error) {
       handleAPIError(error, dispatch);

@@ -968,6 +968,27 @@ describe('Data layer integration tests', () => {
       });
     });
 
+    it('Should refresh exam state from backend if polled attempt has ended in error', async () => {
+      const errorAttempt = Factory.build('attempt', { attempt_status: ExamStatus.ERROR });
+      const errorExam = Factory.build('exam', { attempt: errorAttempt });
+
+      await initWithExamAttempt(exam, attempt);
+      const attemptToPollURL = `${latestAttemptURL}?content_id=block-v1%3Atest%2Bspecial%2Bexam%2Btype%40sequential%2Bblock%40abc123`;
+      axiosMock.onGet(attemptToPollURL).reply(200, {
+        time_remaining_seconds: 0,
+        accessibility_time_string: 'you have 0 minutes remaining',
+        attempt_status: ExamStatus.ERROR,
+      });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: errorExam, active_attempt: {} });
+
+      axiosMock.resetHistory();
+      await executeThunk(thunks.pollAttempt(null, exam.content_id), store.dispatch, store.getState);
+      const state = store.getState();
+      expect(axiosMock.history.get[0].url).toEqual(attemptToPollURL);
+      expect(axiosMock.history.get[1].url).toEqual(fetchExamAttemptsDataUrl);
+      expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.ERROR);
+    });
+
     describe('pollAttempt api called directly', () => {
       // in the download view we call this function directly without invoking the wrapping thunk
       it('should call pollUrl if one is provided', async () => {
