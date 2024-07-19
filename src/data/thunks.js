@@ -560,9 +560,8 @@ export function checkExamEntry() {
           setTimeout(() => reject(), EXAM_START_TIMEOUT_MILLISECONDS);
         }),
       ]).catch(() => {
-        const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
         dispatch(setApiError({ errorMsg: 'Something has gone wrong with your exam. Proctoring application not detected.' }));
-        updateAttemptAfter(exam.course_id, exam.content_id, endExamWithFailure(exam.attempt.attempt_id, 'exam reentry disallowed', useLegacyAttemptAPI))(dispatch);
+        updateAttemptAfter(exam.course_id, exam.content_id, endExamWithFailure(exam.attempt.attempt_id, 'exam reentry disallowed', false))(dispatch);
       });
     }
   };
