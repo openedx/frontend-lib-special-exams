@@ -1,0 +1,17 @@
+# This file records information about this repo. Its use is described in OEP-55:
+# https://open-edx-proposals.readthedocs.io/en/latest/processes/oep-0055-proc-project-maintainers.html
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: 'frontend-lib-special-exams'
+  description: "This is a react library responsible for extending learning app with special exams functionality, e.g. proctored/timed exams."
+  links:
+    - url: "https://github.com/openedx/frontend-lib-special-exams"
+      title: "frontend-lib-special-exams GitHub Repository"
+      icon: "Web"
+spec:
+  owner: group:2u-cosmonauts
+  type: 'library'
+  lifecycle: 'production'
+  subcomponentOf: 'frontend-app-learning'
