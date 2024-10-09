@@ -502,7 +502,7 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByTestId('retry-exam-button')).toHaveTextContent('Retry my exam');
   });
 
-  it('Shows submitted practice exam instructions if exam is onboarding and attempt status is submitted', () => {
+  it('Shows submitted practice exam instructions if exam is onboarding and attempt status is submitted on legacy LTI exams', () => {
     store.getState = () => ({
       specialExams: Factory.build('specialExams', {
         activeAttempt: {},
@@ -510,6 +510,7 @@ describe('SequenceExamWrapper', () => {
           is_proctored: true,
           type: ExamType.PRACTICE,
           attempt: Factory.build('attempt', {
+            use_legacy_attempt_api: true,
             attempt_status: ExamStatus.SUBMITTED,
           }),
         }),

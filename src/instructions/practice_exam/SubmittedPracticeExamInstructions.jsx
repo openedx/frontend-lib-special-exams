@@ -4,12 +4,17 @@ import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
 
 import { resetExam } from '../../data';
+import { ExamStatus } from '../../constants';
 
 const SubmittedPracticeExamInstructions = () => {
   const dispatch = useDispatch();
   const { exam } = useSelector(state => state.specialExams);
 
-  const examHasLtiProvider = !exam?.attempt?.use_legacy_attempt_api;
+  // It does not show the reload button if the exam is submitted and not legacy
+  const showRetryButton = !(
+    exam.attempt?.attempt_status === ExamStatus.SUBMITTED
+    && !exam.attempt?.use_legacy_attempt_api
+  );
 
   return (
     <div>
@@ -26,7 +31,7 @@ const SubmittedPracticeExamInstructions = () => {
           + 'completed this practice exam and can continue with your course work.'}
         />
       </p>
-      {!examHasLtiProvider ? (
+      {showRetryButton ? (
         <Button
           data-testid="retry-exam-button"
           variant="primary"
