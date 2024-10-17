@@ -502,7 +502,7 @@ describe('SequenceExamWrapper', () => {
     expect(screen.getByTestId('retry-exam-button')).toHaveTextContent('Retry my exam');
   });
 
-  it('Shows submitted practice exam instructions if exam is onboarding and attempt status is submitted on legacy LTI exams', () => {
+  it('Shows submitted practice exam instructions if exam is onboarding and attempt status is submitted on legacy proctored exams', () => {
     store.getState = () => ({
       specialExams: Factory.build('specialExams', {
         activeAttempt: {},
