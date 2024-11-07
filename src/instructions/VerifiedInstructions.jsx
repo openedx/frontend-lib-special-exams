@@ -11,6 +11,8 @@ const VerifiedExamInstructions = ({ examType }) => {
     switch (examType) {
       case ExamType.ONBOARDING:
         return <VerifiedOnboardingExamInstructions />;
+      case ExamType.PRACTICE:
+        return <VerifiedOnboardingExamInstructions />;
       case ExamType.PROCTORED:
         return <VerifiedProctoredExamInstructions />;
       default:
