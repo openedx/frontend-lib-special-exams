@@ -9,12 +9,12 @@ import Footer from './proctored_exam/Footer';
 const VerifiedExamInstructions = ({ examType }) => {
   const renderInstructions = () => {
     switch (examType) {
-      case ExamType.ONBOARDING:
-        return <VerifiedOnboardingExamInstructions />;
-      case ExamType.PRACTICE:
-        return <VerifiedOnboardingExamInstructions />;
       case ExamType.PROCTORED:
         return <VerifiedProctoredExamInstructions />;
+      case ExamType.PRACTICE:
+        return <VerifiedProctoredExamInstructions />;
+      case ExamType.ONBOARDING:
+        return <VerifiedOnboardingExamInstructions />;
       default:
         return null;
     }
