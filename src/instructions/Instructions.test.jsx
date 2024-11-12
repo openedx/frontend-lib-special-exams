@@ -364,6 +364,29 @@ describe('SequenceExamWrapper', () => {
     }
   });
 
+  it('Shows correct rejected practice exam instructions when attempt is rejected', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PRACTICE,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.REJECTED,
+          }),
+        }),
+      }),
+    });
+
+    const { queryByTestId } = render(
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
+      { store },
+    );
+
+    expect(queryByTestId('proctored-exam-instructions-title')).toBeInTheDocument();
+  });
+
   it('Shows submit onboarding exam instructions if exam is onboarding and attempt status is ready_to_submit', () => {
     store.getState = () => ({
       specialExams: Factory.build('specialExams', {
@@ -475,6 +498,34 @@ describe('SequenceExamWrapper', () => {
 
     expect(screen.getByText('Your onboarding profile was reviewed successfully')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'test@example.com' })).toHaveTextContent('test@example.com');
+  });
+
+  it('Shows verified practice exam instructions if exam is practice and attempt status is verified', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        proctoringSettings: Factory.build('proctoringSettings', {
+          integration_specific_email: 'test@example.com',
+        }),
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PRACTICE,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.VERIFIED,
+          }),
+        }),
+      }),
+    });
+
+    render(
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
+      { store },
+    );
+
+    expect(screen.getByText('Your proctoring session was reviewed successfully. A final grade will be available soon.')).toBeInTheDocument();
+    expect(screen.getByTestId('proctored-exam-instructions-title')).toBeInTheDocument();
   });
 
   it('Shows error practice exam instructions if exam is onboarding and attempt status is error', () => {

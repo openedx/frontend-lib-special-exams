@@ -12,6 +12,8 @@ const RejectedExamInstructions = ({ examType }) => {
     switch (examType) {
       case ExamType.PROCTORED:
         return <RejectedProctoredExamInstructions />;
+      case ExamType.PRACTICE:
+        return <RejectedProctoredExamInstructions />;
       case ExamType.ONBOARDING:
         return <RejectedOnboardingExamInstructions />;
       default:
