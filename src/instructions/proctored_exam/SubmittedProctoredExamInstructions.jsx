@@ -29,7 +29,7 @@ const SubmittedProctoredExamInstructions = () => (
         <FormattedMessage
           id="exam.SubmittedProctoredExamInstructions.list3"
           defaultMessage={'Proctoring results are usually available within 5 business days '
-          + 'after you submit your exam.'}
+          + 'after you submit your exam. Final grades may take longer.'}
         />
 
       </li>
