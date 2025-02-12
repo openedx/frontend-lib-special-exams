@@ -524,7 +524,7 @@ describe('SequenceExamWrapper', () => {
       { store },
     );
 
-    expect(screen.getByText('Exams are being reviewed and a final grade will be published soon.')).toBeInTheDocument();
+    expect(screen.getByText('Your proctoring session was reviewed successfully. A final grade will be available soon.')).toBeInTheDocument();
     expect(screen.getByTestId('proctored-exam-instructions-title')).toBeInTheDocument();
   });
 
