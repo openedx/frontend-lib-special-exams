@@ -1,3 +1,4 @@
+import { logError } from '@edx/frontend-platform/logging';
 import actionToMessageTypesMap from './constants';
 
 function createWorker(url) {
@@ -26,6 +27,7 @@ export function workerPromiseForEventNames(eventNames, workerUrl) {
           resolve();
         } else {
           reject(e.data.error);
+          logError('workerPromiseForEventNames failed with the following error:', e.data.error);
         }
       };
       proctoringBackendWorker.addEventListener('message', responseHandler);
