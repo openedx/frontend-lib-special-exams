@@ -61,7 +61,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
         if (data.status === ExamStatus.READY_TO_START) {
           setSystemCheckStatus('success');
         } else {
-          // TODO: This call circumvents the thunk for startProctoringSoftwareDownload
+          // TODO: This call will circumvent the thunk for startProctoringSoftwareDownload
           // which is a bit odd and would handle useLegacyAttempt for us.
           // There's an opportunity to refactor and clean this up a bit.
           softwareDownloadAttempt(attemptId, useLegacyAttemptApi);
