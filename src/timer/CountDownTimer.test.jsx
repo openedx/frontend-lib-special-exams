@@ -1,5 +1,6 @@
 import React from 'react';
 import { waitFor } from '@testing-library/dom';
+import userEvent from '@testing-library/user-event';
 import { ExamTimerBlock } from './index';
 import {
   render, screen, initializeTestStore, fireEvent, act,
@@ -85,9 +86,8 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await act(async () => {
-      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
-    });
+
+    await screen.findByText('00:00:23');
     expect(screen.getByRole('alert')).toHaveClass('alert-warning');
   });
 
@@ -116,9 +116,8 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await act(async () => {
-      await waitFor(() => expect(screen.getByText('00:00:05')).toBeInTheDocument());
-    });
+
+    await screen.findByText('00:00:05');
     expect(screen.getByRole('alert')).toHaveClass('alert-danger');
   });
 
@@ -126,17 +125,16 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await act(async () => {
-      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
-    });
+    await screen.findByText('00:00:23');
+
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByLabelText('Hide Timer')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId('hide-timer'));
+    await userEvent.click(screen.getByTestId('hide-timer'));
     expect(screen.getByLabelText('Show Timer')).toBeInTheDocument();
     expect(screen.queryByText(/00:00:2/)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId('show-timer'));
+    await userEvent.click(screen.getByTestId('show-timer'));
     expect(screen.getByLabelText('Hide Timer')).toBeInTheDocument();
     expect(screen.queryByText(/00:00:2/)).toBeInTheDocument();
   });
@@ -145,9 +143,8 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await act(async () => {
-      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
-    });
+
+    await screen.findByText('00:00:23');
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Show more'));
@@ -185,10 +182,9 @@ describe('ExamTimerBlock', () => {
     render(
       <ExamTimerBlock />,
     );
-    await act(async () => {
-      await waitFor(() => expect(screen.getByText('00:00:00')).toBeInTheDocument());
-      fireEvent.click(screen.getByTestId('end-button', { name: 'Show more' }));
-    });
+
+    await screen.findByText('00:00:00');
+    await userEvent.click(screen.getByTestId('end-button', { name: 'Show more' }));
 
     expect(submitExam).toHaveBeenCalledTimes(1);
   });
@@ -198,10 +194,8 @@ describe('ExamTimerBlock', () => {
       <ExamTimerBlock />,
     );
 
-    await act(async () => {
-      await waitFor(() => expect(screen.getByText('00:00:23')).toBeInTheDocument());
-      fireEvent.click(screen.getByTestId('end-button'));
-    });
+    await screen.findByText('00:00:23');
+    await userEvent.click(screen.getByTestId('end-button'));
 
     expect(stopExam).toHaveBeenCalledTimes(1);
   });
@@ -232,9 +226,7 @@ describe('ExamTimerBlock', () => {
       <ExamTimerBlock />,
     );
 
-    await act(async () => {
-      await waitFor(() => expect(screen.getByText('00:03:59')).toBeInTheDocument());
-    });
+    await screen.findByText('00:03:59');
 
     preloadedState.specialExams.activeAttempt = appendTimerEnd({
       ...attempt,
@@ -249,9 +241,7 @@ describe('ExamTimerBlock', () => {
       <ExamTimerBlock />,
     );
 
-    await act(async () => {
-      await waitFor(() => expect(screen.getByText('00:00:19')).toBeInTheDocument());
-    });
+    await screen.findByText('00:00:19');
   });
 
   const timesToTest = {
