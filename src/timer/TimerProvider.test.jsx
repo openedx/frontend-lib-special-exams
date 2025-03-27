@@ -88,12 +88,12 @@ describe('TimerProvider', () => {
   describe('when the remaining time is plenty', () => {
     it('should render normally', async () => {
       const unmount = renderComponent({ remainingSeconds: 60 });
-      await act(async () => {
-        // Since the first update is delayed untill the children are rendered, we need to
-        // wait on it to validate the update.
-        await waitFor(() => expect(screen.getByTestId('time-string')).toBeInTheDocument());
-      });
-      expect(screen.getByTestId('time-string')).toHaveTextContent('00:01:00');
+
+      // Since the first update is delayed untill the children are rendered, we need to
+      // wait on it to validate the update.
+      const timeStringMinute = await screen.findByTestId('time-string');
+
+      expect(timeStringMinute).toHaveTextContent('00:01:00');
       expect(screen.getByTestId('time-state')).toHaveTextContent(JSON.stringify({
         hours: 0,
         minutes: 1,
@@ -102,8 +102,9 @@ describe('TimerProvider', () => {
 
       await act(async () => {
         awaitSeconds(1);
-        await waitFor(() => expect(screen.getByTestId('time-string')).toHaveTextContent('00:00:59'));
       });
+      const timeStringFiftyNine = await screen.findByTestId('time-string');
+      expect(timeStringFiftyNine).toHaveTextContent('00:00:59');
 
       expect(screen.getByTestId('time-state')).toHaveTextContent(JSON.stringify({
         hours: 0,
@@ -127,10 +128,8 @@ describe('TimerProvider', () => {
     it('should emit TIMER_IS_LOW when the timer falls under the threshold (40%)', async () => {
       const unmount = renderComponent({ remainingSeconds: 25 });
 
-      await act(async () => {
-        await waitFor(() => expect(screen.getByTestId('time-string')).toBeInTheDocument());
-      });
-      expect(screen.getByTestId('time-string')).toHaveTextContent('00:00:25');
+      const timeStringTwentyFive = await screen.findByTestId('time-string');
+      expect(timeStringTwentyFive).toHaveTextContent('00:00:25');
 
       expect(Emitter.emit).not.toHaveBeenCalled();
       expect(pingAttempt).not.toHaveBeenCalled();
@@ -138,8 +137,10 @@ describe('TimerProvider', () => {
       // The next second should trigger the warning.
       await act(async () => {
         awaitSeconds(1);
-        await waitFor(() => expect(screen.getByTestId('time-string')).toHaveTextContent('00:00:24'));
       });
+
+      const timeStringTwentyFour = await screen.findByTestId('time-string');
+      expect(timeStringTwentyFour).toHaveTextContent('00:00:24');
 
       expect(Emitter.emit).toHaveBeenCalledTimes(1);
       expect(Emitter.emit).toHaveBeenCalledWith(TIMER_IS_LOW);
@@ -150,10 +151,8 @@ describe('TimerProvider', () => {
     it('should emit TIMER_IS_LOW when the timer falls under the threshold (10%)', async () => {
       const unmount = renderComponent({ remainingSeconds: 7 });
 
-      await act(async () => {
-        await waitFor(() => expect(screen.getByTestId('time-string')).toBeInTheDocument());
-      });
-      expect(screen.getByTestId('time-string')).toHaveTextContent('00:00:07');
+      const timeStringSeven = await screen.findByTestId('time-string');
+      expect(timeStringSeven).toHaveTextContent('00:00:07');
 
       // Low timer warning is called first render.
       expect(Emitter.emit).toHaveBeenCalledTimes(1);
@@ -162,8 +161,10 @@ describe('TimerProvider', () => {
       // The next second should trigger the critical warning.
       await act(async () => {
         awaitSeconds(1);
-        await waitFor(() => expect(screen.getByTestId('time-string')).toHaveTextContent('00:00:06'));
       });
+
+      const timeStringSix = await screen.findByTestId('time-string');
+      expect(timeStringSix).toHaveTextContent('00:00:06');
 
       expect(Emitter.emit).toHaveBeenCalledTimes(2);
       expect(Emitter.emit).toHaveBeenCalledWith(TIMER_IS_CRITICALLY_LOW);
@@ -174,10 +175,8 @@ describe('TimerProvider', () => {
     it('should emit TIMER_REACHED_NULL when the timer falls under the threshold (10%)', async () => {
       const unmount = renderComponent({ remainingSeconds: 1 });
 
-      await act(async () => {
-        await waitFor(() => expect(screen.getByTestId('time-string')).toBeInTheDocument());
-      });
-      expect(screen.getByTestId('time-string')).toHaveTextContent('00:00:01');
+      const timeStringOne = await screen.findByTestId('time-string');
+      expect(timeStringOne).toHaveTextContent('00:00:01');
 
       // Critical timer warning is called first render.
       expect(Emitter.emit).toHaveBeenCalledTimes(1);
@@ -186,8 +185,10 @@ describe('TimerProvider', () => {
       // The next second should trigger the critical warning.
       await act(async () => {
         awaitSeconds(1);
-        await waitFor(() => expect(screen.getByTestId('time-string')).toHaveTextContent('00:00:00'));
       });
+
+      const timeStringZero = await screen.findByTestId('time-string');
+      expect(timeStringZero).toHaveTextContent('00:00:00');
 
       expect(Emitter.emit).toHaveBeenCalledTimes(2);
       expect(Emitter.emit).toHaveBeenCalledWith(TIMER_REACHED_NULL);
@@ -198,9 +199,7 @@ describe('TimerProvider', () => {
     it('should emit TIMER_LIMIT_REACHED when the timer falls under the grace period (5 secs)', async () => {
       const unmount = renderComponent({ remainingSeconds: -4 });
 
-      await act(async () => {
-        await waitFor(() => expect(screen.getByTestId('time-string')).toBeInTheDocument());
-      });
+      await screen.findByTestId('time-string');
       expect(screen.getByTestId('time-string')).toHaveTextContent('00:00:00');
 
       // Timer is null is called first render.
@@ -234,9 +233,7 @@ describe('TimerProvider', () => {
     it('should call poll attempt each time', async () => {
       const unmount = renderComponent({ remainingSeconds: 120 });
 
-      await act(async () => {
-        await waitFor(() => expect(screen.getByTestId('time-string')).toBeInTheDocument());
-      });
+      await screen.findByTestId('time-string');
 
       // A first poll attempt on render.
       expect(pollAttempt).toHaveBeenCalledTimes(1);
@@ -259,9 +256,7 @@ describe('TimerProvider', () => {
     it('should ping first at half the time, then the full delay onwards', async () => {
       const unmount = renderComponent({ remainingSeconds: 120, timeLimitMins: 10, pingIntervalSeconds: 10 });
 
-      await act(async () => {
-        await waitFor(() => expect(screen.getByTestId('time-string')).toBeInTheDocument());
-      });
+      await screen.findByTestId('time-string');
 
       // No pings so far.
       expect(pingAttempt).not.toHaveBeenCalled();
