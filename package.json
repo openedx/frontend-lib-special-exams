@@ -8,9 +8,7 @@
       "main"
     ]
   },
-  "exports": {
-    "import": "./dist/index.js"
-  },
+
   "repository": {
     "type": "git",
     "url": "git+https://github.com/edx/frontend-lib-special-exams.git"
