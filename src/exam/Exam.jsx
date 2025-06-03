@@ -95,7 +95,7 @@ const Exam = ({
   const sequenceContent = <>{children}</>;
 
   return (
-    <div className="d-flex flex-column flex-grow-1 justify-content-center">
+    <>
       {shouldShowMasqueradeAlert() && (
         <Alert variant="info" icon={Info} data-testid="masquerade-alert">
           <FormattedMessage
@@ -113,7 +113,7 @@ const Exam = ({
       {isTimeLimited && !originalUserIsStaff && !isGated
         ? <Instructions>{sequenceContent}</Instructions>
         : sequenceContent}
-    </div>
+    </>
   );
 };
 
