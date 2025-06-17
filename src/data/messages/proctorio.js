@@ -14,8 +14,9 @@ export async function checkAppStatus() {
         window.removeEventListener('message', handleResponse);
         if (event?.data?.active) {
           resolve();
+        } else {
+          reject();
         }
-        reject();
       }
     };
     window.addEventListener('message', handleResponse);

@@ -13,8 +13,16 @@ import {
   render, screen, act, initializeMockApp, initializeTestStore,
 } from '../setupTest';
 import {
-  ExamStatus, ExamType, INCOMPLETE_STATUSES,
+  ExamStatus, ExamType, INCOMPLETE_STATUSES, IS_ONBOARDING_ERROR,
 } from '../constants';
+
+jest.mock('../constants', () => {
+  const original = jest.requireActual('../constants');
+  return {
+    ...original,
+    IS_ONBOARDING_ERROR: jest.fn(() => false),
+  };
+});
 
 jest.mock('../data', () => ({
   continueExam: jest.fn(),
@@ -43,6 +51,135 @@ describe('SequenceExamWrapper', () => {
     store = initializeTestStore();
     store.subscribe = jest.fn();
     store.dispatch = jest.fn();
+  });
+
+  it('renders SkipProctoredExamInstruction when skipProctoring is true for proctored exam', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        allowProctoringOptOut: true,
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          attempt: {},
+          prerequisite_status: {
+            are_prerequisites_satisfied: false,
+            failed_prerequisites: [{ test: 'failed' }],
+          },
+        }),
+      }),
+    });
+
+    // Render and click to trigger skip proctoring
+    const { getByTestId } = render(
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
+      { store },
+    );
+    fireEvent.click(getByTestId('start-exam-without-proctoring-button'));
+    expect(
+      getByTestId('proctored-exam-instructions-title'),
+    ).toHaveTextContent(
+      'Are you sure you want to take this exam without proctoring?',
+    );
+    // Cancel skip
+    fireEvent.click(getByTestId('skip-cancel-exam-button'));
+    expect(getByTestId('start-exam-without-proctoring-button')).toBeInTheDocument();
+  });
+
+  // Removed: renders OnboardingErrorProctoredExamInstructions for proctored exam onboarding error
+  // This path is not directly testable as written, and the actual rendered output may not match the onboarding.
+
+  it('renders DownloadSoftwareProctoredExamInstructions with skipProctoredExam prop', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.CREATED,
+          }),
+        }),
+      }),
+    });
+
+    const { getByText } = render(
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
+      { store },
+    );
+    expect(getByText('Set up and start your proctored exam.')).toBeInTheDocument();
+    expect(getByText('Start System Check')).toBeInTheDocument();
+  });
+
+  it('renders DownloadSoftwareProctoredExamInstructions when attempt status is DOWNLOAD_SOFTWARE_CLICKED', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.DOWNLOAD_SOFTWARE_CLICKED,
+          }),
+        }),
+      }),
+    });
+
+    const { getByText } = render(
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
+      { store },
+    );
+    expect(getByText('Set up and start your proctored exam.')).toBeInTheDocument();
+  });
+
+  it('renders OnboardingErrorProctoredExamInstructions for proctored exam onboarding error', () => {
+    // Mock IS_ONBOARDING_ERROR to return true for this test
+    IS_ONBOARDING_ERROR.mockImplementation(() => true);
+
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            attempt_status: 'ANY_ONBOARDING_ERROR_STATUS',
+          }),
+        }),
+      }),
+    });
+
+    const { getByText } = render(
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
+      { store },
+    );
+    expect(
+      getByText(/onboarding/i),
+    ).toBeInTheDocument();
+
+    IS_ONBOARDING_ERROR.mockImplementation(() => false);
+  });
+
+  it('handles typo in prerequisitesPassed logic gracefully', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED,
+          prerequisite_status: {
+            are_prerequisites_satisifed: false, // typo in key
+            failed_prerequisites: [{ test: 'failed' }],
+          },
+        }),
+      }),
+    });
+
+    const { getByTestId } = render(
+      <Instructions>
+        <div>Sequence</div>
+      </Instructions>,
+      { store },
+    );
+    expect(getByTestId('failed-prerequisites')).toBeInTheDocument();
   });
 
   it('Start exam instructions can be successfully rendered', () => {
@@ -678,6 +815,87 @@ describe('SequenceExamWrapper', () => {
     );
 
     expect(screen.getByTestId('exam-content')).toHaveTextContent('children');
+  });
+
+  it('Shows submitted page for non-timed exam even if due date has passed and hide after due is false', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          type: ExamType.PROCTORED, // Not TIMED
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.SUBMITTED,
+          }),
+          passed_due_date: true,
+          hide_after_due: false,
+        }),
+      }),
+    });
+
+    render(
+      <Instructions>
+        <div data-testid="exam-content">children</div>
+      </Instructions>,
+      { store },
+    );
+
+    // Should show submitted page, not children
+    expect(screen.queryByTestId('exam-content')).not.toBeInTheDocument();
+    expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
+  });
+
+  it('Shows submitted page for timed exam if due date has not passed, even if hide after due is false', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          type: ExamType.TIMED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.SUBMITTED,
+          }),
+          passed_due_date: false, // Due date not passed
+          hide_after_due: false,
+        }),
+      }),
+    });
+
+    render(
+      <Instructions>
+        <div data-testid="exam-content">children</div>
+      </Instructions>,
+      { store },
+    );
+
+    // Should show submitted page, not children
+    expect(screen.queryByTestId('exam-content')).not.toBeInTheDocument();
+    expect(screen.getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('You have submitted your timed exam.');
+  });
+
+  it('Shows submitted page for timed exam if due date has passed but hide after due is true', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', {
+        activeAttempt: {},
+        exam: Factory.build('exam', {
+          type: ExamType.TIMED,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.SUBMITTED,
+          }),
+          passed_due_date: true,
+          hide_after_due: true, // Hide after due is true
+        }),
+      }),
+    });
+
+    render(
+      <Instructions>
+        <div data-testid="exam-content">children</div>
+      </Instructions>,
+      { store },
+    );
+
+    // Should show submitted page, not children
+    expect(screen.queryByTestId('exam-content')).not.toBeInTheDocument();
+    expect(screen.getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('You have submitted your timed exam.');
   });
 
   it('Shows submitted exam page for proctored exams if attempt status is submitted, due date has passed and hide after due is set to false', () => {
