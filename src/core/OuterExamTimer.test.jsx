@@ -25,7 +25,18 @@ describe('OuterExamTimer', () => {
   beforeEach(() => {
     store = initializeTestStore();
   });
+  it('returns null if there is no authenticated user', () => {
+    const appContext = {
+      authenticatedUser: null,
+    };
 
+    const { container } = render(
+      <OuterExamTimer courseId={courseId} />,
+      { store, appContext },
+    );
+
+    expect(container.firstChild).toBeNull();
+  });
   it('is successfully rendered and shows timer if there is an exam in progress', () => {
     const attempt = Factory.build('attempt', {
       attempt_status: ExamStatus.STARTED,
@@ -59,5 +70,20 @@ describe('OuterExamTimer', () => {
       { store },
     );
     expect(queryByTestId('exam-timer')).not.toBeInTheDocument();
+  });
+  it('renders error component when apiErrorMsg is present', () => {
+    store.getState = () => ({
+      specialExams: {
+        activeAttempt: {},
+        exam: {},
+        apiErrorMsg: 'Test error message',
+      },
+    });
+
+    const { queryByTestId } = render(
+      <OuterExamTimer courseId={courseId} />,
+      { store },
+    );
+    expect(queryByTestId('exam-api-error-component')).toBeInTheDocument();
   });
 });
