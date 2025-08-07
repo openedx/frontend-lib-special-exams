@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import { injectIntl, intlShape, FormattedMessage } from '@edx/frontend-platform/i18n';
+import { useIntl, FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Alert, Spinner } from '@openedx/paragon';
 import { Info } from '@openedx/paragon/icons';
 import { ExamTimerBlock } from '../timer';
@@ -21,12 +21,13 @@ import { getProctoringSettings } from '../data';
  * @constructor
  */
 const Exam = ({
-  isGated, isTimeLimited, originalUserIsStaff, canAccessProctoredExams, children, intl,
+  isGated, isTimeLimited, originalUserIsStaff, canAccessProctoredExams, children,
 }) => {
   const {
     isLoading, activeAttempt, exam, apiErrorMsg,
   } = useSelector(state => state.specialExams);
   const dispatch = useDispatch();
+  const intl = useIntl();
 
   const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
 
@@ -123,11 +124,10 @@ Exam.propTypes = {
   originalUserIsStaff: PropTypes.bool.isRequired,
   canAccessProctoredExams: PropTypes.bool,
   children: PropTypes.element.isRequired,
-  intl: intlShape.isRequired,
 };
 
 Exam.defaultProps = {
   canAccessProctoredExams: true,
 };
 
-export default injectIntl(Exam);
+export default Exam;

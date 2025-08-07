@@ -1,19 +1,20 @@
 import React, { useContext } from 'react';
+import PropTypes from 'prop-types';
 import { Icon, useToggle } from '@openedx/paragon';
 import { Visibility, VisibilityOff } from '@openedx/paragon/icons';
-import { injectIntl } from '@edx/frontend-platform/i18n';
+import { useIntl } from '@edx/frontend-platform/i18n';
 import { TimerContext } from './TimerProvider';
 import { generateHumanizedTime } from '../helpers';
 
 /**
  * Display timer textual value. Display hide/show button.
  */
-const CountDownTimer = injectIntl((props) => {
+const CountDownTimer = ({ attempt }) => {
   const timer = useContext(TimerContext);
   const timeString = timer.getTimeString();
   const [isShowTimer, showTimer, hideTimer] = useToggle(true);
-  const { intl } = props;
-  const { time_remaining_seconds: timeRemainingSeconds } = props.attempt;
+  const intl = useIntl();
+  const { time_remaining_seconds: timeRemainingSeconds } = attempt;
 
   const generateAccessbilityString = () => {
     const humanizedTime = generateHumanizedTime(timeRemainingSeconds);
@@ -53,6 +54,12 @@ const CountDownTimer = injectIntl((props) => {
       </span>
     </div>
   );
-});
+};
+
+CountDownTimer.propTypes = {
+  attempt: PropTypes.shape({
+    time_remaining_seconds: PropTypes.number.isRequired,
+  }).isRequired,
+};
 
 export default CountDownTimer;

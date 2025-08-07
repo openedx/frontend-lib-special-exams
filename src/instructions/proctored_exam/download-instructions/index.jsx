@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { getConfig } from '@edx/frontend-platform';
-import { FormattedMessage, injectIntl, intlShape } from '@edx/frontend-platform/i18n';
+import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import { Container } from '@openedx/paragon';
 import { ExamStatus } from '../../../constants';
 import { getExamAttemptsData } from '../../../data';
@@ -16,7 +16,7 @@ import DownloadButtons from './DownloadButtons';
 import Footer from '../Footer';
 import SkipProctoredExamButton from '../SkipProctoredExamButton';
 
-const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) => {
+const DownloadSoftwareProctoredExamInstructions = ({ skipProctoredExam }) => {
   const {
     proctoringSettings,
     exam,
@@ -24,6 +24,8 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
   } = useSelector(state => state.specialExams);
 
   const dispatch = useDispatch();
+
+  const intl = useIntl();
 
   const {
     attempt,
@@ -162,8 +164,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ intl, skipProctoredExam }) 
 };
 
 DownloadSoftwareProctoredExamInstructions.propTypes = {
-  intl: intlShape.isRequired,
   skipProctoredExam: PropTypes.func.isRequired,
 };
 
-export default injectIntl(DownloadSoftwareProctoredExamInstructions);
+export default DownloadSoftwareProctoredExamInstructions;
