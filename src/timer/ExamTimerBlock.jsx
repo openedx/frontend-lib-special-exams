@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { FormattedMessage, injectIntl } from '@edx/frontend-platform/i18n';
+import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import { Button, Alert, useToggle } from '@openedx/paragon';
 import CountDownTimer from './CountDownTimer';
 import { ExamStatus, IS_STARTED_STATUS } from '../constants';
@@ -18,7 +18,8 @@ import {
 /**
  * Exam timer block component.
  */
-const ExamTimerBlock = injectIntl(({ intl }) => {
+const ExamTimerBlock = () => {
+  const intl = useIntl();
   const { activeAttempt: attempt } = useSelector(state => state.specialExams);
   const [isShowMore, showMore, showLess] = useToggle(false);
   const [alertVariant, setAlertVariant] = useState('info');
@@ -43,6 +44,7 @@ const ExamTimerBlock = injectIntl(({ intl }) => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     Emitter.once(TIMER_IS_LOW, onLowTime);
     Emitter.once(TIMER_IS_CRITICALLY_LOW, onCriticalLowTime);
@@ -131,8 +133,6 @@ const ExamTimerBlock = injectIntl(({ intl }) => {
       </Alert>
     </TimerProvider>
   );
-});
-
-ExamTimerBlock.propTypes = {};
+};
 
 export default ExamTimerBlock;

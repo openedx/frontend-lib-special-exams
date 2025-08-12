@@ -3,13 +3,14 @@ import { useSelector } from 'react-redux';
 import { getConfig } from '@edx/frontend-platform';
 import { Alert, Hyperlink, Icon } from '@openedx/paragon';
 import { Info } from '@openedx/paragon/icons';
-import { injectIntl, intlShape, FormattedMessage } from '@edx/frontend-platform/i18n';
+import { useIntl, FormattedMessage } from '@edx/frontend-platform/i18n';
 import messages from './messages';
 
-const ExamAPIError = ({ intl }) => {
+const ExamAPIError = () => {
   const { SITE_NAME, SUPPORT_URL } = getConfig();
   const { apiErrorMsg } = useSelector(state => state.specialExams);
   const shouldShowApiErrorMsg = !!apiErrorMsg && !apiErrorMsg.includes('<');
+  const intl = useIntl();
 
   return (
     <Alert variant="danger" data-testid="exam-api-error-component">
@@ -43,8 +44,4 @@ const ExamAPIError = ({ intl }) => {
   );
 };
 
-ExamAPIError.propTypes = {
-  intl: intlShape.isRequired,
-};
-
-export default injectIntl(ExamAPIError);
+export default ExamAPIError;
