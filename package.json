@@ -67,7 +67,6 @@
   },
   "devDependencies": {
     "@edx/frontend-platform": "^8.3.0",
-    "@edx/reactifex": "^2.1.1",
     "@openedx/frontend-build": "^14.3.3",
     "@openedx/paragon": "^23.3.0",
     "@reduxjs/toolkit": "^1.5.1",
