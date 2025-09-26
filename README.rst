@@ -40,6 +40,14 @@ Internationalization
 
 Please see `edx/frontend-platform's i18n module <https://edx.github.io/frontend-platform/module-Internationalization.html>`_ for documentation on internationalization.  The documentation explains how to use it, and the `How To <https://github.com/edx/frontend-i18n/blob/master/docs/how_tos/i18n.rst>`_ has more detail.
 
+*******
+Plugins
+*******
+
+This MFE can be customized using `Frontend Plugin Framework <https://github.com/openedx/frontend-plugin-framework>`_.
+
+The parts of this MFE that can be customized in that manner are documented `here </src/plugin-slots>`_.
+
 ************
 Contributing
 ************
