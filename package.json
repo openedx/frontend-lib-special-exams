@@ -9,7 +9,17 @@
     ]
   },
   "exports": {
-    "import": "./dist/index.js"
+    ".": {
+      "import": "./dist/index.js"
+    },
+    "./testing": "./dist/testing/index.js"
+  },
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "./dist/testing/index.d.ts"
+      ]
+    }
   },
   "repository": {
     "type": "git",
@@ -83,6 +93,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
+    "axios": "1.8.4",
     "axios-mock-adapter": "1.18.2",
     "babel-jest": "29.7.0",
     "dotenv": "8.6.0",

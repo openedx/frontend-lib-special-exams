@@ -41,6 +41,23 @@ Internationalization
 Please see `edx/frontend-platform's i18n module <https://edx.github.io/frontend-platform/module-Internationalization.html>`_ for documentation on internationalization.  The documentation explains how to use it, and the `How To <https://github.com/edx/frontend-i18n/blob/master/docs/how_tos/i18n.rst>`_ has more detail.
 
 *******
+Testing
+*******
+
+``@edx/frontend-lib-special-exams/testing`` ships a stateful mock of the special-exams backend for a consumer's Jest tests, built on `axios-mock-adapter <https://github.com/ctimmerm/axios-mock-adapter>`_. Register it before any catch-all handler, then describe each exam sequence with ``setExam``:
+
+.. code-block:: js
+
+   import MockAdapter from 'axios-mock-adapter';
+   import { mockSpecialExams } from '@edx/frontend-lib-special-exams/testing';
+
+   const axiosMock = new MockAdapter(httpClient);
+   const specialExams = mockSpecialExams(axiosMock, courseId, { lmsBaseUrl, examsBaseUrl });
+   specialExams.setExam(sequenceId, { status: 'started', exam: { time_limit_mins: 30 } });
+
+It answers both URL families the library talks to: the LMS ``edx_proctoring`` endpoints under ``lmsBaseUrl``, and edx-exams when ``examsBaseUrl`` is set. Each sequence's attempt status carries across requests: POST creates an attempt, PUT applies its ``action``, polls count the time down from ``time_limit_mins``. Every request it answered is recorded in ``requests``. The payload builders it uses (``buildExam``, ``buildAttempt``, ``buildProctoringSettings``, ``buildExamAccessToken``) are exported as well.
+
+*******
 Plugins
 *******
 
