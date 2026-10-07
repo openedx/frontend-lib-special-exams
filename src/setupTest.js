@@ -13,6 +13,11 @@ import { configureStore } from '@reduxjs/toolkit';
 import { IntlProvider } from '@edx/frontend-platform/i18n';
 import examReducer from './data/slice';
 
+// The library still reads its config, HTTP client, logger and messages from `@edx/frontend-platform`,
+// whose entry module imports an `env.config` that only frontend-build's webpack resolved. This mock
+// leaves with frontend-platform later in this PR.
+jest.mock('env.config', () => ({}), { virtual: true });
+
 window.getComputedStyle = jest.fn(() => ({
   getPropertyValue: jest.fn(),
 }));

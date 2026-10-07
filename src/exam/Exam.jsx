@@ -18,7 +18,6 @@ import { getProctoringSettings } from '../data';
  * @param isTimeLimited - boolean used to identify if we need to process sequence as an exam
  * @param children - sequence content
  * @returns {JSX.Element}
- * @constructor
  */
 const Exam = ({
   isGated, isTimeLimited, originalUserIsStaff, canAccessProctoredExams, children,
