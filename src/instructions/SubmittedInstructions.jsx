@@ -1,14 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useSelector } from 'react-redux';
 import { Container } from '@openedx/paragon';
 import { ExamType } from '../constants';
 import { SubmittedPracticeExamInstructions } from './practice_exam';
 import { SubmittedProctoredExamInstructions } from './proctored_exam';
 import { SubmittedOnboardingExamInstructions } from './onboarding_exam';
-import { SubmittedTimedExamInstructions } from './timed_exam';
+import { SubmittedTimedExamInstructions as SubmittedTimedExamInstructionsDefault } from './timed_exam';
 import Footer from './proctored_exam/Footer';
+import { useSequenceExam } from '../core/SequenceExamContext';
 
 const SubmittedExamInstructions = ({ examType }) => {
+  const timeIsOver = useSelector(state => state.specialExams?.timeIsOver || false);
+  const {
+    submittedTimedExamInstructions: SubmittedTimedExamInstructions = SubmittedTimedExamInstructionsDefault,
+  } = useSequenceExam();
+
   const renderInstructions = () => {
     switch (examType) {
       case ExamType.ONBOARDING:
@@ -18,7 +25,7 @@ const SubmittedExamInstructions = ({ examType }) => {
       case ExamType.PROCTORED:
         return <SubmittedProctoredExamInstructions />;
       case ExamType.TIMED:
-        return <SubmittedTimedExamInstructions />;
+        return <SubmittedTimedExamInstructions timeIsOver={timeIsOver} />;
       default:
         return null;
     }

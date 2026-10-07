@@ -57,13 +57,19 @@ Testing
 
 It answers both URL families the library talks to: the LMS ``edx_proctoring`` endpoints under ``lmsBaseUrl``, and edx-exams when ``examsBaseUrl`` is set. Each sequence's attempt status carries across requests: POST creates an attempt, PUT applies its ``action``, polls count the time down from ``time_limit_mins``. Every request it answered is recorded in ``requests``. The payload builders it uses (``buildExam``, ``buildAttempt``, ``buildProctoringSettings``, ``buildExamAccessToken``) are exported as well.
 
-*******
-Plugins
-*******
+*************
+Customization
+*************
 
-This MFE can be customized using `Frontend Plugin Framework <https://github.com/openedx/frontend-plugin-framework>`_.
+``SequenceExamWrapper`` takes an optional ``submittedTimedExamInstructions`` component, rendered in
+place of the default "You have submitted your timed exam." heading once a timed exam is submitted. It
+receives ``timeIsOver``, true when the time limit forced the submission.
 
-The parts of this MFE that can be customized in that manner are documented `here </src/plugin-slots>`_.
+.. code-block:: jsx
+
+    <SequenceExamWrapper sequence={sequence} courseId={courseId} submittedTimedExamInstructions={MyInstructions}>
+      {sequenceContent}
+    </SequenceExamWrapper>
 
 ************
 Contributing

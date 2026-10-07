@@ -6,6 +6,8 @@ import {
   render, screen, initializeMockApp, initializeTestStore,
 } from '../setupTest';
 import { ExamType } from '../constants';
+import SequenceExamContext from '../core/SequenceExamContext';
+import { SubmittedTimedExamInstructions } from './timed_exam';
 
 // Mock the imported components
 jest.mock('./onboarding_exam', () => ({
@@ -21,7 +23,7 @@ jest.mock('./proctored_exam', () => ({
 }));
 
 jest.mock('./timed_exam', () => ({
-  SubmittedTimedExamInstructions: () => <div data-testid="submitted-timed-exam-instructions" />,
+  SubmittedTimedExamInstructions: jest.fn(() => <div data-testid="submitted-timed-exam-instructions" />),
 }));
 
 jest.mock('./proctored_exam/Footer', () => function Footer() {
@@ -107,6 +109,37 @@ describe('SubmittedExamInstructions', () => {
 
     // Verify the Footer component is NOT rendered for TIMED exam type
     expect(screen.queryByTestId('footer')).not.toBeInTheDocument();
+  });
+
+  it('passes the store\'s timeIsOver to the timed instructions', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', { timeIsOver: true }),
+    });
+
+    render(<SubmittedExamInstructions examType={ExamType.TIMED} />, { store });
+
+    expect(SubmittedTimedExamInstructions).toHaveBeenCalledWith(
+      expect.objectContaining({ timeIsOver: true }),
+      expect.anything(),
+    );
+  });
+
+  it('renders the timed instructions component the wrapper provides, with timeIsOver', () => {
+    store.getState = () => ({
+      specialExams: Factory.build('specialExams', { timeIsOver: true }),
+    });
+    const Custom = jest.fn(() => <div data-testid="custom-timed-instructions" />);
+
+    render(
+      <SequenceExamContext.Provider value={{ submittedTimedExamInstructions: Custom }}>
+        <SubmittedExamInstructions examType={ExamType.TIMED} />
+      </SequenceExamContext.Provider>,
+      { store },
+    );
+
+    expect(screen.getByTestId('custom-timed-instructions')).toBeInTheDocument();
+    expect(Custom).toHaveBeenCalledWith(expect.objectContaining({ timeIsOver: true }), expect.anything());
+    expect(screen.queryByTestId('submitted-timed-exam-instructions')).not.toBeInTheDocument();
   });
 
   /**
