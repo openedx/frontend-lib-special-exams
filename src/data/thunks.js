@@ -248,7 +248,7 @@ export function skipProctoringExam() {
       await updateAttemptAfter(
         exam.course_id,
         exam.content_id,
-        createExamAttempt(exam.id, true, false, useLegacyAttemptApi),
+        createExamAttempt(exam.id, useLegacyAttemptApi),
       )(dispatch);
     }
   };
