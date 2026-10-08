@@ -188,7 +188,7 @@ export function startProctoredExam() {
     }
     const { desktop_application_js_url: workerUrl } = attempt || {};
     const useWorker = window.Worker && workerUrl;
-    const examHasLtiProvider = !exam.useLegacyAttemptApi;
+    const examHasLtiProvider = !attempt.use_legacy_attempt_api;
 
     if (useWorker) {
       const startExamTimeoutMilliseconds = EXAM_START_TIMEOUT_MILLISECONDS;
