@@ -839,6 +839,26 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
       expect(mockPostMessage).toHaveBeenCalledWith(['exam_state_change', 'exam_take'], '*');
     });
+
+    it('Should not notify top window on legacy exam start', async () => {
+      const mockPostMessage = jest.fn();
+      windowSpy.mockImplementation(() => ({
+        top: {
+          postMessage: mockPostMessage,
+        },
+      }));
+      const createdLegacyAttempt = Factory.build('attempt', { attempt_status: ExamStatus.CREATED, use_legacy_attempt_api: true });
+      const createdLegacyExam = Factory.build('exam', { attempt: createdLegacyAttempt });
+
+      await initWithExamAttempt(createdLegacyExam, createdLegacyAttempt);
+      axiosMock.onPut(continueAttemptLegacyUrl).reply(200, { exam_attempt_id: startedAttempt.attempt_id });
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: startedExam });
+      axiosMock.onGet(latestAttemptURL).reply(200, startedAttempt);
+
+      await executeThunk(thunks.startProctoredExam(), store.dispatch, store.getState);
+      expect(axiosMock.history.put.map(({ url }) => url)).toEqual([continueAttemptLegacyUrl]);
+      expect(mockPostMessage).not.toHaveBeenCalled();
+    });
   });
 
   describe('Test skipProctoringExam', () => {
