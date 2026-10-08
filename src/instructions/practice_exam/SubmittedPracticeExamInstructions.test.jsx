@@ -6,17 +6,10 @@ import {
 } from '../../setupTest';
 import { ExamStatus, ExamType } from '../../constants';
 
-const mockresetReturn = {};
-const mockDispatch = jest.fn();
-
-jest.mock('react-redux', () => ({
-  ...jest.requireActual('react-redux'),
-  useDispatch: () => mockDispatch,
-}));
-
+const mockResetExam = jest.fn();
 jest.mock('../../data', () => ({
   ...jest.requireActual('../../data'),
-  resetExam: () => mockresetReturn,
+  useResetExam: () => ({ mutate: mockResetExam }),
 }));
 
 describe('ExamTimerBlock', () => {
@@ -51,13 +44,12 @@ describe('ExamTimerBlock', () => {
       expect(screen.queryByTestId('retry-exam-button')).toBeInTheDocument();
     });
 
-    it('calls resetExam() when clicking the retry button', () => {
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockresetReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -88,13 +80,12 @@ describe('ExamTimerBlock', () => {
       expect(screen.queryByTestId('retry-exam-button')).toBeInTheDocument();
     });
 
-    it('calls resetExam() when clicking the retry button', () => {
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockresetReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -127,13 +118,12 @@ describe('ExamTimerBlock', () => {
       expect(screen.queryByTestId('retry-exam-button')).toBeInTheDocument();
     });
 
-    it('calls resetExam() when clicking the retry button', () => {
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockresetReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -167,13 +157,12 @@ describe('ExamTimerBlock', () => {
       expect(screen.queryByTestId('retry-exam-button')).toBeInTheDocument();
     });
 
-    it('calls resetExam() when clicking the retry button', () => {
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockresetReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 

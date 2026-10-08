@@ -6,14 +6,13 @@ import RejectedOnboardingExamInstructions from './RejectedOnboardingExamInstruct
 import {
   render, screen, initializeMockApp, initializeTestStore,
 } from '../../setupTest';
-import * as dataModule from '../../data';
 
-// Mock the resetExam function to test if it's called
+const mockResetExam = jest.fn();
 jest.mock('../../data', () => {
   const originalModule = jest.requireActual('../../data');
   return {
     ...originalModule,
-    resetExam: jest.fn(() => ({ type: 'MOCK_RESET_EXAM' })),
+    useResetExam: () => ({ mutate: mockResetExam }),
   };
 });
 
@@ -123,6 +122,6 @@ describe('RejectedOnboardingExamInstructions', () => {
     fireEvent.click(retryButton);
 
     // Verify that resetExam was called
-    expect(dataModule.resetExam).toHaveBeenCalledTimes(1);
+    expect(mockResetExam).toHaveBeenCalledTimes(1);
   });
 });

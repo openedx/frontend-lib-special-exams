@@ -6,14 +6,13 @@ import EntranceOnboardingExamInstructions from './EntranceOnboardingExamInstruct
 import {
   render, screen, initializeMockApp, initializeTestStore,
 } from '../../setupTest';
-import * as dataModule from '../../data';
 
-// Mock the createProctoredExamAttempt function to test if it's called
+const mockCreateProctoredExamAttempt = jest.fn();
 jest.mock('../../data', () => {
   const originalModule = jest.requireActual('../../data');
   return {
     ...originalModule,
-    createProctoredExamAttempt: jest.fn(() => ({ type: 'MOCK_CREATE_PROCTORED_EXAM_ATTEMPT' })),
+    useCreateProctoredExamAttempt: () => ({ mutate: mockCreateProctoredExamAttempt }),
   };
 });
 
@@ -208,6 +207,6 @@ describe('EntranceOnboardingExamInstructions', () => {
     fireEvent.click(startButton);
 
     // Verify that createProctoredExamAttempt was called
-    expect(dataModule.createProctoredExamAttempt).toHaveBeenCalledTimes(1);
+    expect(mockCreateProctoredExamAttempt).toHaveBeenCalledTimes(1);
   });
 });

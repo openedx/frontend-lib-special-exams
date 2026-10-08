@@ -1,12 +1,11 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
 
-import { resetExam } from '../../data';
+import { useResetExam } from '../../data';
 
 const ErrorOnboardingExamInstructions = () => {
-  const dispatch = useDispatch();
+  const resetExam = useResetExam();
 
   return (
     <div>
@@ -26,7 +25,7 @@ const ErrorOnboardingExamInstructions = () => {
       <Button
         data-testid="retry-exam-button"
         variant="primary"
-        onClick={() => dispatch(resetExam())}
+        onClick={() => resetExam.mutate()}
       >
         <FormattedMessage
           id="exam.ErrorOnboardingExamInstructions.retryExamButton"

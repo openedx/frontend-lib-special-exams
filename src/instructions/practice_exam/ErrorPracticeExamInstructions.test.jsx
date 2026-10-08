@@ -6,20 +6,10 @@ import {
 } from '../../setupTest';
 import { ExamType } from '../../constants';
 
-// Mock return value for resetExam
-const mockResetExamReturn = { type: 'RESET_EXAM' };
-const mockDispatch = jest.fn();
-
-// Mock the react-redux useDispatch hook
-jest.mock('react-redux', () => ({
-  ...jest.requireActual('react-redux'),
-  useDispatch: () => mockDispatch,
-}));
-
-// Mock the resetExam function from data module
+const mockResetExam = jest.fn();
 jest.mock('../../data', () => ({
   ...jest.requireActual('../../data'),
-  resetExam: () => mockResetExamReturn,
+  useResetExam: () => ({ mutate: mockResetExam }),
 }));
 
 describe('ErrorPracticeExamInstructions', () => {
@@ -101,16 +91,12 @@ describe('ErrorPracticeExamInstructions', () => {
       );
     });
 
-    it('dispatches resetExam when clicking the retry button', () => {
-      // Verify dispatch hasn't been called yet
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
-      // Click the button
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      // Verify dispatch was called with the correct action
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockResetExamReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 

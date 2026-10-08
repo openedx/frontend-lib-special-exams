@@ -1,17 +1,15 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
-import { resetExam } from '../../data';
 import {
   render, screen, initializeMockApp, initializeTestStore,
 } from '../../setupTest';
 import ErrorOnboardingExamInstructions from './ErrorOnboardingExamInstructions';
 
+const mockResetExam = jest.fn();
 jest.mock('../../data', () => ({
-  resetExam: jest.fn(),
+  useResetExam: () => ({ mutate: mockResetExam }),
 }));
-
-resetExam.mockReturnValue(jest.fn());
 
 describe('ErrorOnboardingExamInstructions', () => {
   let store;
@@ -40,7 +38,6 @@ describe('ErrorOnboardingExamInstructions', () => {
 
     fireEvent.click(retryButton);
 
-    expect(resetExam).toHaveBeenCalledTimes(1);
-    expect(store.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockResetExam).toHaveBeenCalledTimes(1);
   });
 });

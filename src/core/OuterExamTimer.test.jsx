@@ -8,6 +8,9 @@ import { ExamStatus } from '../constants';
 
 jest.mock('../data', () => ({
   getLatestAttemptData: jest.fn(),
+  useExpireExam: () => ({ mutate: jest.fn() }),
+  useStopExam: () => ({ mutate: jest.fn() }),
+  useSubmitExam: () => ({ mutate: jest.fn() }),
   Emitter: {
     on: () => jest.fn(),
     once: () => jest.fn(),

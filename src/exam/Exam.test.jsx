@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
+import { useIsMutating } from '@tanstack/react-query';
 import { render, initializeTestStore } from '../setupTest';
 import Exam from './Exam';
 import { ExamType, ExamStatus } from '../constants';
@@ -14,6 +15,10 @@ jest.mock('../data', () => {
     getProctoringSettings: jest.fn(),
   };
 });
+jest.mock('@tanstack/react-query', () => ({
+  ...jest.requireActual('@tanstack/react-query'),
+  useIsMutating: jest.fn(() => 0),
+}));
 
 getProctoringSettings.mockReturnValue(jest.fn());
 
@@ -50,6 +55,18 @@ describe('Exam', () => {
     );
 
     expect(queryByTestId('spinner')).toBeInTheDocument();
+  });
+
+  it('renders loading spinner while an attempt action is in flight', () => {
+    useIsMutating.mockReturnValue(1);
+
+    const { queryByTestId } = render(
+      <Exam {...defaultProps} />,
+      { store },
+    );
+
+    expect(queryByTestId('spinner')).toBeInTheDocument();
+    useIsMutating.mockReturnValue(0);
   });
 
   it('renders exam content when not loading', () => {

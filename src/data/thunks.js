@@ -3,16 +3,9 @@ import { getConfig } from '@edx/frontend-platform';
 import {
   fetchExamAttemptsData,
   fetchLatestAttempt,
-  createExamAttempt,
-  stopAttempt,
-  continueAttempt,
-  submitAttempt,
   pollExamAttempt,
   fetchProctoringSettings,
-  softwareDownloadAttempt,
   fetchExamReviewPolicy,
-  resetAttempt,
-  declineAttempt,
   endExamWithFailure,
   fetchExamAccessToken,
 } from './api';
@@ -29,9 +22,8 @@ import {
   setAllowProctoringOptOut,
 } from './slice';
 import { ExamStatus, ExamType, IS_PROCTORED_STATUS } from '../constants';
-import { workerPromiseForEventNames, pingApplication } from './messages/handlers';
-import actionToMessageTypesMap from './messages/constants';
-import { checkAppStatus, notifyStartExam } from './messages/proctorio';
+import { pingApplication } from './messages/handlers';
+import { checkAppStatus } from './messages/proctorio';
 
 function handleAPIError(error, dispatch) {
   const { message, detail } = error;
@@ -139,122 +131,6 @@ export function examRequiresAccessToken() {
 }
 
 /**
- * Start a timed exam
- */
-export function startTimedExam() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().specialExams;
-    if (!exam.id) {
-      logError('Failed to start exam. No exam id.');
-      handleAPIError(
-        { message: 'Failed to start exam. No exam id was found.' },
-        dispatch,
-      );
-      return;
-    }
-    await updateAttemptAfter(
-      exam.course_id,
-      exam.content_id,
-      createExamAttempt(exam.id, exam.use_legacy_attempt_api),
-    )(dispatch);
-  };
-}
-
-export function createProctoredExamAttempt() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().specialExams;
-    if (!exam.id) {
-      logError('Failed to create exam attempt. No exam id.');
-      return;
-    }
-    await updateAttemptAfter(
-      exam.course_id,
-      exam.content_id,
-      createExamAttempt(exam.id, exam.use_legacy_attempt_api, false, true),
-    )(dispatch);
-  };
-}
-
-/**
- * Start a proctored exam (including onboarding and practice exams)
- */
-export function startProctoredExam() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().specialExams;
-    const { attempt } = exam || {};
-    if (!exam.id) {
-      logError('Failed to start proctored exam. No exam id.');
-      return;
-    }
-    const { desktop_application_js_url: workerUrl } = attempt || {};
-    const useWorker = window.Worker && workerUrl;
-    const examHasLtiProvider = !attempt.use_legacy_attempt_api;
-
-    if (useWorker) {
-      const startExamTimeoutMilliseconds = EXAM_START_TIMEOUT_MILLISECONDS;
-      workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)(
-        startExamTimeoutMilliseconds,
-        attempt.external_id,
-      ).then(() => updateAttemptAfter(
-        exam.course_id,
-        exam.content_id,
-        continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api),
-      )(dispatch))
-        .catch(error => {
-          const message = error?.message || 'Worker failed to respond.';
-          logError(
-            message,
-            {
-              attemptId: attempt.attempt_id,
-              attemptStatus: attempt.attempt_status,
-              courseId: attempt.course_id,
-              examId: exam.id,
-            },
-          );
-          handleAPIError(
-            { message: 'Something has gone wrong starting your exam. Please double-check that the application is running.' },
-            dispatch,
-          );
-        });
-    } else {
-      if (examHasLtiProvider) {
-        notifyStartExam();
-      }
-      await updateAttemptAfter(
-        exam.course_id,
-        exam.content_id,
-        continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api),
-      )(dispatch);
-    }
-  };
-}
-
-export function skipProctoringExam() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().specialExams;
-    if (!exam.id) {
-      logError('Failed to skip proctored exam. No exam id.');
-      return;
-    }
-    const attemptId = exam.attempt.attempt_id;
-    const useLegacyAttemptApi = exam.use_legacy_attempt_api;
-    if (attemptId) {
-      await updateAttemptAfter(
-        exam.course_id,
-        exam.content_id,
-        declineAttempt(attemptId, useLegacyAttemptApi),
-      )(dispatch);
-    } else {
-      await updateAttemptAfter(
-        exam.course_id,
-        exam.content_id,
-        createExamAttempt(exam.id, useLegacyAttemptApi),
-      )(dispatch);
-    }
-  };
-}
-
-/**
  * Poll exam active attempt status.
  * @param url - poll attempt url
  */
@@ -294,162 +170,6 @@ export function pollAttempt(url) {
   };
 }
 
-export function stopExam() {
-  return async (dispatch, getState) => {
-    const { exam, activeAttempt } = getState().specialExams;
-
-    if (!activeAttempt) {
-      logError('Failed to stop exam. No active attempt.');
-      handleAPIError(
-        { message: 'Failed to stop exam. No active attempt was found.' },
-        dispatch,
-      );
-      return;
-    }
-
-    const {
-      attempt_id: attemptId,
-      exam_url_path: examUrl,
-      use_legacy_attempt_api: useLegacyAttemptAPI,
-    } = activeAttempt;
-    if (!exam.attempt || attemptId !== exam.attempt.attempt_id) {
-      try {
-        await stopAttempt(attemptId, useLegacyAttemptAPI);
-        window.location.href = examUrl;
-      } catch (error) {
-        handleAPIError(error, dispatch);
-      }
-      return;
-    }
-
-    await updateAttemptAfter(exam.course_id, exam.content_id, stopAttempt(attemptId, useLegacyAttemptAPI))(dispatch);
-  };
-}
-
-export function continueExam() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().specialExams;
-    const attemptId = exam.attempt.attempt_id;
-    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
-    if (!attemptId) {
-      logError('Failed to continue exam. No attempt id.');
-      handleAPIError(
-        { message: 'Failed to continue exam. No attempt id was found.' },
-        dispatch,
-      );
-      return;
-    }
-    await updateAttemptAfter(
-      exam.course_id,
-      exam.content_id,
-      continueAttempt(attemptId, useLegacyAttemptAPI),
-    )(dispatch);
-  };
-}
-
-export function resetExam() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().specialExams;
-    const attemptId = exam.attempt.attempt_id;
-    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
-    if (!attemptId) {
-      logError('Failed to reset exam attempt. No attempt id.');
-      handleAPIError(
-        { message: 'Failed to reset exam attempt. No attempt id was found.' },
-        dispatch,
-      );
-      return;
-    }
-    await updateAttemptAfter(exam.course_id, exam.content_id, resetAttempt(attemptId, useLegacyAttemptAPI))(dispatch);
-  };
-}
-
-export function submitExam() {
-  return async (dispatch, getState) => {
-    const { exam, activeAttempt } = getState().specialExams;
-    const { desktop_application_js_url: workerUrl, external_id: attemptExternalId } = activeAttempt || {};
-    const useWorker = window.Worker && activeAttempt && workerUrl;
-
-    const handleBackendProviderSubmission = () => {
-      // if a backend provider is being used during the exam
-      // send it a message that exam is being submitted
-      if (useWorker) {
-        workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)(0, attemptExternalId)
-          .catch(() => handleAPIError(
-            { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
-            dispatch,
-          ));
-      }
-    };
-
-    if (!activeAttempt) {
-      logError('Failed to submit exam. No active attempt.');
-      handleAPIError(
-        { message: 'Failed to submit exam. No active attempt was found.' },
-        dispatch,
-      );
-      return;
-    }
-
-    const {
-      attempt_id: attemptId,
-      exam_url_path: examUrl,
-      use_legacy_attempt_api: useLegacyAttemptAPI,
-    } = activeAttempt;
-    if (!exam.attempt || attemptId !== exam.attempt.attempt_id) {
-      try {
-        await submitAttempt(attemptId, useLegacyAttemptAPI);
-        window.location.href = examUrl;
-        handleBackendProviderSubmission();
-      } catch (error) {
-        handleAPIError(error, dispatch);
-      }
-      return;
-    }
-
-    await updateAttemptAfter(exam.course_id, exam.content_id, submitAttempt(attemptId, useLegacyAttemptAPI))(dispatch);
-    handleBackendProviderSubmission();
-  };
-}
-
-export function expireExam() {
-  return async (dispatch, getState) => {
-    const { exam, activeAttempt } = getState().specialExams;
-    const {
-      desktop_application_js_url: workerUrl,
-      attempt_id: attemptId,
-      external_id: attemptExternalId,
-      use_legacy_attempt_api: useLegacyAttemptAPI,
-    } = activeAttempt || {};
-    const useWorker = window.Worker && activeAttempt && workerUrl;
-
-    if (!attemptId) {
-      logError('Failed to expire exam. No attempt id.');
-      handleAPIError(
-        { message: 'Failed to expire exam. No attempt id was found.' },
-        dispatch,
-      );
-      return;
-    }
-
-    // this sure looks like a bug
-    await updateAttemptAfter(
-      activeAttempt.course_id,
-      exam.content_id,
-      submitAttempt(attemptId, useLegacyAttemptAPI),
-    )(dispatch);
-    dispatch(expireExamAttempt());
-
-    if (useWorker) {
-      workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)(0, attemptExternalId)
-        .catch(() => handleAPIError(
-          { message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.' },
-          dispatch,
-        ));
-    }
-  };
-}
-
 /**
  * Ping provider application (used for proctored exams).
  * @param timeoutInSeconds - time to wait for worker response before raising an error
@@ -484,27 +204,6 @@ export function pingAttempt(timeoutInSeconds, workerUrl) {
           endExamWithFailure(activeAttempt.attempt_id, message, useLegacyAttemptAPI),
         )(dispatch);
       });
-  };
-}
-
-export function startProctoringSoftwareDownload() {
-  return async (dispatch, getState) => {
-    const { exam } = getState().specialExams;
-    const attemptId = exam.attempt.attempt_id;
-    const useLegacyAttemptAPI = exam.attempt.use_legacy_attempt_api;
-    if (!attemptId) {
-      logError('Failed to start downloading proctoring software. No attempt id.');
-      handleAPIError(
-        { message: 'Failed to start downloading proctoring software. No attempt id was found.' },
-        dispatch,
-      );
-      return;
-    }
-    await updateAttemptAfter(
-      exam.course_id,
-      exam.content_id,
-      softwareDownloadAttempt(attemptId, useLegacyAttemptAPI),
-    )(dispatch);
   };
 }
 

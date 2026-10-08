@@ -3,9 +3,7 @@ import { Factory } from 'rosie';
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from './index';
-import {
-  continueExam, getExamAttemptsData, startProctoredExam, startTimedExam, submitExam,
-} from '../data';
+import { getExamAttemptsData } from '../data';
 import { pollExamAttempt, softwareDownloadAttempt } from '../data/api';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
@@ -24,23 +22,26 @@ jest.mock('../constants', () => {
   };
 });
 
+const mockContinueExam = jest.fn();
+const mockSubmitExam = jest.fn();
+const mockSkipProctoringExam = jest.fn();
+const mockStartTimedExam = jest.fn();
 jest.mock('../data', () => ({
-  continueExam: jest.fn(),
   getExamAttemptsData: jest.fn(),
   getExamReviewPolicy: jest.fn(),
-  startProctoredExam: jest.fn(),
-  startTimedExam: jest.fn(),
-  submitExam: jest.fn(),
+  useContinueExam: () => ({ mutate: mockContinueExam }),
+  useCreateProctoredExamAttempt: () => ({ mutate: jest.fn() }),
+  useResetExam: () => ({ mutate: jest.fn() }),
+  useSkipProctoringExam: () => ({ mutate: mockSkipProctoringExam }),
+  useStartProctoredExam: () => ({ mutate: jest.fn() }),
+  useStartTimedExam: () => ({ mutate: mockStartTimedExam }),
+  useSubmitExam: () => ({ mutate: mockSubmitExam }),
 }));
 jest.mock('../data/api', () => ({
   pollExamAttempt: jest.fn(),
   softwareDownloadAttempt: jest.fn(),
 }));
-continueExam.mockReturnValue(jest.fn());
-submitExam.mockReturnValue(jest.fn());
 getExamAttemptsData.mockReturnValue(jest.fn());
-startProctoredExam.mockReturnValue(jest.fn());
-startTimedExam.mockReturnValue(jest.fn());
 pollExamAttempt.mockReturnValue(Promise.resolve({}));
 
 describe('SequenceExamWrapper', () => {
@@ -51,6 +52,7 @@ describe('SequenceExamWrapper', () => {
     store = initializeTestStore();
     store.subscribe = jest.fn();
     store.dispatch = jest.fn();
+    jest.clearAllMocks();
   });
 
   it('renders SkipProctoredExamInstruction when skipProctoring is true for proctored exam', () => {
@@ -84,6 +86,10 @@ describe('SequenceExamWrapper', () => {
     // Cancel skip
     fireEvent.click(getByTestId('skip-cancel-exam-button'));
     expect(getByTestId('start-exam-without-proctoring-button')).toBeInTheDocument();
+    // Skip, then confirm
+    fireEvent.click(getByTestId('start-exam-without-proctoring-button'));
+    fireEvent.click(getByTestId('skip-confirm-exam-button'));
+    expect(mockSkipProctoringExam).toHaveBeenCalledTimes(1);
   });
 
   // Removed: renders OnboardingErrorProctoredExamInstructions for proctored exam onboarding error
@@ -192,6 +198,8 @@ describe('SequenceExamWrapper', () => {
       { store },
     );
     expect(getByTestId('start-exam-button')).toHaveTextContent('I am ready to start this timed exam.');
+    fireEvent.click(getByTestId('start-exam-button'));
+    expect(mockStartTimedExam).toHaveBeenCalledTimes(1);
   });
 
   it('Instructions are not shown when exam is started', () => {
@@ -412,12 +420,12 @@ describe('SequenceExamWrapper', () => {
 
     expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Are you sure that you want to submit your timed exam?');
     fireEvent.click(queryByTestId('end-exam-button'));
-    expect(submitExam).toHaveBeenCalled();
+    expect(mockSubmitExam).toHaveBeenCalled();
     const continueButton = queryByTestId('continue-exam-button');
     if (secondsLeft > 0) {
       expect(continueButton).toBeInTheDocument();
       fireEvent.click(continueButton);
-      expect(continueExam).toHaveBeenCalledTimes(1);
+      expect(mockContinueExam).toHaveBeenCalledTimes(1);
       act(() => {
         Emitter.emit(TIMER_REACHED_NULL);
       });

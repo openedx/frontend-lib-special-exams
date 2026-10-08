@@ -3,7 +3,7 @@ import { Factory } from 'rosie';
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from '../index';
-import { getExamAttemptsData, submitExam } from '../../data';
+import { getExamAttemptsData } from '../../data';
 import {
   initializeMockApp,
   initializeTestStore,
@@ -16,13 +16,19 @@ import {
   ONBOARDING_ERRORS,
 } from '../../constants';
 
+const mockSubmitExam = jest.fn();
 jest.mock('../../data', () => ({
   getExamAttemptsData: jest.fn(),
   getExamReviewPolicy: jest.fn(),
-  submitExam: jest.fn(),
+  useContinueExam: () => ({ mutate: jest.fn() }),
+  useCreateProctoredExamAttempt: () => ({ mutate: jest.fn() }),
+  useResetExam: () => ({ mutate: jest.fn() }),
+  useSkipProctoringExam: () => ({ mutate: jest.fn() }),
+  useStartProctoredExam: () => ({ mutate: jest.fn() }),
+  useStartTimedExam: () => ({ mutate: jest.fn() }),
+  useSubmitExam: () => ({ mutate: mockSubmitExam }),
 }));
 
-submitExam.mockReturnValue(jest.fn());
 getExamAttemptsData.mockReturnValue(jest.fn());
 
 describe('SequenceExamWrapper', () => {
@@ -185,7 +191,7 @@ describe('SequenceExamWrapper', () => {
 
     expect(queryByTestId('proctored-exam-instructions-title')).toHaveTextContent('Are you sure you want to end your proctored exam?');
     fireEvent.click(queryByTestId('end-exam-button'));
-    expect(submitExam).toHaveBeenCalled();
+    expect(mockSubmitExam).toHaveBeenCalled();
   });
 
   it('Initiates an LTI launch in a new window when the user clicks the submit button', async () => {

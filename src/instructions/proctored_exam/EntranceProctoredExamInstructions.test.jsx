@@ -2,7 +2,6 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
 import EntranceProctoredExamInstructions from './EntranceProctoredExamInstructions';
-import { createProctoredExamAttempt } from '../../data';
 import {
   initializeMockApp,
   initializeTestStore,
@@ -10,9 +9,9 @@ import {
   screen,
 } from '../../setupTest';
 
-// Mock the data module
+const mockCreateProctoredExamAttempt = jest.fn();
 jest.mock('../../data', () => ({
-  createProctoredExamAttempt: jest.fn(),
+  useCreateProctoredExamAttempt: () => ({ mutate: mockCreateProctoredExamAttempt }),
 }));
 
 // Mock the SkipProctoredExamButton component with a simple function
@@ -159,10 +158,7 @@ describe('EntranceProctoredExamInstructions', () => {
    * Test case for clicking the "Continue to my proctored exam" button
    * This tests the onClick handler for the button
    */
-  it('dispatches createProctoredExamAttempt when continue button is clicked', () => {
-    // Set up the mock function
-    createProctoredExamAttempt.mockReturnValue({ type: 'CREATE_PROCTORED_EXAM_ATTEMPT' });
-
+  it('creates the proctored attempt when continue button is clicked', () => {
     // Set up the store state
     store.getState = () => ({
       specialExams: {
@@ -184,11 +180,7 @@ describe('EntranceProctoredExamInstructions', () => {
     // Click the continue button
     fireEvent.click(screen.getByTestId('start-exam-button'));
 
-    // Verify the createProctoredExamAttempt function was called
-    expect(createProctoredExamAttempt).toHaveBeenCalled();
-
-    // Verify the dispatch was called with the correct action
-    expect(store.dispatch).toHaveBeenCalledWith({ type: 'CREATE_PROCTORED_EXAM_ATTEMPT' });
+    expect(mockCreateProctoredExamAttempt).toHaveBeenCalledTimes(1);
   });
 
   /**

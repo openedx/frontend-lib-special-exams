@@ -1,13 +1,13 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
 
-import { resetExam } from '../../data';
+import { useResetExam } from '../../data';
 import { ExamStatus } from '../../constants';
 
 const SubmittedPracticeExamInstructions = () => {
-  const dispatch = useDispatch();
+  const resetExam = useResetExam();
   const { exam } = useSelector(state => state.specialExams);
 
   // It does not show the reload button if the exam is submitted and not legacy
@@ -35,7 +35,7 @@ const SubmittedPracticeExamInstructions = () => {
         <Button
           data-testid="retry-exam-button"
           variant="primary"
-          onClick={() => dispatch(resetExam())}
+          onClick={() => resetExam.mutate()}
         >
           <FormattedMessage
             id="exam.SubmittedPracticeExamInstructions.retryExamButton"

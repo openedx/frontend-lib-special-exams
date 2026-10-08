@@ -1,14 +1,14 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button, MailtoLink } from '@openedx/paragon';
 
-import { resetExam } from '../../data';
+import { useResetExam } from '../../data';
 
 const RejectedOnboardingExamInstructions = () => {
   const { proctoringSettings } = useSelector(state => state.specialExams);
 
-  const dispatch = useDispatch();
+  const resetExam = useResetExam();
 
   const { integration_specific_email: integrationSpecificEmail } = proctoringSettings || {};
 
@@ -38,7 +38,7 @@ const RejectedOnboardingExamInstructions = () => {
       <Button
         data-testid="reset-exam-button"
         variant="primary"
-        onClick={() => dispatch(resetExam())}
+        onClick={() => resetExam.mutate()}
       >
         <FormattedMessage
           id="exam.RejectedOnboardingExamInstructions.resetExamButton"

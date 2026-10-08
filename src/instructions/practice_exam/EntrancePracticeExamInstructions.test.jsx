@@ -6,20 +6,10 @@ import {
 } from '../../setupTest';
 import { ExamType } from '../../constants';
 
-// Mock return value for createProctoredExamAttempt
-const mockCreateAttemptReturn = { type: 'CREATE_ATTEMPT' };
-const mockDispatch = jest.fn();
-
-// Mock the react-redux useDispatch hook
-jest.mock('react-redux', () => ({
-  ...jest.requireActual('react-redux'),
-  useDispatch: () => mockDispatch,
-}));
-
-// Mock the createProctoredExamAttempt function from data module
+const mockCreateProctoredExamAttempt = jest.fn();
 jest.mock('../../data', () => ({
   ...jest.requireActual('../../data'),
-  createProctoredExamAttempt: () => mockCreateAttemptReturn,
+  useCreateProctoredExamAttempt: () => ({ mutate: mockCreateProctoredExamAttempt }),
 }));
 
 describe('EntrancePracticeExamInstructions', () => {
@@ -103,16 +93,12 @@ describe('EntrancePracticeExamInstructions', () => {
       );
     });
 
-    it('dispatches createProctoredExamAttempt when clicking the start button', () => {
-      // Verify dispatch hasn't been called yet
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('creates the proctored attempt when clicking the start button', () => {
+      expect(mockCreateProctoredExamAttempt).not.toHaveBeenCalled();
 
-      // Click the button
       fireEvent.click(screen.getByTestId('start-exam-button'));
 
-      // Verify dispatch was called with the correct action
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockCreateAttemptReturn);
+      expect(mockCreateProctoredExamAttempt).toHaveBeenCalledTimes(1);
     });
   });
 

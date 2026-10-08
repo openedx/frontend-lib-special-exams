@@ -8,7 +8,7 @@ import SubmitExamInstructions from './SubmitInstructions';
 import { ExamType } from '../constants';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
-import { continueExam } from '../data';
+import { useContinueExam } from '../data';
 
 // Mock the imported components
 jest.mock('./proctored_exam/Footer', () => jest.fn(() => <div data-testid="footer-component" />));
@@ -19,11 +19,11 @@ jest.mock('./timed_exam', () => ({
   SubmitTimedExamInstructions: jest.fn(() => <div data-testid="submit-timed-exam-instructions" />),
 }));
 
-// Mock the continueExam function
 jest.mock('../data', () => ({
-  continueExam: jest.fn(),
+  useContinueExam: jest.fn(),
 }));
-continueExam.mockReturnValue(jest.fn());
+const continueExam = jest.fn();
+useContinueExam.mockReturnValue({ mutate: continueExam });
 
 describe('SubmitExamInstructions', () => {
   let store;

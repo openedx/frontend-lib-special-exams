@@ -10,6 +10,7 @@ import PropTypes from 'prop-types';
 import { Provider } from 'react-redux';
 import { render as rtlRender } from '@testing-library/react';
 import { configureStore } from '@reduxjs/toolkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IntlProvider } from '@edx/frontend-platform/i18n';
 import examReducer from './data/slice';
 
@@ -51,6 +52,10 @@ export function initializeMockApp() {
 
 let globalStore;
 
+export const createTestQueryClient = () => new QueryClient({
+  defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+});
+
 export function initializeTestStore(preloadedState = null, overrideStore = true) {
   let store = configureStore({
     reducer: {
@@ -76,6 +81,7 @@ function render(
   {
     store = null,
     appContext = null,
+    queryClient = createTestQueryClient(),
     ...renderOptions
   } = {},
 ) {
@@ -93,7 +99,9 @@ function render(
       <AppContext.Provider value={appContext || defaultAppContext}>
         <IntlProvider locale="en">
           <Provider store={store || globalStore}>
-            {children}
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
           </Provider>
         </IntlProvider>
       </AppContext.Provider>

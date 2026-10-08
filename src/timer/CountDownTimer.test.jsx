@@ -5,9 +5,13 @@ import { ExamTimerBlock } from './index';
 import {
   render, screen, initializeTestStore, fireEvent, act,
 } from '../setupTest';
-import { stopExam, submitExam } from '../data';
+import { Emitter } from '../data';
 import { appendTimerEnd } from '../helpers';
+import { TIMER_LIMIT_REACHED } from './events';
 
+const mockExpireExam = jest.fn();
+const mockStopExam = jest.fn();
+const mockSubmitExam = jest.fn();
 // We do a partial mock to avoid mocking out other exported values (e.g. the store and the Emitter).
 jest.mock('../data', () => {
   const originalModule = jest.requireActual('../data');
@@ -15,18 +19,18 @@ jest.mock('../data', () => {
   return {
     __esModule: true,
     ...originalModule,
-    stopExam: jest.fn(),
-    submitExam: jest.fn(),
+    useExpireExam: () => ({ mutate: mockExpireExam }),
+    useStopExam: () => ({ mutate: mockStopExam }),
+    useSubmitExam: () => ({ mutate: mockSubmitExam }),
   };
 });
 
 describe('ExamTimerBlock', () => {
   let attempt;
   let store;
-  submitExam.mockReturnValue(jest.fn());
-  stopExam.mockReturnValue(jest.fn());
 
   beforeEach(() => {
+    jest.clearAllMocks();
     const preloadedState = {
       specialExams: {
         isLoading: true,
@@ -186,7 +190,7 @@ describe('ExamTimerBlock', () => {
     await screen.findByText('00:00:00');
     await userEvent.click(screen.getByTestId('end-button', { name: 'Show more' }));
 
-    expect(submitExam).toHaveBeenCalledTimes(1);
+    expect(mockSubmitExam).toHaveBeenCalledTimes(1);
   });
 
   it('stops exam if time has not reached 00:00 and user clicks end my exam button', async () => {
@@ -197,7 +201,21 @@ describe('ExamTimerBlock', () => {
     await screen.findByText('00:00:23');
     await userEvent.click(screen.getByTestId('end-button'));
 
-    expect(stopExam).toHaveBeenCalledTimes(1);
+    expect(mockStopExam).toHaveBeenCalledTimes(1);
+  });
+
+  it('expires the exam once when the limit is reached after a remount', async () => {
+    const first = render(<ExamTimerBlock />);
+    await screen.findByText('00:00:23');
+    first.unmount();
+
+    render(<ExamTimerBlock />);
+    await screen.findByText('00:00:23');
+    act(() => {
+      Emitter.emit(TIMER_LIMIT_REACHED);
+    });
+
+    expect(mockExpireExam).toHaveBeenCalledTimes(1);
   });
 
   it('Update exam timer when attempt time_remaining_seconds is smaller than displayed time', async () => {

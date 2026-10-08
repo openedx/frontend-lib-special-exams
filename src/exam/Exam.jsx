@@ -4,12 +4,13 @@ import PropTypes from 'prop-types';
 import { useIntl, FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Alert, Spinner } from '@openedx/paragon';
 import { Info } from '@openedx/paragon/icons';
+import { useIsMutating } from '@tanstack/react-query';
 import { ExamTimerBlock } from '../timer';
 import Instructions from '../instructions';
 import ExamAPIError from './ExamAPIError';
 import { ExamStatus, ExamType, IS_STARTED_STATUS } from '../constants';
 import messages from './messages';
-import { getProctoringSettings } from '../data';
+import { getProctoringSettings, specialExamsMutationKey } from '../data';
 
 /**
  * Exam component is intended to render exam instructions before and after exam.
@@ -23,10 +24,12 @@ const Exam = ({
   isGated, isTimeLimited, originalUserIsStaff, canAccessProctoredExams, children,
 }) => {
   const {
-    isLoading, activeAttempt, exam, apiErrorMsg,
+    isLoading: isExamLoading, activeAttempt, exam, apiErrorMsg,
   } = useSelector(state => state.specialExams);
   const dispatch = useDispatch();
   const intl = useIntl();
+  const isMutating = useIsMutating({ mutationKey: specialExamsMutationKey }) > 0;
+  const isLoading = isExamLoading || isMutating;
 
   const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
 

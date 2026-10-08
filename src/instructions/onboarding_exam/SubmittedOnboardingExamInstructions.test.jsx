@@ -3,13 +3,12 @@ import { fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useToggle } from '@openedx/paragon';
 
-import { resetExam } from '../../data';
+import { useResetExam } from '../../data';
 import SubmittedOnboardingExamInstructions from './SubmittedOnboardingExamInstructions';
 import { render, initializeTestStore, initializeMockApp } from '../../setupTest';
 
-// Mock the resetExam action
 jest.mock('../../data', () => ({
-  resetExam: jest.fn(),
+  useResetExam: jest.fn(),
 }));
 
 // Mock the useToggle hook
@@ -35,7 +34,7 @@ describe('SubmittedOnboardingExamInstructions', () => {
     store = initializeTestStore();
 
     // Setup mock implementations
-    resetExam.mockReturnValue(mockResetExam);
+    useResetExam.mockReturnValue({ mutate: mockResetExam });
 
     // Mock the dispatch function
     store.dispatch = jest.fn();
@@ -234,8 +233,6 @@ describe('SubmittedOnboardingExamInstructions', () => {
     // Click the retry button
     fireEvent.click(retryButton);
 
-    // Verify resetExam was called and the result was dispatched
-    expect(resetExam).toHaveBeenCalled();
-    expect(store.dispatch).toHaveBeenCalledWith(mockResetExam);
+    expect(mockResetExam).toHaveBeenCalled();
   });
 });

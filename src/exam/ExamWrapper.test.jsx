@@ -2,21 +2,19 @@ import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
-import { getExamAttemptsData, startTimedExam } from '../data';
+import { getExamAttemptsData } from '../data';
 import { render, waitFor, initializeTestStore } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
 
 jest.mock('../data', () => {
-  const originalModule = jest.requireActual('../data/thunks');
+  const originalModule = jest.requireActual('../data');
   return {
     ...originalModule,
     getExamAttemptsData: jest.fn(),
-    startTimedExam: jest.fn(),
   };
 });
 
 getExamAttemptsData.mockReturnValue(jest.fn());
-startTimedExam.mockReturnValue(jest.fn());
 
 describe('SequenceExamWrapper', () => {
   const sequence = {

@@ -1,15 +1,15 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
 import { ExamType } from '../../constants';
-import { submitExam } from '../../data';
+import { useSubmitExam } from '../../data';
 
 const SubmitProctoredExamInstructions = () => {
   const { exam, activeAttempt } = useSelector(state => state.specialExams);
 
-  const dispatch = useDispatch();
+  const submitExam = useSubmitExam();
 
   const { type: examType, attempt } = exam || {};
   const { exam_display_name: examName } = activeAttempt;
@@ -20,7 +20,7 @@ const SubmitProctoredExamInstructions = () => {
     if (examHasLtiProvider) {
       window.location.assign(submitLtiAttemptUrl);
     } else {
-      dispatch(submitExam());
+      submitExam.mutate();
     }
   };
 

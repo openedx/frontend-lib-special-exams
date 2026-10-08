@@ -5,13 +5,14 @@ import { getConfig } from '@edx/frontend-platform';
 import { Button, Container, Spinner } from '@openedx/paragon';
 import Footer from './Footer';
 
-import { getExamReviewPolicy, startProctoredExam } from '../../data';
+import { getExamReviewPolicy, useStartProctoredExam } from '../../data';
 
 const ReadyToStartProctoredExamInstructions = () => {
   const { exam } = useSelector(state => state.specialExams);
   const { attempt, reviewPolicy } = exam;
 
   const dispatch = useDispatch();
+  const startProctoredExam = useStartProctoredExam();
 
   const examDuration = attempt.total_time ? attempt.total_time : exam.total_time;
   const platformName = getConfig().SITE_NAME;
@@ -24,7 +25,7 @@ const ReadyToStartProctoredExamInstructions = () => {
 
   const handleStart = () => {
     setBeginExamClicked(true);
-    dispatch(startProctoredExam());
+    startProctoredExam.mutate();
   };
 
   return (
