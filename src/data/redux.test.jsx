@@ -860,7 +860,7 @@ describe('Data layer integration tests', () => {
       it('Should create exam attempt with declined status, and update attempt and exam', async () => {
         axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam: Factory.build('exam'), active_attempt: {} });
         axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).reply(200, { exam: declinedExam, active_attempt: {} });
-        axiosMock.onPost(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
+        axiosMock.onPost(createExamAttemptLegacyUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
 
         await executeThunk(thunks.getExamAttemptsData(courseId, contentId), store.dispatch);
         let state = store.getState();
@@ -869,6 +869,12 @@ describe('Data layer integration tests', () => {
         await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
         state = store.getState();
         expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+        // edx-proctoring declines a proctored exam's new attempt only when attempt_proctored is false.
+        expect(axiosMock.history.post).toHaveLength(1);
+        expect(axiosMock.history.post[0].url).toBe(createExamAttemptLegacyUrl);
+        expect(JSON.parse(axiosMock.history.post[0].data)).toEqual({
+          exam_id: exam.id, start_clock: 'true', attempt_proctored: 'false',
+        });
       });
 
       it('Should change existing attempt status to declined, and update attempt and exam', async () => {
@@ -894,7 +900,24 @@ describe('Data layer integration tests', () => {
       await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
       const state = store.getState();
       expect(state.specialExams.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
-      expect(axiosMock.history.post.length).toBe(1);
+      expect(axiosMock.history.post).toHaveLength(1);
+      expect(axiosMock.history.post[0].url).toBe(createUpdateAttemptURL);
+      expect(JSON.parse(axiosMock.history.post[0].data)).toEqual({
+        exam_id: exam.id, start_clock: 'true', attempt_proctored: 'false',
+      });
+    });
+
+    it('Should create the declined attempt on edx-proctoring for a legacy exam', async () => {
+      await initWithExamAttempt(Factory.build('exam', { use_legacy_attempt_api: true }), {});
+      axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: declinedExam, active_attempt: {} });
+      axiosMock.onPost(createExamAttemptLegacyUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
+
+      await executeThunk(thunks.skipProctoringExam(), store.dispatch, store.getState);
+      expect(axiosMock.history.post).toHaveLength(1);
+      expect(axiosMock.history.post[0].url).toBe(createExamAttemptLegacyUrl);
+      expect(JSON.parse(axiosMock.history.post[0].data)).toEqual({
+        exam_id: exam.id, start_clock: 'true', attempt_proctored: 'false',
+      });
     });
 
     it('Should change existing attempt status to declined, and update attempt and exam', async () => {
