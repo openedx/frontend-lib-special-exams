@@ -1,4 +1,3 @@
-import 'babel-polyfill';
 import '@testing-library/jest-dom';
 import './data/__factories__';
 import React, { useMemo, useState } from 'react';
