@@ -1,4 +1,4 @@
-import { defineMessages } from '@edx/frontend-platform/i18n';
+import { defineMessages } from 'react-intl';
 
 const messages = defineMessages({
   cannotStartModalTitle: {

@@ -2,7 +2,7 @@ import React from 'react';
 import { getConfig } from '@edx/frontend-platform';
 import { Alert, Hyperlink, Icon } from '@openedx/paragon';
 import { Info } from '@openedx/paragon/icons';
-import { useIntl, FormattedMessage } from '@edx/frontend-platform/i18n';
+import { useIntl, FormattedMessage } from 'react-intl';
 import messages from './messages';
 import { useSequenceExam } from '../core/SequenceExamContext';
 

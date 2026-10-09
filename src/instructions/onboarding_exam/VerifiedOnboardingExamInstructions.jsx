@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import { MailtoLink } from '@openedx/paragon';
 import { useProctoringSettings } from '../../data';
 

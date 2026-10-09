@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Container } from '@openedx/paragon';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import Emitter from '../data/emitter';
 import { ExamType } from '../constants';
 import { useContinueExam, useActiveAttempt, useExam } from '../data';

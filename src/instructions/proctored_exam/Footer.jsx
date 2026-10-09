@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@openedx/paragon';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import { getConfig } from '@edx/frontend-platform';
 
 const Footer = () => {

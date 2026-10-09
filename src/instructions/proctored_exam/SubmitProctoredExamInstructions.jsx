@@ -1,6 +1,6 @@
 import React from 'react';
 import { getConfig } from '@edx/frontend-platform';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import { Button } from '@openedx/paragon';
 import { ExamType } from '../../constants';
 import { useSubmitExam, useActiveAttempt, useExam } from '../../data';

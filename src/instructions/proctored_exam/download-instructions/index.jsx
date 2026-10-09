@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { getConfig } from '@edx/frontend-platform';
-import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Container } from '@openedx/paragon';
 import { ExamStatus } from '../../../constants';
 import { useExam, useInvalidateExamState, useProctoringSettings } from '../../../data';

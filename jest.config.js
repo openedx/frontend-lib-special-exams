@@ -12,8 +12,9 @@ module.exports = {
   transform: {
     '^.+\\.[jt]sx?$': 'babel-jest',
   },
+  // react-intl 10 and its formatjs packages ship ES modules only.
   transformIgnorePatterns: [
-    '/node_modules/(?!@(open)?edx)',
+    '/node_modules/(?!@(open)?edx|react-intl|@formatjs|intl-messageformat)',
   ],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',

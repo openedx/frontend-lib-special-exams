@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { StatefulButton, Form } from '@openedx/paragon';
 import { Check } from '@openedx/paragon/icons';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 
 const ExamCode = ({ code }) => {
   const props = {

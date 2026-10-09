@@ -9,7 +9,7 @@ import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { render as rtlRender } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { IntlProvider } from '@edx/frontend-platform/i18n';
+import { IntlProvider } from 'react-intl';
 import SequenceExamContext from './core/SequenceExamContext';
 import { specialExamsQueryKeys } from './data/queryKeys';
 import { defaultExam } from './data/defaults';

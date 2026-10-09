@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import { Button } from '@openedx/paragon';
 import { useStartTimedExam, useExam } from '../../data';
 

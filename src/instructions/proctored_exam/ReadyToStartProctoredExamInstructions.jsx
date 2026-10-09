@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import { getConfig } from '@edx/frontend-platform';
 import { Button, Container, Spinner } from '@openedx/paragon';
 import Footer from './Footer';
