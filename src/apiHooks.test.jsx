@@ -1,16 +1,14 @@
 import { Factory } from 'rosie';
 import MockAdapter from 'axios-mock-adapter';
-import { getConfig } from '@edx/frontend-platform';
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 
 import { useExamAccessToken, useIsExam } from './apiHooks';
 import { specialExamsQueryKeys } from './data/queryKeys';
 import {
-  createTestQueryClient, initializeMockApp, render, waitFor,
+  createTestQueryClient, httpClient, initializeMockApp, render, testConfig, waitFor,
 } from './setupTest';
 
 const { loggingService } = initializeMockApp();
-const axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+const axiosMock = new MockAdapter(httpClient);
 
 /**
  * Hooks must be run in the scope of a component. To run the hook, wrap it in a test component whose sole
@@ -38,7 +36,7 @@ describe('External API integration tests', () => {
   describe('under an exam sequence', () => {
     const mockExam = Factory.build('exam', { attempt: Factory.build('attempt') });
     const mockToken = Factory.build('examAccessToken');
-    const accessTokenUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${mockExam.id}/`;
+    const accessTokenUrl = `${testConfig.examsBaseUrl}/api/v1/access_tokens/exam_id/${mockExam.id}/`;
 
     it('useIsExam should return true if exam is set', () => {
       expect(renderHook(useIsExam, { exam: mockExam }).current).toBe(true);
@@ -76,8 +74,7 @@ describe('External API integration tests', () => {
 
       renderHook(useExamAccessToken, { exam: mockExam });
 
-      // frontend-platform's `logError` forwards the custom attributes the hook leaves out.
-      await waitFor(() => expect(loggingService.logError).toHaveBeenCalledWith('Exam access token was not granted.', undefined));
+      await waitFor(() => expect(loggingService.logError).toHaveBeenCalledWith('Exam access token was not granted.'));
     });
   });
 

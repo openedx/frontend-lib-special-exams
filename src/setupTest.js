@@ -1,53 +1,37 @@
 import 'babel-polyfill';
 import '@testing-library/jest-dom';
 import './data/__factories__';
-import { getConfig, mergeConfig } from '@edx/frontend-platform';
-import { configure as configureLogging } from '@edx/frontend-platform/logging';
-import { configure as configureAuth, MockAuthService } from '@edx/frontend-platform/auth';
-import { AppContext } from '@edx/frontend-platform/react';
 import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 import { render as rtlRender } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IntlProvider } from 'react-intl';
 import SequenceExamContext from './core/SequenceExamContext';
+import SpecialExamsProvider from './core/SpecialExamsProvider';
 import { specialExamsQueryKeys } from './data/queryKeys';
 import { defaultExam } from './data/defaults';
-
-// The library still reads its config, HTTP client, logger and messages from `@edx/frontend-platform`,
-// whose entry module imports an `env.config` that only frontend-build's webpack resolved. This mock
-// leaves with frontend-platform later in this PR.
-jest.mock('env.config', () => ({}), { virtual: true });
 
 window.getComputedStyle = jest.fn(() => ({
   getPropertyValue: jest.fn(),
 }));
 
-class MockLoggingService {
-  constructor() {
-    this.logInfo = jest.fn();
-    this.logError = jest.fn();
-  }
-}
-
-export function initializeTestConfig() {
-  mergeConfig({
-    ...process.env,
-    EXAMS_BASE_URL: process.env.EXAMS_BASE_URL || null,
-  });
-}
+// The host services `SpecialExamsProvider` takes, as tests provide them.
+export const testConfig = {
+  lmsBaseUrl: 'http://localhost:18000',
+  examsBaseUrl: 'http://localhost:18740',
+  contactUrl: 'http://localhost:18000/contact',
+  proctoredExamFaqUrl: '',
+  proctoredExamRulesUrl: '',
+};
+export const httpClient = axios.create();
+const loggingService = { logInfo: jest.fn(), logError: jest.fn() };
+export const testServices = {
+  config: testConfig, httpClient, logError: loggingService.logError, isAuthenticated: true,
+};
 
 export function initializeMockApp() {
-  initializeTestConfig();
-  const loggingService = configureLogging(MockLoggingService, {
-    config: getConfig(),
-  });
-  const authService = configureAuth(MockAuthService, {
-    config: getConfig(),
-    loggingService,
-  });
-
-  return { loggingService, authService };
+  return { loggingService };
 }
 
 export const createTestQueryClient = () => new QueryClient({
@@ -111,7 +95,7 @@ export function createTestSequenceExam(sequenceExam = {}, initialClientState = {
 function render(
   ui,
   {
-    appContext = null,
+    services = {},
     queryClient = createTestQueryClient(),
     specialExams = null,
     sequenceExam = {},
@@ -121,28 +105,19 @@ function render(
 ) {
   const identity = { ...(specialExams ? seedSpecialExams(queryClient, specialExams) : {}), ...sequenceExam };
   const { SequenceExamProvider } = createTestSequenceExam(identity, clientState);
-  const Wrapper = ({ children }) => {
-    const defaultAppContext = useMemo(() => ({
-      authenticatedUser: {
-        userId: 'abc123',
-        username: 'Mock User',
-        roles: [],
-        administrator: false,
-      },
-    }), []);
-    return (
-      // eslint-disable-next-line react/jsx-filename-extension
-      <AppContext.Provider value={appContext || defaultAppContext}>
-        <IntlProvider locale="en">
-          <QueryClientProvider client={queryClient}>
-            <SequenceExamProvider>
-              {children}
-            </SequenceExamProvider>
-          </QueryClientProvider>
-        </IntlProvider>
-      </AppContext.Provider>
-    );
-  };
+  const specialExamsServices = { ...testServices, ...services, config: { ...testConfig, ...services.config } };
+  const Wrapper = ({ children }) => (
+    // eslint-disable-next-line react/jsx-filename-extension
+    <SpecialExamsProvider {...specialExamsServices}>
+      <IntlProvider locale="en">
+        <QueryClientProvider client={queryClient}>
+          <SequenceExamProvider>
+            {children}
+          </SequenceExamProvider>
+        </QueryClientProvider>
+      </IntlProvider>
+    </SpecialExamsProvider>
+  );
 
   Wrapper.propTypes = {
     children: PropTypes.node.isRequired,

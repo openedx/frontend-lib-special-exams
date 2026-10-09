@@ -1,14 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
-import { getConfig } from '@edx/frontend-platform';
 import SkipProctoredExamButton from '../SkipProctoredExamButton';
+import { useSpecialExams } from '../../../core/SpecialExamsProvider';
 
 const FailedPrerequisitesProctoredExamInstructions = (props) => {
   const {
     allowProctoringOptOut, prerequisites, skipProctoredExam,
   } = props;
-  const platformName = getConfig().SITE_NAME;
+  const platformName = useSpecialExams().config.siteName;
 
   return (
     <>

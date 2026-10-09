@@ -1,22 +1,22 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { AppContext } from '@edx/frontend-platform/react';
 import { ExamTimerBlock } from '../timer';
 import ExamAPIError from '../exam/ExamAPIError';
 import { useActiveAttempt, useActiveAttemptQuery, useReportQueryError } from '../data';
 import { IS_STARTED_STATUS } from '../constants';
 import SequenceExamContext, { useExamClientState, useSequenceExam } from './SequenceExamContext';
+import { useSpecialExams } from './SpecialExamsProvider';
 
 const ExamTimer = ({ courseId }) => {
   const { apiErrorMsg } = useSequenceExam();
-  const { authenticatedUser } = useContext(AppContext);
+  const { isAuthenticated } = useSpecialExams();
   useReportQueryError(useActiveAttemptQuery(courseId, { refetchOnMount: 'always' }));
   const activeAttempt = useActiveAttempt();
   const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
 
   // if user is not authenticated they cannot have active exam, so no need for timer
   // (also exam API would return 403 error)
-  if (!authenticatedUser) {
+  if (!isAuthenticated) {
     return null;
   }
 

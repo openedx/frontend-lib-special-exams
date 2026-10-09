@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Container } from '@openedx/paragon';
 import { ExamStatus } from '../../../constants';
@@ -15,8 +14,10 @@ import RPNowInstructions from './RPNowInstructions';
 import DownloadButtons from './DownloadButtons';
 import Footer from '../Footer';
 import SkipProctoredExamButton from '../SkipProctoredExamButton';
+import { useSpecialExams } from '../../../core/SpecialExamsProvider';
 
 const DownloadSoftwareProctoredExamInstructions = ({ skipProctoredExam }) => {
+  const { config, httpClient } = useSpecialExams();
   const proctoringSettings = useProctoringSettings();
   const exam = useExam();
   const { allowProctoringOptOut } = useSequenceExam();
@@ -51,10 +52,10 @@ const DownloadSoftwareProctoredExamInstructions = ({ skipProctoredExam }) => {
   const [downloadClicked, setDownloadClicked] = useState(false);
   const withProviderInstructions = instructions && instructions.length > 0;
   const launchSoftwareUrl = examHasLtiProvider
-    ? `${getConfig().EXAMS_BASE_URL}/lti/start_proctoring/${attemptId}` : downloadUrl;
+    ? `${config.examsBaseUrl}/lti/start_proctoring/${attemptId}` : downloadUrl;
 
   const handleDownloadClick = () => {
-    pollExamAttempt(pollUrl, sequenceId)
+    pollExamAttempt({ config, httpClient }, pollUrl, sequenceId)
       .then((data) => {
         if (data.status === ExamStatus.READY_TO_START) {
           setSystemCheckStatus('success');
@@ -62,7 +63,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ skipProctoredExam }) => {
           // TODO: This call will circumvent the thunk for startProctoringSoftwareDownload
           // which is a bit odd and would handle useLegacyAttempt for us.
           // There's an opportunity to refactor and clean this up a bit.
-          softwareDownloadAttempt(attemptId, useLegacyAttemptApi);
+          softwareDownloadAttempt({ config, httpClient }, attemptId, useLegacyAttemptApi);
           window.location.assign(launchSoftwareUrl);
         }
       });
@@ -70,7 +71,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ skipProctoredExam }) => {
   };
 
   const handleStartExamClick = () => {
-    pollExamAttempt(pollUrl, sequenceId)
+    pollExamAttempt({ config, httpClient }, pollUrl, sequenceId)
       .then((data) => (
         data.status === ExamStatus.READY_TO_START
           ? invalidateExamState()

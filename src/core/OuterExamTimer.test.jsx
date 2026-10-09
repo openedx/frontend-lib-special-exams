@@ -21,13 +21,9 @@ describe('OuterExamTimer', () => {
   });
 
   it('returns null if there is no authenticated user', () => {
-    const appContext = {
-      authenticatedUser: null,
-    };
-
     const { container } = render(
       <OuterExamTimer courseId={courseId} />,
-      { appContext },
+      { services: { isAuthenticated: false } },
     );
 
     expect(container.firstChild).toBeNull();
@@ -36,7 +32,7 @@ describe('OuterExamTimer', () => {
   it('asks for the latest attempt in the course', async () => {
     render(<OuterExamTimer courseId={courseId} />);
 
-    await waitFor(() => expect(fetchLatestAttempt).toHaveBeenCalledWith(courseId));
+    await waitFor(() => expect(fetchLatestAttempt).toHaveBeenCalledWith(expect.anything(), courseId));
   });
 
   it('is successfully rendered and shows timer if there is an exam in progress', async () => {

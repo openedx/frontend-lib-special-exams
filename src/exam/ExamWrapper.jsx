@@ -1,5 +1,3 @@
-import { useContext } from 'react';
-import { AppContext } from '@edx/frontend-platform/react';
 import PropTypes from 'prop-types';
 import Exam from './Exam';
 import {
@@ -9,12 +7,13 @@ import {
   useExamQuery,
   useReportQueryError,
 } from '../data';
+import { useSpecialExams } from '../core/SpecialExamsProvider';
 
 /**
  * Exam wrapper is responsible for triggering initial exam data fetching and rendering Exam.
  */
 const ExamWrapper = ({ children, ...props }) => {
-  const { authenticatedUser } = useContext(AppContext);
+  const { isAuthenticated } = useSpecialExams();
   const {
     sequence,
     courseId,
@@ -36,7 +35,7 @@ const ExamWrapper = ({ children, ...props }) => {
   // if the user is browsing public content (not logged in) they cannot be in an exam
   // if the user is staff they may view exam content without an exam attempt
   // any requests for exam state will 403 so just short circuit this component here
-  if (!authenticatedUser || isStaff) {
+  if (!isAuthenticated || isStaff) {
     return children;
   }
 

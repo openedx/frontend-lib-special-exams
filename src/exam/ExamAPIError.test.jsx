@@ -1,15 +1,7 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { getConfig } from '@edx/frontend-platform';
 import { render } from '../setupTest';
 import ExamAPIError from './ExamAPIError';
-
-const originalConfig = jest.requireActual('@edx/frontend-platform').getConfig();
-jest.mock('@edx/frontend-platform', () => ({
-  ...jest.requireActual('@edx/frontend-platform'),
-  getConfig: jest.fn(),
-}));
-getConfig.mockImplementation(() => originalConfig);
 
 describe('ExamAPIError', () => {
   const defaultMessage = 'A system error has occurred with your exam.';
@@ -28,19 +20,18 @@ describe('ExamAPIError', () => {
 
   it('renders support link if site name and support url are given', () => {
     const config = {
-      SITE_NAME: 'Open edX',
-      SUPPORT_URL: 'https://support.example.org/',
+      siteName: 'Open edX',
+      supportUrl: 'https://support.example.org/',
     };
-    getConfig.mockImplementation(() => config);
 
     const { getByTestId } = render(
       <ExamAPIError />,
-      { specialExams: {} },
+      { specialExams: {}, services: { config } },
     );
 
     const supportLink = getByTestId('support-link');
-    expect(supportLink).toHaveProperty('href', config.SUPPORT_URL);
-    expect(supportLink).toHaveTextContent(`${config.SITE_NAME} Support`);
+    expect(supportLink).toHaveProperty('href', config.supportUrl);
+    expect(supportLink).toHaveTextContent(`${config.siteName} Support`);
   });
 
   it('renders error details when provided', () => {

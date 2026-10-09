@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
-import { logError } from '@edx/frontend-platform/logging';
 
 import {
   continueAttempt, createExamAttempt, declineAttempt, endExamWithFailure, resetAttempt, stopAttempt, submitAttempt,
@@ -11,6 +10,7 @@ import { workerPromiseForEventNames } from './messages/handlers';
 import actionToMessageTypesMap from './messages/constants';
 import { notifyStartExam } from './messages/proctorio';
 import { useSequenceExam } from '../core/SequenceExamContext';
+import { useSpecialExams } from '../core/SpecialExamsProvider';
 
 const EXAM_START_TIMEOUT_MILLISECONDS = 5000;
 
@@ -32,6 +32,7 @@ const useApiError = () => {
 
 const useFailAction = () => {
   const { setApiError } = useSequenceExam();
+  const { logError } = useSpecialExams();
   return (logMessage: string, errorMsg?: string) => {
     logError(logMessage);
     if (errorMsg) {
@@ -74,10 +75,11 @@ const useAttemptAction = <Variables = void>(
 const useNotifyWorkerOfSubmit = () => {
   const activeAttempt = useActiveAttempt();
   const apiError = useApiError();
+  const { logError } = useSpecialExams();
   return () => {
     const workerUrl = activeAttempt?.desktop_application_js_url;
     if (window.Worker && activeAttempt && workerUrl) {
-      workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl)(0, activeAttempt.external_id)
+      workerPromiseForEventNames(actionToMessageTypesMap.submit, workerUrl, logError)(0, activeAttempt.external_id)
         .catch(() => apiError({
           message: 'Something has gone wrong submitting your exam. Please double-check that the application is running.',
         }));
@@ -86,6 +88,7 @@ const useNotifyWorkerOfSubmit = () => {
 };
 
 export const useStartTimedExam = () => {
+  const services = useSpecialExams();
   const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('startTimedExam', {
@@ -93,12 +96,13 @@ export const useStartTimedExam = () => {
       if (!exam.id) {
         return fail('Failed to start exam. No exam id.', 'Failed to start exam. No exam id was found.');
       }
-      return createExamAttempt(exam.id, exam.use_legacy_attempt_api);
+      return createExamAttempt(services, exam.id, exam.use_legacy_attempt_api);
     },
   });
 };
 
 export const useCreateProctoredExamAttempt = () => {
+  const services = useSpecialExams();
   const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('createProctoredExamAttempt', {
@@ -106,12 +110,13 @@ export const useCreateProctoredExamAttempt = () => {
       if (!exam.id) {
         return fail('Failed to create exam attempt. No exam id.');
       }
-      return createExamAttempt(exam.id, exam.use_legacy_attempt_api, false, true);
+      return createExamAttempt(services, exam.id, exam.use_legacy_attempt_api, false, true);
     },
   });
 };
 
 export const useStartProctoredExam = () => {
+  const services = useSpecialExams();
   const exam = useExam();
   const fail = useFailAction();
   const apiError = useApiError();
@@ -127,13 +132,17 @@ export const useStartProctoredExam = () => {
 
       if (useWorker) {
         try {
-          await workerPromiseForEventNames(actionToMessageTypesMap.start, exam.attempt.desktop_application_js_url)(
+          await workerPromiseForEventNames(
+            actionToMessageTypesMap.start,
+            exam.attempt.desktop_application_js_url,
+            services.logError,
+          )(
             EXAM_START_TIMEOUT_MILLISECONDS,
             attempt.external_id,
           );
         } catch (error) {
           const message = (error as ApiError)?.message || 'Worker failed to respond.';
-          logError(message, {
+          services.logError(message, {
             attemptId: attempt.attempt_id,
             attemptStatus: attempt.attempt_status,
             courseId: attempt.course_id,
@@ -145,12 +154,13 @@ export const useStartProctoredExam = () => {
       } else if (examHasLtiProvider) {
         notifyStartExam();
       }
-      return continueAttempt(attempt.attempt_id, attempt.use_legacy_attempt_api);
+      return continueAttempt(services, attempt.attempt_id!, attempt.use_legacy_attempt_api);
     },
   });
 };
 
 export const useSkipProctoringExam = () => {
+  const services = useSpecialExams();
   const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('skipProctoringExam', {
@@ -161,13 +171,14 @@ export const useSkipProctoringExam = () => {
       const attemptId = exam.attempt.attempt_id;
       const useLegacyAttemptApi = exam.use_legacy_attempt_api;
       return attemptId
-        ? declineAttempt(attemptId, useLegacyAttemptApi)
-        : createExamAttempt(exam.id, useLegacyAttemptApi);
+        ? declineAttempt(services, attemptId, useLegacyAttemptApi)
+        : createExamAttempt(services, exam.id, useLegacyAttemptApi);
     },
   });
 };
 
 export const useStopExam = () => {
+  const services = useSpecialExams();
   const exam = useExam();
   const activeAttempt = useActiveAttempt();
   const fail = useFailAction();
@@ -184,19 +195,20 @@ export const useStopExam = () => {
       } = activeAttempt;
       if (!exam.attempt || attemptId !== exam.attempt.attempt_id) {
         try {
-          await stopAttempt(attemptId, useLegacyAttemptAPI);
+          await stopAttempt(services, attemptId, useLegacyAttemptAPI);
           window.location.href = examUrl;
         } catch (error) {
           apiError(error as ApiError);
         }
         return undefined;
       }
-      return stopAttempt(attemptId, useLegacyAttemptAPI);
+      return stopAttempt(services, attemptId, useLegacyAttemptAPI);
     },
   });
 };
 
 export const useContinueExam = () => {
+  const services = useSpecialExams();
   const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('continueExam', {
@@ -206,12 +218,13 @@ export const useContinueExam = () => {
       if (!attemptId) {
         return fail('Failed to continue exam. No attempt id.', 'Failed to continue exam. No attempt id was found.');
       }
-      return continueAttempt(attemptId, useLegacyAttemptAPI);
+      return continueAttempt(services, attemptId, useLegacyAttemptAPI);
     },
   });
 };
 
 export const useResetExam = () => {
+  const services = useSpecialExams();
   const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('resetExam', {
@@ -221,12 +234,13 @@ export const useResetExam = () => {
       if (!attemptId) {
         return fail('Failed to reset exam attempt. No attempt id.', 'Failed to reset exam attempt. No attempt id was found.');
       }
-      return resetAttempt(attemptId, useLegacyAttemptAPI);
+      return resetAttempt(services, attemptId, useLegacyAttemptAPI);
     },
   });
 };
 
 export const useSubmitExam = () => {
+  const services = useSpecialExams();
   const exam = useExam();
   const activeAttempt = useActiveAttempt();
   const fail = useFailAction();
@@ -244,7 +258,7 @@ export const useSubmitExam = () => {
       } = activeAttempt;
       if (!exam.attempt || attemptId !== exam.attempt.attempt_id) {
         try {
-          await submitAttempt(attemptId, useLegacyAttemptAPI);
+          await submitAttempt(services, attemptId, useLegacyAttemptAPI);
           window.location.href = examUrl;
           notifyWorkerOfSubmit();
         } catch (error) {
@@ -252,13 +266,14 @@ export const useSubmitExam = () => {
         }
         return undefined;
       }
-      return submitAttempt(attemptId, useLegacyAttemptAPI);
+      return submitAttempt(services, attemptId, useLegacyAttemptAPI);
     },
     after: notifyWorkerOfSubmit,
   });
 };
 
 export const useExpireExam = () => {
+  const services = useSpecialExams();
   const activeAttempt = useActiveAttempt();
   const { sequenceId, isTimeLimited, setTimeIsOver } = useSequenceExam();
   const fail = useFailAction();
@@ -270,7 +285,7 @@ export const useExpireExam = () => {
       if (!attemptId) {
         return fail('Failed to expire exam. No attempt id.', 'Failed to expire exam. No attempt id was found.');
       }
-      return submitAttempt(attemptId, useLegacyAttemptAPI);
+      return submitAttempt(services, attemptId, useLegacyAttemptAPI);
     },
     // this sure looks like a bug
     refetchKey: () => (isTimeLimited
@@ -289,6 +304,11 @@ interface EndExamWithFailureVariables {
   useLegacyAttemptAPI?: boolean;
 }
 
-export const useEndExamWithFailure = () => useAttemptAction<EndExamWithFailureVariables>('endExamWithFailure', {
-  run: ({ attemptId, message, useLegacyAttemptAPI }) => endExamWithFailure(attemptId, message, useLegacyAttemptAPI),
-});
+export const useEndExamWithFailure = () => {
+  const services = useSpecialExams();
+  return useAttemptAction<EndExamWithFailureVariables>('endExamWithFailure', {
+    run: ({ attemptId, message, useLegacyAttemptAPI }) => (
+      endExamWithFailure(services, attemptId, message, useLegacyAttemptAPI)
+    ),
+  });
+};

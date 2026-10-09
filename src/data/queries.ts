@@ -4,10 +4,9 @@ import {
 import {
   queryOptions, useQuery, useQueryClient, type QueryKey, type UseQueryOptions, type UseQueryResult,
 } from '@tanstack/react-query';
-import { getConfig } from '@edx/frontend-platform';
-import { logError } from '@edx/frontend-platform/logging';
 
 import {
+  type ApiServices,
   fetchExamAccessToken,
   fetchExamAttemptsData,
   fetchExamReviewPolicy,
@@ -24,6 +23,7 @@ import {
   ExamStatus, ExamType, IS_PROCTORED_STATUS, IS_STARTED_STATUS,
 } from '../constants';
 import { useSequenceExam } from '../core/SequenceExamContext';
+import { useSpecialExams } from '../core/SpecialExamsProvider';
 import type {
   AttemptPayload, ExamAccessTokenPayload, ExamPayload, ExamState, PollPayload, ProctoringSettingsPayload,
   ReviewPolicyPayload,
@@ -49,9 +49,9 @@ const toExamState = (data: { exam: ExamPayload; active_attempt?: AttemptPayload 
 });
 
 // The exam of one sequence and the attempt running in its course, fetched together.
-export const examQueryOptions = (courseId?: string, sequenceId?: string) => queryOptions({
+export const examQueryOptions = (services: ApiServices, courseId?: string, sequenceId?: string) => queryOptions({
   queryKey: specialExamsQueryKeys.exam(courseId, sequenceId),
-  queryFn: async () => toExamState(await fetchExamAttemptsData(courseId, sequenceId)),
+  queryFn: async () => toExamState(await fetchExamAttemptsData(services, courseId, sequenceId)),
   staleTime: Infinity,
 });
 
@@ -59,46 +59,61 @@ export const useExamQuery = (
   courseId?: string,
   sequenceId?: string,
   options?: QueryOptions<ExamState>,
-) => useQuery({ ...examQueryOptions(courseId, sequenceId), ...options });
+) => {
+  const services = useSpecialExams();
+  return useQuery({ ...examQueryOptions(services, courseId, sequenceId), ...options });
+};
 
 // The attempt running in a course, for pages with no sequence.
-export const activeAttemptQueryOptions = (courseId?: string) => queryOptions({
+export const activeAttemptQueryOptions = (services: ApiServices, courseId?: string) => queryOptions({
   queryKey: specialExamsQueryKeys.activeAttempt(courseId),
-  queryFn: async () => toExamState(await fetchLatestAttempt(courseId)),
+  queryFn: async () => toExamState(await fetchLatestAttempt(services, courseId)),
   staleTime: Infinity,
 });
 
 export const useActiveAttemptQuery = (
   courseId?: string,
   options?: QueryOptions<ExamState>,
-) => useQuery({ ...activeAttemptQueryOptions(courseId), ...options });
+) => {
+  const services = useSpecialExams();
+  return useQuery({ ...activeAttemptQueryOptions(services, courseId), ...options });
+};
 
 export const useProctoringSettingsQuery = (
   courseId?: string,
   examId?: number | null,
   options?: QueryOptions<ProctoringSettingsPayload>,
-) => useQuery({
-  queryKey: specialExamsQueryKeys.proctoringSettings(courseId, examId),
-  queryFn: () => fetchProctoringSettings(courseId, examId),
-  staleTime: Infinity,
-  placeholderData: defaultProctoringSettings,
-  ...options,
-});
+) => {
+  const services = useSpecialExams();
+  return useQuery({
+    queryKey: specialExamsQueryKeys.proctoringSettings(courseId, examId),
+    queryFn: () => fetchProctoringSettings(services, courseId, examId),
+    staleTime: Infinity,
+    placeholderData: defaultProctoringSettings,
+    ...options,
+  });
+};
 
-export const useReviewPolicyQuery = (examId?: number | null) => useQuery<ReviewPolicyPayload>({
-  queryKey: specialExamsQueryKeys.reviewPolicy(examId),
-  queryFn: () => fetchExamReviewPolicy(examId),
-  staleTime: Infinity,
-  enabled: !!examId,
-});
+export const useReviewPolicyQuery = (examId?: number | null) => {
+  const services = useSpecialExams();
+  return useQuery<ReviewPolicyPayload>({
+    queryKey: specialExamsQueryKeys.reviewPolicy(examId),
+    queryFn: () => fetchExamReviewPolicy(services, examId),
+    staleTime: Infinity,
+    enabled: !!examId,
+  });
+};
 
-export const useAccessTokenQuery = (examId?: number | null) => useQuery<ExamAccessTokenPayload>({
-  queryKey: specialExamsQueryKeys.accessToken(examId),
-  queryFn: () => fetchExamAccessToken(examId),
-  enabled: !!examId && !!getConfig().EXAMS_BASE_URL,
-  refetchOnWindowFocus: false,
-  refetchOnReconnect: false,
-});
+export const useAccessTokenQuery = (examId?: number | null) => {
+  const services = useSpecialExams();
+  return useQuery<ExamAccessTokenPayload>({
+    queryKey: specialExamsQueryKeys.accessToken(examId),
+    queryFn: () => fetchExamAccessToken(services, examId),
+    enabled: !!examId && !!services.config.examsBaseUrl,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+};
 
 // Surfaces a query's failure the way the thunks did, as the error message the page shows.
 export const useReportQueryError = (query: { error: unknown }) => {
@@ -182,6 +197,7 @@ export const withPolledAttempt = (data: PollPayload) => (state?: ExamState) => (
 // over the attempt in whichever query holds it. A `submitted` / `error` status ends the exam.
 export const usePollQuery = (enabled: boolean) => {
   const queryClient = useQueryClient();
+  const services = useSpecialExams();
   const { setApiError, setTimeIsOver } = useSequenceExam();
   const queryKey = useExamStateKey();
   const attempt = useActiveAttempt();
@@ -189,7 +205,7 @@ export const usePollQuery = (enabled: boolean) => {
   const invalidateExamState = useInvalidateExamState();
   const pollQuery = useQuery<PollPayload>({
     queryKey: specialExamsQueryKeys.poll(attempt?.attempt_id),
-    queryFn: () => pollExamAttempt(attempt?.exam_started_poll_url, exam.content_id),
+    queryFn: () => pollExamAttempt(services, attempt?.exam_started_poll_url, exam.content_id),
     enabled: enabled && !!attempt && IS_STARTED_STATUS(attempt.attempt_status)
       && attempt.attempt_status !== ExamStatus.READY_TO_SUBMIT,
     refetchInterval: POLL_INTERVAL_MILLISECONDS,
@@ -222,12 +238,19 @@ interface EndExamWithFailure {
 export const usePingAttempt = (endExamWithFailure: EndExamWithFailure) => {
   const attempt = useActiveAttempt();
   const exam = useExam();
-  const latest = useRef({ attempt, exam, endExamWithFailure });
+  const { logError } = useSpecialExams();
+  const latest = useRef({
+    attempt, exam, endExamWithFailure, logError,
+  });
   useEffect(() => {
-    latest.current = { attempt, exam, endExamWithFailure };
+    latest.current = {
+      attempt, exam, endExamWithFailure, logError,
+    };
   });
   return useCallback((timeoutInSeconds: number, workerUrl: string) => {
-    const { attempt: currentAttempt, exam: currentExam, endExamWithFailure: endExam } = latest.current;
+    const {
+      attempt: currentAttempt, exam: currentExam, endExamWithFailure: endExam, logError: log,
+    } = latest.current;
     const onFailure = (error: ApiError) => {
       const message = error?.message || 'Worker failed to respond.';
       /**
@@ -235,7 +258,7 @@ export const usePingAttempt = (endExamWithFailure: EndExamWithFailure) => {
        * This may be different from the exam they are currently attempting
        * if the learner has navigated to other course content during the exam.
        * */
-      logError(message, {
+      log(message, {
         attemptId: currentAttempt?.attempt_id,
         attemptStatus: currentAttempt?.attempt_status,
         courseId: currentAttempt?.course_id,
@@ -247,7 +270,7 @@ export const usePingAttempt = (endExamWithFailure: EndExamWithFailure) => {
         useLegacyAttemptAPI: currentExam.attempt?.use_legacy_attempt_api,
       });
     };
-    return pingApplication(timeoutInSeconds, currentAttempt?.external_id, workerUrl).catch(onFailure);
+    return pingApplication(timeoutInSeconds, currentAttempt?.external_id, workerUrl, log).catch(onFailure);
   }, []);
 };
 
@@ -265,6 +288,7 @@ export const useCheckExamEntry = (
   endExamWithFailure: EndExamWithFailure,
 ) => {
   const { setApiError } = useSequenceExam();
+  const { config: { examsBaseUrl } } = useSpecialExams();
   const checked = useRef(false);
   const mounted = useRef(true);
   const timeout = useRef<ReturnType<typeof setTimeout>>();
@@ -290,7 +314,7 @@ export const useCheckExamEntry = (
 
     if (IS_PROCTORED_STATUS(exam.attempt.attempt_status)) {
       Promise.race([
-        checkAppStatus(),
+        checkAppStatus(examsBaseUrl),
         new Promise((_, reject) => {
           timeout.current = setTimeout(() => reject(), EXAM_START_TIMEOUT_MILLISECONDS);
         }),
@@ -302,5 +326,5 @@ export const useCheckExamEntry = (
         endExamWithFailure.mutate({ attemptId: exam.attempt.attempt_id!, message: 'exam reentry disallowed', useLegacyAttemptAPI: false });
       });
     }
-  }, [data, isFetching, setApiError, endExamWithFailure]);
+  }, [data, isFetching, setApiError, endExamWithFailure, examsBaseUrl]);
 };

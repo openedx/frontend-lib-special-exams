@@ -1,17 +1,11 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { getConfig } from '@edx/frontend-platform';
 import Footer from './Footer';
 import {
   initializeMockApp,
   render,
   screen,
 } from '../../setupTest';
-
-// Mock the getConfig function
-jest.mock('@edx/frontend-platform', () => ({
-  getConfig: jest.fn(),
-}));
 
 describe('Footer', () => {
   // Mock FAQ URL for testing
@@ -28,11 +22,7 @@ describe('Footer', () => {
    */
   it('renders the FAQ button when PROCTORED_EXAM_FAQ_URL exists', () => {
     // Set up the mock configuration with a FAQ URL
-    getConfig.mockReturnValue({
-      PROCTORED_EXAM_FAQ_URL: mockFaqUrl,
-    });
-
-    render(<Footer />);
+    render(<Footer />, { services: { config: { proctoredExamFaqUrl: mockFaqUrl } } });
 
     // Verify the button is rendered with the correct attributes
     const button = screen.getByTestId('request-exam-time-button');
@@ -50,11 +40,7 @@ describe('Footer', () => {
    */
   it('does not render the FAQ button when PROCTORED_EXAM_FAQ_URL does not exist', () => {
     // Set up the mock configuration without a FAQ URL
-    getConfig.mockReturnValue({
-      // No PROCTORED_EXAM_FAQ_URL
-    });
-
-    render(<Footer />);
+    render(<Footer />, { services: { config: { proctoredExamFaqUrl: undefined } } });
 
     // Verify the button is not rendered
     expect(screen.queryByTestId('request-exam-time-button')).not.toBeInTheDocument();
@@ -67,11 +53,7 @@ describe('Footer', () => {
    */
   it('does not render the FAQ button when PROCTORED_EXAM_FAQ_URL is null', () => {
     // Set up the mock configuration with a null FAQ URL
-    getConfig.mockReturnValue({
-      PROCTORED_EXAM_FAQ_URL: null,
-    });
-
-    render(<Footer />);
+    render(<Footer />, { services: { config: { proctoredExamFaqUrl: null } } });
 
     // Verify the button is not rendered
     expect(screen.queryByTestId('request-exam-time-button')).not.toBeInTheDocument();
@@ -84,11 +66,7 @@ describe('Footer', () => {
    */
   it('does not render the FAQ button when PROCTORED_EXAM_FAQ_URL is an empty string', () => {
     // Set up the mock configuration with an empty string FAQ URL
-    getConfig.mockReturnValue({
-      PROCTORED_EXAM_FAQ_URL: '',
-    });
-
-    render(<Footer />);
+    render(<Footer />, { services: { config: { proctoredExamFaqUrl: '' } } });
 
     // Verify the button is not rendered
     expect(screen.queryByTestId('request-exam-time-button')).not.toBeInTheDocument();

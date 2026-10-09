@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { getConfig } from '@edx/frontend-platform';
 import { Button, Container, Spinner } from '@openedx/paragon';
 import Footer from './Footer';
 
 import {
   useExam, useReportQueryError, useReviewPolicyQuery, useStartProctoredExam,
 } from '../../data';
+import { useSpecialExams } from '../../core/SpecialExamsProvider';
 
 const ReadyToStartProctoredExamInstructions = () => {
   const exam = useExam();
@@ -18,8 +18,7 @@ const ReadyToStartProctoredExamInstructions = () => {
   const startProctoredExam = useStartProctoredExam();
 
   const examDuration = attempt.total_time ? attempt.total_time : exam.total_time;
-  const platformName = getConfig().SITE_NAME;
-  const rulesUrl = getConfig().PROCTORED_EXAM_RULES_URL;
+  const { siteName: platformName, proctoredExamRulesUrl: rulesUrl } = useSpecialExams().config;
   const [beginExamClicked, setBeginExamClicked] = useState(false);
 
   const handleStart = () => {

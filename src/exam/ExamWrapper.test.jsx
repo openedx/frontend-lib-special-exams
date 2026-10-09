@@ -108,7 +108,7 @@ describe('SequenceExamWrapper', () => {
       </SequenceExamWrapper>,
       { specialExams },
     );
-    await waitFor(() => expect(fetchExamAttemptsData).toHaveBeenCalledWith(courseId, sequence.id));
+    await waitFor(() => expect(fetchExamAttemptsData).toHaveBeenCalledWith(expect.anything(), courseId, sequence.id));
     expect(fetchLatestAttempt).not.toHaveBeenCalled();
   });
 
@@ -119,7 +119,7 @@ describe('SequenceExamWrapper', () => {
       </SequenceExamWrapper>,
       { specialExams },
     );
-    await waitFor(() => expect(fetchLatestAttempt).toHaveBeenCalledWith(courseId));
+    await waitFor(() => expect(fetchLatestAttempt).toHaveBeenCalledWith(expect.anything(), courseId));
     expect(fetchExamAttemptsData).not.toHaveBeenCalled();
   });
 
@@ -135,14 +135,11 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('does not take any actions if the sequence item is not an exam and the user is anonymous', async () => {
-    const appContext = {
-      authenticatedUser: null,
-    };
     const { getByTestId } = render(
       <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
         <div data-testid="sequence-content">children</div>
       </SequenceExamWrapper>,
-      { specialExams, appContext },
+      { specialExams, services: { isAuthenticated: false } },
     );
     await loaded();
     expect(getByTestId('sequence-content')).toHaveTextContent('children');

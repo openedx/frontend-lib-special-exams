@@ -1,5 +1,3 @@
-require('dotenv').config({ path: `${__dirname}/.env.test` });
-
 module.exports = {
   testEnvironment: 'jsdom',
   testEnvironmentOptions: {

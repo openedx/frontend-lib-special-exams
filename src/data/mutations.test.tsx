@@ -4,9 +4,6 @@ import MockAdapter from 'axios-mock-adapter';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider, useIsMutating } from '@tanstack/react-query';
 
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import { getConfig, mergeConfig } from '@edx/frontend-platform';
-
 import {
   activeAttemptQueryOptions, examQueryOptions, specialExamsQueryKeys, useActiveAttemptQuery, useExamQuery,
 } from './queries';
@@ -23,16 +20,17 @@ import {
   specialExamsMutationKey,
 } from './mutations';
 import {
-  createTestQueryClient, createTestSequenceExam, initializeMockApp, initializeTestConfig,
+  createTestQueryClient, createTestSequenceExam, httpClient, initializeMockApp, testConfig, testServices,
 } from '../setupTest';
 import { ExamStatus } from '../constants';
 import type { SequenceExamIdentity } from '../core/SequenceExamContext';
 import type { ExamState } from './types';
+import SpecialExamsProvider, { type SpecialExamsServices } from '../core/SpecialExamsProvider';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 
 const { loggingService } = initializeMockApp();
-const axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+const axiosMock = new MockAdapter(httpClient);
 
 // Mock for worker failure
 const mockPromise = jest.fn(() => Promise.reject(Error('test error')));
@@ -44,25 +42,26 @@ jest.mock('./messages/handlers', () => ({
 describe('Attempt action mutations', () => {
   const exam = Factory.build('exam', { attempt: Factory.build('attempt') });
   const { course_id: courseId, content_id: contentId, attempt } = exam;
-  const fetchExamAttemptsDataLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`
+  const fetchExamAttemptsDataLegacyUrl = `${testConfig.lmsBaseUrl}${BASE_API_URL}/course_id/${courseId}`
     + `?content_id=${encodeURIComponent(contentId)}&is_learning_mfe=true`;
-  const updateAttemptStatusLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${attempt.attempt_id}`;
-  const createExamAttemptLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}`;
+  const updateAttemptStatusLegacyUrl = `${testConfig.lmsBaseUrl}${BASE_API_URL}/${attempt.attempt_id}`;
+  const createExamAttemptLegacyUrl = `${testConfig.lmsBaseUrl}${BASE_API_URL}`;
 
-  const createUpdateAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
-  const fetchExamAttemptsDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
-  const latestAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
+  const createUpdateAttemptURL = `${testConfig.examsBaseUrl}/api/v1/exams/attempt`;
+  const fetchExamAttemptsDataUrl = `${testConfig.examsBaseUrl}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
+  const latestAttemptURL = `${testConfig.examsBaseUrl}/api/v1/exams/attempt/latest`;
   let clientState: () => { timeIsOver: boolean; apiErrorMsg: string };
   let queryClient: QueryClient;
+  let services: SpecialExamsServices;
   const sequenceExam = { courseId, sequenceId: contentId, isTimeLimited: true };
 
   const initWithExamAttempt = async (testExam = exam, testAttempt = attempt) => {
     axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: testExam });
     axiosMock.onGet(latestAttemptURL).reply(200, testAttempt);
-    await queryClient.fetchQuery(examQueryOptions(courseId, contentId));
+    await queryClient.fetchQuery(examQueryOptions(services, courseId, contentId));
   };
   const initLegacy = async () => {
-    await queryClient.fetchQuery(examQueryOptions(courseId, contentId));
+    await queryClient.fetchQuery(examQueryOptions(services, courseId, contentId));
   };
 
   // Renders the hook under the exam's context, beside the owner observer the wrapper mounts in the
@@ -71,9 +70,11 @@ describe('Attempt action mutations', () => {
     const testSequenceExam = createTestSequenceExam(context);
     clientState = testSequenceExam.clientState;
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        <testSequenceExam.SequenceExamProvider>{children}</testSequenceExam.SequenceExamProvider>
-      </QueryClientProvider>
+      <SpecialExamsProvider {...services}>
+        <QueryClientProvider client={queryClient}>
+          <testSequenceExam.SequenceExamProvider>{children}</testSequenceExam.SequenceExamProvider>
+        </QueryClientProvider>
+      </SpecialExamsProvider>
     );
     return renderHook(() => {
       // The owner `ExamWrapper` mounts: the sequence's exam, or the course's attempt outside an exam.
@@ -111,7 +112,7 @@ describe('Attempt action mutations', () => {
   };
 
   beforeEach(() => {
-    initializeTestConfig();
+    services = testServices;
     axiosMock.reset();
     loggingService.logError.mockReset();
     loggingService.logInfo.mockReset();
@@ -149,7 +150,7 @@ describe('Attempt action mutations', () => {
   describe('useStartTimedExam', () => {
     describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
       beforeEach(() => {
-        mergeConfig({ EXAMS_BASE_URL: null });
+        services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       });
 
       it('Should create and start exam', async () => {
@@ -210,7 +211,7 @@ describe('Attempt action mutations', () => {
 
     describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
       beforeEach(() => {
-        mergeConfig({ EXAMS_BASE_URL: null });
+        services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       });
 
       it('Should stop exam, and update attempt', async () => {
@@ -323,7 +324,7 @@ describe('Attempt action mutations', () => {
 
     describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
       beforeEach(() => {
-        mergeConfig({ EXAMS_BASE_URL: null });
+        services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       });
 
       it('Should return to exam, and update attempt', async () => {
@@ -372,7 +373,7 @@ describe('Attempt action mutations', () => {
 
     describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
       beforeEach(() => {
-        mergeConfig({ EXAMS_BASE_URL: null });
+        services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       });
 
       it('Should reset exam attempt', async () => {
@@ -425,7 +426,7 @@ describe('Attempt action mutations', () => {
 
     describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
       beforeEach(() => {
-        mergeConfig({ EXAMS_BASE_URL: null });
+        services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       });
 
       it('Should submit exam, and update attempt and exam', async () => {
@@ -525,7 +526,7 @@ describe('Attempt action mutations', () => {
 
     describe('with edx-proctoring as backend (no EXAMS_BASE_URL)', () => {
       beforeEach(() => {
-        mergeConfig({ EXAMS_BASE_URL: null });
+        services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       });
 
       it('Should expire exam, and update attempt', async () => {
@@ -559,7 +560,7 @@ describe('Attempt action mutations', () => {
 
     it('Should refresh the course\'s latest attempt when expired outside an exam sequence', async () => {
       axiosMock.onGet(latestAttemptURL).replyOnce(200, attempt);
-      await queryClient.fetchQuery(activeAttemptQueryOptions(courseId));
+      await queryClient.fetchQuery(activeAttemptQueryOptions(services, courseId));
       axiosMock.onGet(latestAttemptURL).reply(200, submittedAttempt);
       axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
@@ -590,7 +591,7 @@ describe('Attempt action mutations', () => {
 
     describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
       beforeEach(() => {
-        mergeConfig({ EXAMS_BASE_URL: null });
+        services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       });
 
       it('Should create exam attempt, and update attempt and exam', async () => {
@@ -642,11 +643,11 @@ describe('Attempt action mutations', () => {
     const startedFixture = Factory.build('attempt', { attempt_status: ExamStatus.STARTED });
     const createdExam = Factory.build('exam', { attempt: createdAttempt });
     const startedExam = Factory.build('exam', { attempt: startedFixture });
-    const continueAttemptLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/${createdAttempt.attempt_id}`;
+    const continueAttemptLegacyUrl = `${testConfig.lmsBaseUrl}${BASE_API_URL}/${createdAttempt.attempt_id}`;
 
     describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
       beforeEach(() => {
-        mergeConfig({ EXAMS_BASE_URL: null });
+        services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       });
 
       it('Should start exam, and update attempt and exam', async () => {
@@ -747,7 +748,7 @@ describe('Attempt action mutations', () => {
 
     describe('with edx-proctoring as a backend (no EXAMS_BASE_URL)', () => {
       beforeEach(() => {
-        mergeConfig({ EXAMS_BASE_URL: null });
+        services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       });
 
       it('Should create exam attempt with declined status, and update attempt and exam', async () => {

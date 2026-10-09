@@ -1,6 +1,5 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { getConfig } from '@edx/frontend-platform';
 import ErrorProctoredExamInstructions from './ErrorProctoredExamInstructions';
 import {
   initializeMockApp,
@@ -8,25 +7,15 @@ import {
   screen,
 } from '../../setupTest';
 
-// Mock the getConfig function
-jest.mock('@edx/frontend-platform', () => ({
-  getConfig: jest.fn(),
-}));
-
 describe('ErrorProctoredExamInstructions', () => {
   // Mock configuration values
   const mockSiteName = 'Test Platform';
   const mockContactUrl = 'https://example.com/contact';
+  const services = { config: { siteName: mockSiteName, contactUrl: mockContactUrl } };
 
   beforeEach(() => {
     initializeMockApp();
     jest.clearAllMocks();
-
-    // Set up the mock configuration
-    getConfig.mockReturnValue({
-      SITE_NAME: mockSiteName,
-      CONTACT_URL: mockContactUrl,
-    });
   });
 
   /**
@@ -42,7 +31,7 @@ describe('ErrorProctoredExamInstructions', () => {
       },
     };
 
-    render(<ErrorProctoredExamInstructions />, { specialExams });
+    render(<ErrorProctoredExamInstructions />, { specialExams, services });
 
     // Verify the title is rendered correctly
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
@@ -71,7 +60,7 @@ describe('ErrorProctoredExamInstructions', () => {
       },
     };
 
-    render(<ErrorProctoredExamInstructions />, { specialExams });
+    render(<ErrorProctoredExamInstructions />, { specialExams, services });
 
     // Verify the title is rendered correctly
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
@@ -95,7 +84,7 @@ describe('ErrorProctoredExamInstructions', () => {
    */
   it('handles undefined specialExams or proctoringSettings', () => {
     // Set up the store state with undefined specialExams
-    render(<ErrorProctoredExamInstructions />);
+    render(<ErrorProctoredExamInstructions />, { services });
 
     // Verify the title is rendered correctly
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
@@ -121,7 +110,7 @@ describe('ErrorProctoredExamInstructions', () => {
       proctoringSettings: null,
     };
 
-    render(<ErrorProctoredExamInstructions />, { specialExams });
+    render(<ErrorProctoredExamInstructions />, { specialExams, services });
 
     // Verify the title is rendered correctly
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();

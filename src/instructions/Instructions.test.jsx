@@ -996,7 +996,7 @@ describe('SequenceExamWrapper', () => {
     );
     fireEvent.click(screen.getByText('Start System Check'));
     await waitFor(() => { expect(mockAssign).toHaveBeenCalledWith('http://localhost:18740/lti/start_proctoring/4321'); });
-    expect(softwareDownloadAttempt).toHaveBeenCalledWith(4321, false);
+    expect(softwareDownloadAttempt).toHaveBeenCalledWith(expect.anything(), 4321, false);
 
     // also validate start button works
     pollExamAttempt.mockReturnValue(Promise.resolve({ status: ExamStatus.READY_TO_START }));

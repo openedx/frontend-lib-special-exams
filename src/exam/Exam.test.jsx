@@ -3,7 +3,7 @@ import { Factory } from 'rosie';
 import React from 'react';
 import { useIsMutating } from '@tanstack/react-query';
 import {
-  createTestQueryClient, render, waitFor,
+  createTestQueryClient, render, testServices, waitFor,
 } from '../setupTest';
 import Exam from './Exam';
 import { ExamType, ExamStatus } from '../constants';
@@ -54,7 +54,9 @@ describe('Exam', () => {
     const queryClient = createTestQueryClient();
     const specialExams = Factory.build('specialExams');
     fetchExamAttemptsData.mockReturnValue(new Promise(() => {}));
-    queryClient.prefetchQuery(examQueryOptions(specialExams.exam.course_id, specialExams.exam.content_id));
+    queryClient.prefetchQuery(
+      examQueryOptions(testServices, specialExams.exam.course_id, specialExams.exam.content_id),
+    );
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} />,

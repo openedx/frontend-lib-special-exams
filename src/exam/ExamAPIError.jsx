@@ -1,13 +1,13 @@
 import React from 'react';
-import { getConfig } from '@edx/frontend-platform';
 import { Alert, Hyperlink, Icon } from '@openedx/paragon';
 import { Info } from '@openedx/paragon/icons';
 import { useIntl, FormattedMessage } from 'react-intl';
 import messages from './messages';
 import { useSequenceExam } from '../core/SequenceExamContext';
+import { useSpecialExams } from '../core/SpecialExamsProvider';
 
 const ExamAPIError = () => {
-  const { SITE_NAME, SUPPORT_URL } = getConfig();
+  const { siteName: SITE_NAME, supportUrl: SUPPORT_URL } = useSpecialExams().config;
   const { apiErrorMsg } = useSequenceExam();
   const shouldShowApiErrorMsg = !!apiErrorMsg && !apiErrorMsg.includes('<');
   const intl = useIntl();

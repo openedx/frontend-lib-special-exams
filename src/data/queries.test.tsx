@@ -4,9 +4,6 @@ import MockAdapter from 'axios-mock-adapter';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
-import { getConfig, mergeConfig } from '@edx/frontend-platform';
-
 import {
   activeAttemptQueryOptions,
   examQueryOptions,
@@ -23,16 +20,17 @@ import {
 } from './queries';
 import { useEndExamWithFailure } from './mutations';
 import {
-  createTestQueryClient, createTestSequenceExam, initializeMockApp, initializeTestConfig,
+  createTestQueryClient, createTestSequenceExam, httpClient, initializeMockApp, testConfig, testServices,
 } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
 import type { SequenceExamIdentity } from '../core/SequenceExamContext';
 import type { ExamState } from './types';
+import SpecialExamsProvider, { type SpecialExamsServices } from '../core/SpecialExamsProvider';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 
 const { loggingService } = initializeMockApp();
-const axiosMock = new MockAdapter(getAuthenticatedHttpClient());
+const axiosMock = new MockAdapter(httpClient);
 
 jest.mock('./messages/handlers', () => ({
   ...jest.requireActual('./messages/handlers'),
@@ -42,25 +40,26 @@ jest.mock('./messages/handlers', () => ({
 describe('Exam queries', () => {
   const exam = Factory.build('exam', { attempt: Factory.build('attempt') });
   const { course_id: courseId, content_id: contentId, attempt } = exam;
-  const fetchExamAttemptsDataLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}`
+  const fetchExamAttemptsDataLegacyUrl = `${testConfig.lmsBaseUrl}${BASE_API_URL}/course_id/${courseId}`
     + `?content_id=${encodeURIComponent(contentId)}&is_learning_mfe=true`;
-  const fetchLatestAttemptLegacyUrl = `${getConfig().LMS_BASE_URL}${BASE_API_URL}/course_id/${courseId}?is_learning_mfe=true`;
-  const fetchProctoringSettingsLegacyUrl = `${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/settings/exam_id/${exam.id}/`;
+  const fetchLatestAttemptLegacyUrl = `${testConfig.lmsBaseUrl}${BASE_API_URL}/course_id/${courseId}?is_learning_mfe=true`;
+  const fetchProctoringSettingsLegacyUrl = `${testConfig.lmsBaseUrl}/api/edx_proctoring/v1/proctored_exam/settings/exam_id/${exam.id}/`;
 
-  const createUpdateAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
-  const fetchExamAttemptsDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
-  const latestAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-  const fetchProctoringSettingsUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exam/provider_settings/course_id/${courseId}/exam_id/${exam.id}`;
+  const createUpdateAttemptURL = `${testConfig.examsBaseUrl}/api/v1/exams/attempt`;
+  const fetchExamAttemptsDataUrl = `${testConfig.examsBaseUrl}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
+  const latestAttemptURL = `${testConfig.examsBaseUrl}/api/v1/exams/attempt/latest`;
+  const fetchProctoringSettingsUrl = `${testConfig.examsBaseUrl}/api/v1/exam/provider_settings/course_id/${courseId}/exam_id/${exam.id}`;
   const examKey = specialExamsQueryKeys.exam(courseId, contentId);
   const inSequence: SequenceExamIdentity = { courseId, sequenceId: contentId, isTimeLimited: true };
 
   let clientState: () => { timeIsOver: boolean; apiErrorMsg: string };
   let queryClient: QueryClient;
+  let services: SpecialExamsServices;
 
   const initWithExamAttempt = async (testExam = exam, testAttempt = attempt) => {
     axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: testExam });
     axiosMock.onGet(latestAttemptURL).reply(200, testAttempt);
-    return queryClient.fetchQuery(examQueryOptions(courseId, contentId));
+    return queryClient.fetchQuery(examQueryOptions(services, courseId, contentId));
   };
   const examState = () => queryClient.getQueryData<ExamState>(examKey);
 
@@ -68,9 +67,11 @@ describe('Exam queries', () => {
     const testSequenceExam = createTestSequenceExam(sequenceExam);
     clientState = testSequenceExam.clientState;
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        <testSequenceExam.SequenceExamProvider>{children}</testSequenceExam.SequenceExamProvider>
-      </QueryClientProvider>
+      <SpecialExamsProvider {...services}>
+        <QueryClientProvider client={queryClient}>
+          <testSequenceExam.SequenceExamProvider>{children}</testSequenceExam.SequenceExamProvider>
+        </QueryClientProvider>
+      </SpecialExamsProvider>
     );
     return renderHook(useHook, { wrapper });
   }
@@ -82,7 +83,7 @@ describe('Exam queries', () => {
   });
 
   beforeEach(() => {
-    initializeTestConfig();
+    services = testServices;
     axiosMock.reset();
     loggingService.logError.mockReset();
     queryClient = createTestQueryClient();
@@ -93,7 +94,7 @@ describe('Exam queries', () => {
       axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam });
       axiosMock.onGet(latestAttemptURL).replyOnce(200, attempt);
 
-      const state = await queryClient.fetchQuery(examQueryOptions(courseId, contentId));
+      const state = await queryClient.fetchQuery(examQueryOptions(services, courseId, contentId));
 
       expect(state.exam).toMatchObject({ id: exam.id, content_id: contentId });
       expect(state.activeAttempt).toMatchObject({ attempt_id: attempt.attempt_id, attempt_status: ExamStatus.STARTED });
@@ -108,7 +109,7 @@ describe('Exam queries', () => {
       axiosMock.onGet(fetchExamAttemptsDataUrl).replyOnce(200, { exam: { ...exam, total_time: 30 } });
       axiosMock.onGet(latestAttemptURL).replyOnce(200, attempt);
 
-      const state = await queryClient.fetchQuery(examQueryOptions(courseId, contentId));
+      const state = await queryClient.fetchQuery(examQueryOptions(services, courseId, contentId));
 
       expect(state.exam.total_time).toBe('30 minutes');
     });
@@ -125,10 +126,10 @@ describe('Exam queries', () => {
 
   describe('the active-attempt query', () => {
     it('fetches the course-level attempt on edx-proctoring', async () => {
-      mergeConfig({ EXAMS_BASE_URL: null });
+      services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       axiosMock.onGet(fetchLatestAttemptLegacyUrl).reply(200, { exam: {}, active_attempt: attempt });
 
-      const state = await queryClient.fetchQuery(activeAttemptQueryOptions(courseId));
+      const state = await queryClient.fetchQuery(activeAttemptQueryOptions(services, courseId));
 
       expect(state.activeAttempt).toMatchObject({ attempt_id: attempt.attempt_id, attempt_status: ExamStatus.STARTED });
       expect(axiosMock.history.get[0].url).toBe(fetchLatestAttemptLegacyUrl);
@@ -137,7 +138,7 @@ describe('Exam queries', () => {
     it('fetches the latest attempt on edx-exams', async () => {
       axiosMock.onGet(latestAttemptURL).reply(200, Factory.build('attempt', { attempt_id: 1234 }));
 
-      const state = await queryClient.fetchQuery(activeAttemptQueryOptions(courseId));
+      const state = await queryClient.fetchQuery(activeAttemptQueryOptions(services, courseId));
 
       expect(state.activeAttempt?.attempt_id).toBe(1234);
       expect(state.exam).toEqual({});
@@ -148,7 +149,7 @@ describe('Exam queries', () => {
     const proctoringSettings = Factory.build('proctoringSettings', { provider_name: 'Mock Provider' });
 
     it('fetches from edx-proctoring when there is no EXAMS_BASE_URL', async () => {
-      mergeConfig({ EXAMS_BASE_URL: null });
+      services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
       axiosMock.onGet(fetchProctoringSettingsLegacyUrl).reply(200, proctoringSettings);
 
       const { result } = renderOwner(() => useProctoringSettingsQuery(courseId, exam.id, { enabled: true }));
@@ -184,7 +185,7 @@ describe('Exam queries', () => {
   });
 
   describe('the review-policy query', () => {
-    const reviewPolicyUrl = `${getConfig().LMS_BASE_URL}/api/edx_proctoring/v1/proctored_exam/review_policy/exam_id/${exam.id}/`;
+    const reviewPolicyUrl = `${testConfig.lmsBaseUrl}/api/edx_proctoring/v1/proctored_exam/review_policy/exam_id/${exam.id}/`;
 
     it('fetches the policy', async () => {
       axiosMock.onGet(reviewPolicyUrl).reply(200, { review_policy: 'Example review policy.' });
@@ -212,10 +213,10 @@ describe('Exam queries', () => {
   });
 
   describe('the access-token query', () => {
-    const accessTokenUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/access_tokens/exam_id/${exam.id}/`;
+    const accessTokenUrl = `${testConfig.examsBaseUrl}/api/v1/access_tokens/exam_id/${exam.id}/`;
 
     it('does not fetch when there is no EXAMS_BASE_URL', () => {
-      mergeConfig({ EXAMS_BASE_URL: null });
+      services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
 
       const { result } = renderIn(() => useAccessTokenQuery(exam.id));
 
@@ -271,11 +272,11 @@ describe('Exam queries', () => {
     };
 
     it('polls the attempt URL on edx-proctoring and writes the reply over the attempt', async () => {
-      mergeConfig({ EXAMS_BASE_URL: null });
-      const pollUrl = `${getConfig().LMS_BASE_URL}${attempt.exam_started_poll_url}`;
+      services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
+      const pollUrl = `${testConfig.lmsBaseUrl}${attempt.exam_started_poll_url}`;
       axiosMock.onGet(fetchExamAttemptsDataLegacyUrl).replyOnce(200, { exam, active_attempt: attempt });
       axiosMock.onGet(pollUrl).reply(200, { ...pollReply, status: ExamStatus.STARTED });
-      await queryClient.fetchQuery(examQueryOptions(courseId, contentId));
+      await queryClient.fetchQuery(examQueryOptions(services, courseId, contentId));
 
       renderIn(() => usePollQuery(true));
 
@@ -402,7 +403,7 @@ describe('Exam queries', () => {
       () => useCheckExamEntry({ data, isFetching }, useEndExamWithFailure()),
     );
     const answer = (active: boolean) => act(() => {
-      window.dispatchEvent(new MessageEvent('message', { data: { active }, origin: getConfig().EXAMS_BASE_URL }));
+      window.dispatchEvent(new MessageEvent('message', { data: { active }, origin: testConfig.examsBaseUrl }));
     });
 
     beforeEach(() => {
