@@ -2,7 +2,7 @@ import React from 'react';
 import { Factory } from 'rosie';
 import { SubmittedPracticeExamInstructions } from './index';
 import {
-  render, screen, initializeTestStore, fireEvent,
+  render, screen, fireEvent,
 } from '../../setupTest';
 import { ExamStatus, ExamType } from '../../constants';
 
@@ -13,25 +13,22 @@ jest.mock('../../data', () => ({
 }));
 
 describe('ExamTimerBlock', () => {
+  const onboardingExam = {
+    exam: Factory.build('exam', {
+      is_proctored: false,
+      type: ExamType.ONBOARDING,
+      attempt: Factory.build('attempt'),
+    }),
+  };
   afterEach(() => {
     jest.resetAllMocks();
   });
 
   describe('when the exam is not proctored', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: false,
-            type: ExamType.ONBOARDING,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams: onboardingExam },
       );
     });
 
@@ -55,19 +52,9 @@ describe('ExamTimerBlock', () => {
 
   describe('when the exam is not proctored', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: false,
-            type: ExamType.ONBOARDING,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams: onboardingExam },
       );
     });
 
@@ -91,21 +78,19 @@ describe('ExamTimerBlock', () => {
 
   describe('when a legacy proctoring attempt API is used', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PROCTORED,
-            attempt: Factory.build('attempt', {
-              use_legacy_attempt_api: true,
-            }),
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            use_legacy_attempt_api: true,
           }),
-        },
+        }),
       };
-      initializeTestStore(preloadedState);
 
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams },
       );
     });
 
@@ -129,22 +114,20 @@ describe('ExamTimerBlock', () => {
 
   describe('when an LTI provider is used but it has an error', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PROCTORED,
-            attempt: Factory.build('attempt', {
-              use_legacy_attempt_api: false,
-              attempt_status: ExamStatus.ERROR,
-            }),
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            use_legacy_attempt_api: false,
+            attempt_status: ExamStatus.ERROR,
           }),
-        },
+        }),
       };
-      initializeTestStore(preloadedState);
 
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams },
       );
     });
 
@@ -168,22 +151,20 @@ describe('ExamTimerBlock', () => {
 
   describe('when an LTI provider is used and the exam is submitted', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PROCTORED,
-            attempt: Factory.build('attempt', {
-              use_legacy_attempt_api: false,
-              attempt_status: ExamStatus.SUBMITTED,
-            }),
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            use_legacy_attempt_api: false,
+            attempt_status: ExamStatus.SUBMITTED,
           }),
-        },
+        }),
       };
-      initializeTestStore(preloadedState);
 
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams },
       );
     });
 

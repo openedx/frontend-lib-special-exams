@@ -2,7 +2,7 @@ import React from 'react';
 import { Factory } from 'rosie';
 import { EntrancePracticeExamInstructions } from './index';
 import {
-  render, screen, initializeTestStore, fireEvent,
+  render, screen, fireEvent,
 } from '../../setupTest';
 import { ExamType } from '../../constants';
 
@@ -13,6 +13,13 @@ jest.mock('../../data', () => ({
 }));
 
 describe('EntrancePracticeExamInstructions', () => {
+  const practiceExam = {
+    exam: Factory.build('exam', {
+      is_proctored: true,
+      type: ExamType.PRACTICE,
+      attempt: Factory.build('attempt'),
+    }),
+  };
   // Reset mocks after each test
   afterEach(() => {
     jest.resetAllMocks();
@@ -25,20 +32,10 @@ describe('EntrancePracticeExamInstructions', () => {
   describe('component rendering', () => {
     beforeEach(() => {
       // Initialize store with a practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       // Render the component
       render(
         <EntrancePracticeExamInstructions />,
+        { specialExams: practiceExam },
       );
     });
 
@@ -76,20 +73,10 @@ describe('EntrancePracticeExamInstructions', () => {
   describe('button click functionality', () => {
     beforeEach(() => {
       // Initialize store with a practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       // Render the component
       render(
         <EntrancePracticeExamInstructions />,
+        { specialExams: practiceExam },
       );
     });
 
@@ -109,20 +96,18 @@ describe('EntrancePracticeExamInstructions', () => {
   describe('with different exam types', () => {
     it('renders correctly with a non-proctored exam', () => {
       // Initialize store with a non-proctored practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: false,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: false,
+          type: ExamType.PRACTICE,
+          attempt: Factory.build('attempt'),
+        }),
       };
-      initializeTestStore(preloadedState);
 
       // Render the component
       render(
         <EntrancePracticeExamInstructions />,
+        { specialExams },
       );
 
       // Verify the component renders correctly
@@ -132,21 +117,19 @@ describe('EntrancePracticeExamInstructions', () => {
 
     it('renders correctly with a timed exam', () => {
       // Initialize store with a timed practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: false,
-            is_timed: true,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: false,
+          is_timed: true,
+          type: ExamType.PRACTICE,
+          attempt: Factory.build('attempt'),
+        }),
       };
-      initializeTestStore(preloadedState);
 
       // Render the component
       render(
         <EntrancePracticeExamInstructions />,
+        { specialExams },
       );
 
       // Verify the component renders correctly
@@ -162,20 +145,10 @@ describe('EntrancePracticeExamInstructions', () => {
   describe('component structure and accessibility', () => {
     beforeEach(() => {
       // Initialize store with a practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       // Render the component
       render(
         <EntrancePracticeExamInstructions />,
+        { specialExams: practiceExam },
       );
     });
 

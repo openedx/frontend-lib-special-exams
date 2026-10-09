@@ -1,22 +1,19 @@
-import React, { useEffect, useContext } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useContext, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { AppContext } from '@edx/frontend-platform/react';
 import { ExamTimerBlock } from '../timer';
 import ExamAPIError from '../exam/ExamAPIError';
-import { getLatestAttemptData } from '../data';
+import { useActiveAttempt, useActiveAttemptQuery, useReportQueryError } from '../data';
 import { IS_STARTED_STATUS } from '../constants';
+import SequenceExamContext from './SequenceExamContext';
 
 const ExamTimer = ({ courseId }) => {
-  const { activeAttempt, apiErrorMsg } = useSelector(state => state.specialExams);
+  const { apiErrorMsg } = useSelector(state => state.specialExams);
   const { authenticatedUser } = useContext(AppContext);
+  useReportQueryError(useActiveAttemptQuery(courseId, { refetchOnMount: 'always' }));
+  const activeAttempt = useActiveAttempt();
   const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(getLatestAttemptData(courseId));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId]);
 
   // if user is not authenticated they cannot have active exam, so no need for timer
   // (also exam API would return 403 error)
@@ -43,9 +40,14 @@ ExamTimer.propTypes = {
  * @param courseId - Id of a course that is checked for active exams, if there is one the timer
  * will be shown.
  */
-const OuterExamTimer = ({ courseId }) => (
-  <ExamTimer courseId={courseId} />
-);
+const OuterExamTimer = ({ courseId }) => {
+  const sequenceExam = useMemo(() => ({ courseId }), [courseId]);
+  return (
+    <SequenceExamContext.Provider value={sequenceExam}>
+      <ExamTimer courseId={courseId} />
+    </SequenceExamContext.Provider>
+  );
+};
 
 OuterExamTimer.propTypes = {
   courseId: PropTypes.string.isRequired,

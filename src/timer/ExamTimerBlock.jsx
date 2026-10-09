@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import { Button, Alert, useToggle } from '@openedx/paragon';
 import CountDownTimer from './CountDownTimer';
 import { ExamStatus, IS_STARTED_STATUS } from '../constants';
 import TimerProvider from './TimerProvider';
 import {
-  Emitter, useExpireExam, useStopExam, useSubmitExam,
+  Emitter, useActiveAttempt, useExpireExam, useStopExam, useSubmitExam,
 } from '../data';
 import {
   TIMER_IS_CRITICALLY_LOW,
@@ -20,7 +19,7 @@ import {
  */
 const ExamTimerBlock = () => {
   const intl = useIntl();
-  const { activeAttempt: attempt } = useSelector(state => state.specialExams);
+  const attempt = useActiveAttempt();
   const [isShowMore, showMore, showLess] = useToggle(false);
   const [alertVariant, setAlertVariant] = useState('info');
   const [timeReachedNull, setTimeReachedNull] = useState(false);

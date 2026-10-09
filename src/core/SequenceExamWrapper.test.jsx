@@ -2,51 +2,41 @@ import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
 import SequenceExamWrapper from './SequenceExamWrapper';
+import { fetchExamAttemptsData } from '../data/api';
 import { initializeTestStore, render, screen } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
 
-// The wrapper fetches on mount; the data layer is not under test here.
-jest.mock('../data/thunks', () => ({
-  ...jest.requireActual('../data/thunks'),
-  getExamAttemptsData: () => () => {},
-  getAllowProctoringOptOut: () => () => {},
-  checkExamEntry: () => () => {},
+// The wrapper fetches on mount; the fetcher answers with the submitted exam.
+jest.mock('../data/api', () => ({
+  ...jest.requireActual('../data/api'),
+  fetchExamAttemptsData: jest.fn(),
 }));
 
 describe('SequenceExamWrapper', () => {
   const sequence = {
-    id: 'block-v1:test+test+test+type@sequential+block@5b1bb1aaf6d34e79b213aa37422b4743',
+    id: 'block-v1:test+special+exam+type@sequential+block@abc123',
     isTimeLimited: true,
   };
-  const courseId = 'course-v1:test+test+test';
-  let store;
-
-  beforeEach(() => {
-    store = initializeTestStore({
-      specialExams: Factory.build('specialExams', {
-        isLoading: false,
-      }),
-    });
-  });
+  const courseId = 'course-v1:test+special+exam';
 
   describe('once a timed exam is submitted', () => {
-    const submittedTimedExam = (timeIsOver) => initializeTestStore({
-      specialExams: Factory.build('specialExams', {
-        isLoading: false,
-        timeIsOver,
+    const submittedTimedExam = (timeIsOver) => {
+      const specialExams = Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.TIMED,
           attempt: Factory.build('attempt', { attempt_status: ExamStatus.SUBMITTED, exam_type: ExamType.TIMED }),
         }),
-      }),
-    });
+      });
+      fetchExamAttemptsData.mockResolvedValue({ exam: specialExams.exam, active_attempt: {} });
+      return { specialExams, store: initializeTestStore({ specialExams: { timeIsOver } }) };
+    };
 
     it('shows the default heading when no component is given', () => {
       render(
         <SequenceExamWrapper sequence={sequence} courseId={courseId}>
           <div>Test Content</div>
         </SequenceExamWrapper>,
-        { store: submittedTimedExam(false) },
+        submittedTimedExam(false),
       );
 
       expect(screen.getByText('You have submitted your timed exam.')).toBeInTheDocument();
@@ -59,7 +49,7 @@ describe('SequenceExamWrapper', () => {
         <SequenceExamWrapper sequence={sequence} courseId={courseId} submittedTimedExamInstructions={Custom}>
           <div>Test Content</div>
         </SequenceExamWrapper>,
-        { store: submittedTimedExam(true) },
+        submittedTimedExam(true),
       );
 
       expect(screen.getByTestId('custom-timed-instructions')).toBeInTheDocument();
@@ -74,7 +64,7 @@ describe('SequenceExamWrapper', () => {
       <SequenceExamWrapper sequence={sequence} courseId={courseId}>
         <div>Test Content</div>
       </SequenceExamWrapper>,
-      { store },
+      { specialExams: Factory.build('specialExams') },
     );
 
     // Just verify that the component renders without throwing an error

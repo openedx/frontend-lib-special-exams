@@ -17,6 +17,8 @@ export interface AttemptPayload {
   total_time: string;
   external_id?: string;
   use_legacy_attempt_api?: boolean;
+  ping_interval?: number;
+  timer_ends?: string;
   [field: string]: unknown;
 }
 
@@ -56,6 +58,7 @@ export interface ProctoringSettingsPayload {
   };
   provider_tech_support_email: string;
   provider_tech_support_phone: string;
+  provider_tech_support_url?: string;
   provider_name: string;
   learner_notification_from_email: string;
   integration_specific_email: string;
@@ -66,4 +69,20 @@ export interface ExamAccessTokenPayload {
   exam_access_token: string;
   exam_access_token_expiration: string;
   [field: string]: unknown;
+}
+
+/** What `fetchExamAttemptsData` and `fetchLatestAttempt` return, with an empty attempt as `null`. */
+export interface ExamState {
+  exam: ExamPayload;
+  activeAttempt: AttemptPayload | null;
+}
+
+export interface PollPayload {
+  status: string;
+  time_remaining_seconds: number;
+  [field: string]: unknown;
+}
+
+export interface ReviewPolicyPayload {
+  review_policy: string;
 }

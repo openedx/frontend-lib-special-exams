@@ -1,13 +1,13 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
 import { ExamType } from '../../constants';
-import { useSubmitExam } from '../../data';
+import { useSubmitExam, useActiveAttempt, useExam } from '../../data';
 
 const SubmitProctoredExamInstructions = () => {
-  const { exam, activeAttempt } = useSelector(state => state.specialExams);
+  const exam = useExam();
+  const activeAttempt = useActiveAttempt();
 
   const submitExam = useSubmitExam();
 

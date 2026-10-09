@@ -2,7 +2,7 @@ import React from 'react';
 import { Factory } from 'rosie';
 import RejectedInstructions from './RejectedInstructions';
 import {
-  render, screen, initializeTestStore, initializeMockApp,
+  render, screen, initializeMockApp,
 } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
 
@@ -22,6 +22,14 @@ jest.mock('./proctored_exam/RejectedProctoredExamInstructions', () => function M
 });
 
 describe('RejectedInstructions', () => {
+  const rejectedProctoredExam = Factory.build('specialExams', {
+    exam: Factory.build('exam', {
+      type: ExamType.PROCTORED,
+      attempt: Factory.build('attempt', {
+        attempt_status: ExamStatus.REJECTED,
+      }),
+    }),
+  });
   beforeEach(() => {
     initializeMockApp();
   });
@@ -34,21 +42,10 @@ describe('RejectedInstructions', () => {
   describe('with PROCTORED exam type', () => {
     beforeEach(() => {
       // Initialize store with a proctored exam with REJECTED status
-      const preloadedState = {
-        specialExams: Factory.build('specialExams', {
-          exam: Factory.build('exam', {
-            type: ExamType.PROCTORED,
-            attempt: Factory.build('attempt', {
-              attempt_status: ExamStatus.REJECTED,
-            }),
-          }),
-        }),
-      };
-      initializeTestStore(preloadedState);
-
       // Render the component
       render(
         <RejectedInstructions examType={ExamType.PROCTORED} />,
+        { specialExams: rejectedProctoredExam },
       );
     });
 
@@ -76,21 +73,19 @@ describe('RejectedInstructions', () => {
   describe('with PRACTICE exam type', () => {
     beforeEach(() => {
       // Initialize store with a practice exam with REJECTED status
-      const preloadedState = {
-        specialExams: Factory.build('specialExams', {
-          exam: Factory.build('exam', {
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt', {
-              attempt_status: ExamStatus.REJECTED,
-            }),
+      const specialExams = Factory.build('specialExams', {
+        exam: Factory.build('exam', {
+          type: ExamType.PRACTICE,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.REJECTED,
           }),
         }),
-      };
-      initializeTestStore(preloadedState);
+      });
 
       // Render the component
       render(
         <RejectedInstructions examType={ExamType.PRACTICE} />,
+        { specialExams },
       );
     });
 
@@ -118,21 +113,19 @@ describe('RejectedInstructions', () => {
   describe('with ONBOARDING exam type', () => {
     beforeEach(() => {
       // Initialize store with an onboarding exam with REJECTED status
-      const preloadedState = {
-        specialExams: Factory.build('specialExams', {
-          exam: Factory.build('exam', {
-            type: ExamType.ONBOARDING,
-            attempt: Factory.build('attempt', {
-              attempt_status: ExamStatus.REJECTED,
-            }),
+      const specialExams = Factory.build('specialExams', {
+        exam: Factory.build('exam', {
+          type: ExamType.ONBOARDING,
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.REJECTED,
           }),
         }),
-      };
-      initializeTestStore(preloadedState);
+      });
 
       // Render the component
       render(
         <RejectedInstructions examType={ExamType.ONBOARDING} />,
+        { specialExams },
       );
     });
 
@@ -160,21 +153,19 @@ describe('RejectedInstructions', () => {
   describe('with unknown exam type', () => {
     beforeEach(() => {
       // Initialize store with an exam with an unknown type
-      const preloadedState = {
-        specialExams: Factory.build('specialExams', {
-          exam: Factory.build('exam', {
-            type: 'unknown',
-            attempt: Factory.build('attempt', {
-              attempt_status: ExamStatus.REJECTED,
-            }),
+      const specialExams = Factory.build('specialExams', {
+        exam: Factory.build('exam', {
+          type: 'unknown',
+          attempt: Factory.build('attempt', {
+            attempt_status: ExamStatus.REJECTED,
           }),
         }),
-      };
-      initializeTestStore(preloadedState);
+      });
 
       // Render the component
       render(
         <RejectedInstructions examType="unknown" />,
+        { specialExams },
       );
     });
 
@@ -202,21 +193,10 @@ describe('RejectedInstructions', () => {
   describe('component structure and accessibility', () => {
     beforeEach(() => {
       // Initialize store with a proctored exam with REJECTED status
-      const preloadedState = {
-        specialExams: Factory.build('specialExams', {
-          exam: Factory.build('exam', {
-            type: ExamType.PROCTORED,
-            attempt: Factory.build('attempt', {
-              attempt_status: ExamStatus.REJECTED,
-            }),
-          }),
-        }),
-      };
-      initializeTestStore(preloadedState);
-
       // Render the component
       render(
         <RejectedInstructions examType={ExamType.PROCTORED} />,
+        { specialExams: rejectedProctoredExam },
       );
     });
 

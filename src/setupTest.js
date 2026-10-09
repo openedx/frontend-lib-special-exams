@@ -13,6 +13,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IntlProvider } from '@edx/frontend-platform/i18n';
 import examReducer from './data/slice';
+import SequenceExamContext from './core/SequenceExamContext';
+import { specialExamsQueryKeys } from './data/queryKeys';
+import { defaultExam } from './data/defaults';
 
 // The library still reads its config, HTTP client, logger and messages from `@edx/frontend-platform`,
 // whose entry module imports an `env.config` that only frontend-build's webpack resolved. This mock
@@ -56,20 +59,47 @@ export const createTestQueryClient = () => new QueryClient({
   defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
 });
 
+// Seeds the query cache with a `specialExams` fixture (the shape the `specialExams` factory builds and the
+// old slice held) and returns the context the readers resolve it through; never-stale, so mounting
+// observers do not refetch over it.
+export const seedSpecialExams = (queryClient, specialExams) => {
+  const {
+    exam, activeAttempt = null, proctoringSettings, examAccessToken, reviewPolicy, allowProctoringOptOut,
+  } = specialExams;
+  const courseId = exam?.course_id;
+  const sequenceId = exam?.content_id;
+  // Readers key the per-exam queries off `useExam()`, which falls back to the default exam.
+  const examCourseId = exam?.course_id ?? defaultExam.course_id;
+  const examId = exam?.id ?? defaultExam.id;
+  const seed = (queryKey, data) => {
+    queryClient.setQueryDefaults(queryKey, { staleTime: Infinity });
+    queryClient.setQueryData(queryKey, data);
+  };
+  seed(specialExamsQueryKeys.exam(courseId, sequenceId), { exam, activeAttempt });
+  if (proctoringSettings) {
+    seed(specialExamsQueryKeys.proctoringSettings(examCourseId, examId), proctoringSettings);
+  }
+  if (examAccessToken) {
+    seed(specialExamsQueryKeys.accessToken(examId), examAccessToken);
+  }
+  const policy = reviewPolicy ?? exam?.reviewPolicy;
+  if (policy !== undefined) {
+    seed(specialExamsQueryKeys.reviewPolicy(examId), { review_policy: policy });
+  }
+  return {
+    courseId, sequenceId, isTimeLimited: true, allowProctoringOptOut,
+  };
+};
+
+// The store holds client state only (`timeIsOver`, `apiErrorMsg`); exam data is seeded through `render`'s
+// `specialExams` option.
 export function initializeTestStore(preloadedState = null, overrideStore = true) {
-  let store = configureStore({
+  const store = configureStore({
     reducer: {
       specialExams: examReducer,
     },
+    preloadedState: preloadedState || undefined,
   });
-  if (preloadedState) {
-    store = configureStore({
-      reducer: {
-        specialExams: examReducer,
-      },
-      preloadedState,
-    });
-  }
   if (overrideStore) {
     globalStore = store;
   }
@@ -82,9 +112,12 @@ function render(
     store = null,
     appContext = null,
     queryClient = createTestQueryClient(),
+    specialExams = null,
     ...renderOptions
   } = {},
 ) {
+  const sequenceExam = specialExams ? seedSpecialExams(queryClient, specialExams) : {};
+  const reduxStore = store || globalStore || initializeTestStore(null, false);
   const Wrapper = ({ children }) => {
     const defaultAppContext = useMemo(() => ({
       authenticatedUser: {
@@ -98,9 +131,11 @@ function render(
       // eslint-disable-next-line react/jsx-filename-extension
       <AppContext.Provider value={appContext || defaultAppContext}>
         <IntlProvider locale="en">
-          <Provider store={store || globalStore}>
+          <Provider store={reduxStore}>
             <QueryClientProvider client={queryClient}>
-              {children}
+              <SequenceExamContext.Provider value={sequenceExam}>
+                {children}
+              </SequenceExamContext.Provider>
             </QueryClientProvider>
           </Provider>
         </IntlProvider>

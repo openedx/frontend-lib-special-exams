@@ -1,10 +1,9 @@
 import { useContext } from 'react';
-import { appendTimerEnd } from '../helpers';
 import TimerProvider, { TimerContext } from './TimerProvider';
 import {
-  render, screen, initializeTestStore, act, waitFor,
+  render, screen, act, waitFor,
 } from '../setupTest';
-import { Emitter, pollAttempt, pingAttempt } from '../data';
+import { Emitter, usePollQuery } from '../data';
 import {
   TIMER_IS_CRITICALLY_LOW,
   TIMER_IS_LOW,
@@ -12,16 +11,13 @@ import {
   TIMER_REACHED_NULL,
 } from './events';
 
+const mockPingAttempt = jest.fn();
 jest.mock('../data', () => ({
+  ...jest.requireActual('../data'),
   Emitter: { emit: jest.fn() },
-  pollAttempt: jest.fn(),
-  pingAttempt: jest.fn(),
-}));
-
-const mockedDispatch = jest.fn();
-jest.mock('react-redux', () => ({
-  ...jest.requireActual('react-redux'),
-  useDispatch: jest.fn().mockImplementation(() => mockedDispatch),
+  usePollQuery: jest.fn(),
+  usePingAttempt: () => mockPingAttempt,
+  useEndExamWithFailure: () => ({ mutate: jest.fn() }),
 }));
 
 const TestingComponent = () => {
@@ -43,21 +39,19 @@ const TestComponent = () => (
 );
 
 const renderComponent = ({ remainingSeconds, timeLimitMins = 2, pingIntervalSeconds = undefined }) => {
-  const store = initializeTestStore({
-    specialExams: {
-      activeAttempt: appendTimerEnd({
-        time_remaining_seconds: remainingSeconds,
-        exam_started_poll_url: 'https://some-poll.endpoint',
-        desktop_application_js_url: 'https://desktop-application.js?url=42',
-        ping_interval: pingIntervalSeconds,
-      }),
-      exam: {
-        time_limit_mins: timeLimitMins,
-      },
+  const specialExams = {
+    activeAttempt: {
+      time_remaining_seconds: remainingSeconds,
+      exam_started_poll_url: 'https://some-poll.endpoint',
+      desktop_application_js_url: 'https://desktop-application.js?url=42',
+      ping_interval: pingIntervalSeconds,
     },
-  });
+    exam: {
+      time_limit_mins: timeLimitMins,
+    },
+  };
 
-  const { unmount } = render(<TestComponent />, { store });
+  const { unmount } = render(<TestComponent />, { specialExams });
   return unmount;
 };
 
@@ -114,11 +108,11 @@ describe('TimerProvider', () => {
 
       expect(Emitter.emit).not.toHaveBeenCalled();
 
-      // No Poll calls in between.
-      expect(pollAttempt).toHaveBeenCalledTimes(1);
+      // Polling is on while time remains.
+      expect(usePollQuery).toHaveBeenLastCalledWith(true);
 
       // No Ping attempts.
-      expect(pingAttempt).not.toHaveBeenCalled();
+      expect(mockPingAttempt).not.toHaveBeenCalled();
 
       unmount(); // Cleanup.
     });
@@ -132,7 +126,7 @@ describe('TimerProvider', () => {
       expect(timeStringTwentyFive).toHaveTextContent('00:00:25');
 
       expect(Emitter.emit).not.toHaveBeenCalled();
-      expect(pingAttempt).not.toHaveBeenCalled();
+      expect(mockPingAttempt).not.toHaveBeenCalled();
 
       // The next second should trigger the warning.
       await act(async () => {
@@ -225,28 +219,8 @@ describe('TimerProvider', () => {
       expect(Emitter.emit).toHaveBeenCalledTimes(2);
       expect(Emitter.emit).toHaveBeenCalledWith(TIMER_LIMIT_REACHED);
 
-      unmount(); // Cleanup.
-    });
-  });
-
-  describe('when the poll interval is reached (1 minute)', () => {
-    it('should call poll attempt each time', async () => {
-      const unmount = renderComponent({ remainingSeconds: 120 });
-
-      await screen.findByTestId('time-string');
-
-      // A first poll attempt on render.
-      expect(pollAttempt).toHaveBeenCalledTimes(1);
-
-      await act(async () => awaitSeconds(60));
-
-      // A 2nd poll attempt should fire.
-      expect(pollAttempt).toHaveBeenCalledTimes(2);
-
-      await act(async () => awaitSeconds(60));
-
-      // A 3rd one, just in case.
-      expect(pollAttempt).toHaveBeenCalledTimes(3);
+      // No polling during the grace period.
+      expect(usePollQuery).toHaveBeenLastCalledWith(false);
 
       unmount(); // Cleanup.
     });
@@ -259,24 +233,24 @@ describe('TimerProvider', () => {
       await screen.findByTestId('time-string');
 
       // No pings so far.
-      expect(pingAttempt).not.toHaveBeenCalled();
+      expect(mockPingAttempt).not.toHaveBeenCalled();
 
       await act(async () => awaitSeconds(5));
 
       // A ping poll attempt should fire.
-      expect(pingAttempt).toHaveBeenCalledTimes(1);
+      expect(mockPingAttempt).toHaveBeenCalledTimes(1);
 
       // Then one ping after 10.
       await act(async () => awaitSeconds(10));
 
       // A ping poll attempt should fire.
-      expect(pingAttempt).toHaveBeenCalledTimes(2);
+      expect(mockPingAttempt).toHaveBeenCalledTimes(2);
 
       // Let's round it up on 6..
       await act(async () => awaitSeconds(40));
 
       // A ping poll attempt should fire.
-      expect(pingAttempt).toHaveBeenCalledTimes(6);
+      expect(mockPingAttempt).toHaveBeenCalledTimes(6);
 
       unmount(); // Cleanup.
     });

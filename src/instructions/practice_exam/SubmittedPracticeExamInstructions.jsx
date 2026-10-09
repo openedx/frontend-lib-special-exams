@@ -1,14 +1,13 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
 
-import { useResetExam } from '../../data';
+import { useResetExam, useExam } from '../../data';
 import { ExamStatus } from '../../constants';
 
 const SubmittedPracticeExamInstructions = () => {
   const resetExam = useResetExam();
-  const { exam } = useSelector(state => state.specialExams);
+  const exam = useExam();
 
   // It does not show the reload button if the exam is submitted and not legacy
   const showRetryButton = !(

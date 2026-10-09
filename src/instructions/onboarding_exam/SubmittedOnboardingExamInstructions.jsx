@@ -1,14 +1,13 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button, MailtoLink, useToggle } from '@openedx/paragon';
 
-import { useResetExam } from '../../data';
+import { useResetExam, useProctoringSettings } from '../../data';
 
 const SubmittedOnboardingExamInstructions = () => {
   const [isConfirm, confirm] = useToggle(false);
 
-  const { proctoringSettings } = useSelector(state => state.specialExams);
+  const proctoringSettings = useProctoringSettings();
 
   const resetExam = useResetExam();
 

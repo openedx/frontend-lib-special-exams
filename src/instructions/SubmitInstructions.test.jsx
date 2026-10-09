@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
 import {
-  render, screen, act, initializeMockApp, initializeTestStore,
+  render, screen, act, initializeMockApp,
 } from '../setupTest';
 import SubmitExamInstructions from './SubmitInstructions';
 import { ExamType } from '../constants';
@@ -20,46 +20,42 @@ jest.mock('./timed_exam', () => ({
 }));
 
 jest.mock('../data', () => ({
+  ...jest.requireActual('../data'),
   useContinueExam: jest.fn(),
 }));
 const continueExam = jest.fn();
 useContinueExam.mockReturnValue({ mutate: continueExam });
 
 describe('SubmitExamInstructions', () => {
-  let store;
+  const proctoredExam = {
+    exam: { type: ExamType.PROCTORED },
+    activeAttempt: { time_remaining_seconds: 100 },
+  };
 
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
     jest.clearAllMocks();
   });
 
   it('renders correct instructions based on examType', () => {
     // Test for PROCTORED exam type
-    store.getState = () => ({
-      specialExams: {
-        exam: { type: ExamType.PROCTORED },
-        activeAttempt: { time_remaining_seconds: 100 },
-      },
-    });
-
-    const { rerender } = render(
+    const { unmount } = render(
       <SubmitExamInstructions />,
-      { store },
+      { specialExams: proctoredExam },
     );
     expect(screen.getByTestId('submit-proctored-exam-instructions')).toBeInTheDocument();
     expect(screen.getByTestId('footer-component')).toBeInTheDocument();
+    unmount();
 
     // Test for TIMED exam type
-    store.getState = () => ({
-      specialExams: {
-        exam: { type: ExamType.TIMED },
-        activeAttempt: { time_remaining_seconds: 100 },
-      },
-    });
+    const timedExam = {
+      exam: { type: ExamType.TIMED },
+      activeAttempt: { time_remaining_seconds: 100 },
+    };
 
-    rerender(
+    render(
       <SubmitExamInstructions />,
+      { specialExams: timedExam },
     );
     expect(screen.getByTestId('submit-timed-exam-instructions')).toBeInTheDocument();
     expect(screen.queryByTestId('footer-component')).not.toBeInTheDocument();
@@ -68,16 +64,9 @@ describe('SubmitExamInstructions', () => {
   it('shows continue button when timeRemaining > 0', () => {
     // This test specifically targets line 19 in SubmitInstructions.jsx
     // where canContinue is set based on timeRemaining > 0
-    store.getState = () => ({
-      specialExams: {
-        exam: { type: ExamType.PROCTORED },
-        activeAttempt: { time_remaining_seconds: 100 },
-      },
-    });
-
     render(
       <SubmitExamInstructions />,
-      { store },
+      { specialExams: proctoredExam },
     );
 
     const continueButton = screen.getByTestId('continue-exam-button');
@@ -92,16 +81,14 @@ describe('SubmitExamInstructions', () => {
   it('does not show continue button when timeRemaining <= 0', () => {
     // This test specifically targets line 19 in SubmitInstructions.jsx
     // where canContinue is set based on timeRemaining > 0
-    store.getState = () => ({
-      specialExams: {
-        exam: { type: ExamType.PROCTORED },
-        activeAttempt: { time_remaining_seconds: 0 },
-      },
-    });
+    const specialExams = {
+      exam: { type: ExamType.PROCTORED },
+      activeAttempt: { time_remaining_seconds: 0 },
+    };
 
     render(
       <SubmitExamInstructions />,
-      { store },
+      { specialExams },
     );
 
     // Verify that the continue button is not rendered
@@ -112,16 +99,14 @@ describe('SubmitExamInstructions', () => {
     // This test specifically targets line 19 in SubmitInstructions.jsx
     // where canContinue is set based on timeRemaining > 0
     // Testing the case where timeRemaining is undefined
-    store.getState = () => ({
-      specialExams: {
-        exam: { type: ExamType.PROCTORED },
-        activeAttempt: { }, // time_remaining_seconds is undefined
-      },
-    });
+    const specialExams = {
+      exam: { type: ExamType.PROCTORED },
+      activeAttempt: { }, // time_remaining_seconds is undefined
+    };
 
     render(
       <SubmitExamInstructions />,
-      { store },
+      { specialExams },
     );
 
     // Verify that the continue button is not rendered
@@ -132,16 +117,14 @@ describe('SubmitExamInstructions', () => {
     // This test specifically targets line 19 in SubmitInstructions.jsx
     // where canContinue is set based on timeRemaining > 0
     // Testing the case where timeRemaining is negative
-    store.getState = () => ({
-      specialExams: {
-        exam: { type: ExamType.PROCTORED },
-        activeAttempt: { time_remaining_seconds: -10 },
-      },
-    });
+    const specialExams = {
+      exam: { type: ExamType.PROCTORED },
+      activeAttempt: { time_remaining_seconds: -10 },
+    };
 
     render(
       <SubmitExamInstructions />,
-      { store },
+      { specialExams },
     );
 
     // Verify that the continue button is not rendered
@@ -152,16 +135,14 @@ describe('SubmitExamInstructions', () => {
     // This test specifically targets line 19 in SubmitInstructions.jsx
     // where canContinue is set based on timeRemaining > 0
     // Testing the case where timeRemaining is null
-    store.getState = () => ({
-      specialExams: {
-        exam: { type: ExamType.PROCTORED },
-        activeAttempt: { time_remaining_seconds: null },
-      },
-    });
+    const specialExams = {
+      exam: { type: ExamType.PROCTORED },
+      activeAttempt: { time_remaining_seconds: null },
+    };
 
     render(
       <SubmitExamInstructions />,
-      { store },
+      { specialExams },
     );
 
     // Verify that the continue button is not rendered
@@ -171,16 +152,14 @@ describe('SubmitExamInstructions', () => {
   it('renders correctly when exam is undefined', () => {
     // This test specifically targets line 19 in SubmitInstructions.jsx
     // Testing the case where exam is undefined, which would make examType undefined
-    store.getState = () => ({
-      specialExams: {
-        // exam is undefined
-        activeAttempt: { time_remaining_seconds: 100 },
-      },
-    });
+    const specialExams = {
+      // exam is undefined
+      activeAttempt: { time_remaining_seconds: 100 },
+    };
 
     render(
       <SubmitExamInstructions />,
-      { store },
+      { specialExams },
     );
 
     // Since examType is undefined, it should default to the non-TIMED branch
@@ -197,16 +176,9 @@ describe('SubmitExamInstructions', () => {
 
   it('hides continue button when TIMER_REACHED_NULL event is emitted', () => {
     // This test specifically targets the useEffect that listens for TIMER_REACHED_NULL
-    store.getState = () => ({
-      specialExams: {
-        exam: { type: ExamType.PROCTORED },
-        activeAttempt: { time_remaining_seconds: 100 },
-      },
-    });
-
     render(
       <SubmitExamInstructions />,
-      { store },
+      { specialExams: proctoredExam },
     );
 
     // Verify that the continue button is initially rendered

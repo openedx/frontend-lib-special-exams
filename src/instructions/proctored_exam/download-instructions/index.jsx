@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { getConfig } from '@edx/frontend-platform';
 import { FormattedMessage, useIntl } from '@edx/frontend-platform/i18n';
 import { Container } from '@openedx/paragon';
 import { ExamStatus } from '../../../constants';
-import { getExamAttemptsData } from '../../../data';
+import { useExam, useInvalidateExamState, useProctoringSettings } from '../../../data';
+import { useSequenceExam } from '../../../core/SequenceExamContext';
 import WarningModal from '../WarningModal';
 import { pollExamAttempt, softwareDownloadAttempt } from '../../../data/api';
 import messages from '../messages';
@@ -17,19 +17,15 @@ import Footer from '../Footer';
 import SkipProctoredExamButton from '../SkipProctoredExamButton';
 
 const DownloadSoftwareProctoredExamInstructions = ({ skipProctoredExam }) => {
-  const {
-    proctoringSettings,
-    exam,
-    allowProctoringOptOut,
-  } = useSelector(state => state.specialExams);
-
-  const dispatch = useDispatch();
+  const proctoringSettings = useProctoringSettings();
+  const exam = useExam();
+  const { allowProctoringOptOut } = useSequenceExam();
+  const invalidateExamState = useInvalidateExamState();
 
   const intl = useIntl();
 
   const {
     attempt,
-    course_id: courseId,
     content_id: sequenceId,
   } = exam;
 
@@ -77,7 +73,7 @@ const DownloadSoftwareProctoredExamInstructions = ({ skipProctoredExam }) => {
     pollExamAttempt(pollUrl, sequenceId)
       .then((data) => (
         data.status === ExamStatus.READY_TO_START
-          ? dispatch(getExamAttemptsData(courseId, sequenceId))
+          ? invalidateExamState()
           : setSystemCheckStatus('failure')
       ));
   };

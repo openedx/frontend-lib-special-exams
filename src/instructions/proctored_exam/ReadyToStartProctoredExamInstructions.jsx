@@ -1,27 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState } from 'react';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { getConfig } from '@edx/frontend-platform';
 import { Button, Container, Spinner } from '@openedx/paragon';
 import Footer from './Footer';
 
-import { getExamReviewPolicy, useStartProctoredExam } from '../../data';
+import {
+  useExam, useReportQueryError, useReviewPolicyQuery, useStartProctoredExam,
+} from '../../data';
 
 const ReadyToStartProctoredExamInstructions = () => {
-  const { exam } = useSelector(state => state.specialExams);
-  const { attempt, reviewPolicy } = exam;
+  const exam = useExam();
+  const { attempt } = exam;
+  const reviewPolicyQuery = useReviewPolicyQuery(exam.id);
+  useReportQueryError(reviewPolicyQuery);
+  const reviewPolicy = reviewPolicyQuery.data?.review_policy;
 
-  const dispatch = useDispatch();
   const startProctoredExam = useStartProctoredExam();
 
   const examDuration = attempt.total_time ? attempt.total_time : exam.total_time;
   const platformName = getConfig().SITE_NAME;
   const rulesUrl = getConfig().PROCTORED_EXAM_RULES_URL;
   const [beginExamClicked, setBeginExamClicked] = useState(false);
-
-  useEffect(() => {
-    dispatch(getExamReviewPolicy());
-  }, [dispatch]);
 
   const handleStart = () => {
     setBeginExamClicked(true);

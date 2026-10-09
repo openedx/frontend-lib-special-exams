@@ -3,10 +3,11 @@ import { waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { ExamTimerBlock } from './index';
 import {
-  render, screen, initializeTestStore, fireEvent, act,
+  render, screen, fireEvent, act,
+  createTestQueryClient,
 } from '../setupTest';
 import { Emitter } from '../data';
-import { appendTimerEnd } from '../helpers';
+import { specialExamsQueryKeys } from '../data/queryKeys';
 import { TIMER_LIMIT_REACHED } from './events';
 
 const mockExpireExam = jest.fn();
@@ -26,37 +27,35 @@ jest.mock('../data', () => {
 });
 
 describe('ExamTimerBlock', () => {
+  let specialExams;
   let attempt;
-  let store;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    const preloadedState = {
-      specialExams: {
-        isLoading: true,
-        timeIsOver: false,
-        activeAttempt: appendTimerEnd({
-          attempt_status: 'started',
-          exam_url_path: 'exam_url_path',
-          exam_display_name: 'exam name',
-          time_remaining_seconds: 24,
-          exam_started_poll_url: '',
-          taking_as_proctored: false,
-          exam_type: 'a timed exam',
-        }),
-        proctoringSettings: {},
-        exam: {
-          time_limit_mins: 2,
-        },
+    specialExams = {
+      isLoading: true,
+      timeIsOver: false,
+      activeAttempt: {
+        attempt_status: 'started',
+        exam_url_path: 'exam_url_path',
+        exam_display_name: 'exam name',
+        time_remaining_seconds: 24,
+        exam_started_poll_url: '',
+        taking_as_proctored: false,
+        exam_type: 'a timed exam',
+      },
+      proctoringSettings: {},
+      exam: {
+        time_limit_mins: 2,
       },
     };
-    store = initializeTestStore(preloadedState);
-    attempt = store.getState().specialExams.activeAttempt;
+    attempt = specialExams.activeAttempt;
   });
 
   it('renders items correctly', async () => {
     render(
       <ExamTimerBlock />,
+      { specialExams },
     );
 
     await act(async () => {
@@ -69,19 +68,17 @@ describe('ExamTimerBlock', () => {
   });
 
   it('renders without activeAttempt return null', () => {
-    const preloadedState = {
-      specialExams: {
-        isLoading: true,
-        timeIsOver: false,
-        activeAttempt: null,
-        proctoringSettings: {},
-        exam: {},
-      },
+    specialExams = {
+      isLoading: true,
+      timeIsOver: false,
+      activeAttempt: null,
+      proctoringSettings: {},
+      exam: {},
     };
-    const testStore = initializeTestStore(preloadedState);
-    attempt = testStore.getState().specialExams.activeAttempt;
+    attempt = specialExams.activeAttempt;
     const { container } = render(
       <ExamTimerBlock />,
+      { specialExams },
     );
     expect(container.firstChild).not.toBeInTheDocument();
   });
@@ -89,6 +86,7 @@ describe('ExamTimerBlock', () => {
   it('changes behavior when clock time decreases low threshold', async () => {
     render(
       <ExamTimerBlock />,
+      { specialExams },
     );
 
     await screen.findByText('00:00:23');
@@ -96,29 +94,27 @@ describe('ExamTimerBlock', () => {
   });
 
   it('changes behavior when clock time decreases critically low threshold', async () => {
-    const preloadedState = {
-      specialExams: {
-        isLoading: true,
-        timeIsOver: false,
-        activeAttempt: appendTimerEnd({
-          attempt_status: 'started',
-          exam_url_path: 'exam_url_path',
-          exam_display_name: 'exam name',
-          time_remaining_seconds: 6,
-          exam_started_poll_url: '',
-          taking_as_proctored: false,
-          exam_type: 'a timed exam',
-        }),
-        proctoringSettings: {},
-        exam: {
-          time_limit_mins: 2,
-        },
+    specialExams = {
+      isLoading: true,
+      timeIsOver: false,
+      activeAttempt: {
+        attempt_status: 'started',
+        exam_url_path: 'exam_url_path',
+        exam_display_name: 'exam name',
+        time_remaining_seconds: 6,
+        exam_started_poll_url: '',
+        taking_as_proctored: false,
+        exam_type: 'a timed exam',
+      },
+      proctoringSettings: {},
+      exam: {
+        time_limit_mins: 2,
       },
     };
-    const testStore = initializeTestStore(preloadedState);
-    attempt = testStore.getState().specialExams.activeAttempt;
+    attempt = specialExams.activeAttempt;
     render(
       <ExamTimerBlock />,
+      { specialExams },
     );
 
     await screen.findByText('00:00:05');
@@ -128,6 +124,7 @@ describe('ExamTimerBlock', () => {
   it('toggles timer visibility correctly', async () => {
     render(
       <ExamTimerBlock />,
+      { specialExams },
     );
     await screen.findByText('00:00:23');
 
@@ -146,6 +143,7 @@ describe('ExamTimerBlock', () => {
   it('toggles long text visibility on show more/less', async () => {
     render(
       <ExamTimerBlock />,
+      { specialExams },
     );
 
     await screen.findByText('00:00:23');
@@ -161,30 +159,28 @@ describe('ExamTimerBlock', () => {
   });
 
   it('submits exam if time reached 00:00 and user clicks end my exam button', async () => {
-    const preloadedState = {
-      specialExams: {
-        isLoading: true,
-        timeIsOver: false,
-        activeAttempt: appendTimerEnd({
-          attempt_status: 'started',
-          exam_url_path: 'exam_url_path',
-          exam_display_name: 'exam name',
-          time_remaining_seconds: 1,
-          exam_started_poll_url: '',
-          taking_as_proctored: false,
-          exam_type: 'a timed exam',
-        }),
-        proctoringSettings: {},
-        exam: {
-          time_limit_mins: 30,
-        },
+    specialExams = {
+      isLoading: true,
+      timeIsOver: false,
+      activeAttempt: {
+        attempt_status: 'started',
+        exam_url_path: 'exam_url_path',
+        exam_display_name: 'exam name',
+        time_remaining_seconds: 1,
+        exam_started_poll_url: '',
+        taking_as_proctored: false,
+        exam_type: 'a timed exam',
+      },
+      proctoringSettings: {},
+      exam: {
+        time_limit_mins: 30,
       },
     };
-    const testStore = initializeTestStore(preloadedState);
-    attempt = testStore.getState().specialExams.activeAttempt;
+    attempt = specialExams.activeAttempt;
 
     render(
       <ExamTimerBlock />,
+      { specialExams },
     );
 
     await screen.findByText('00:00:00');
@@ -196,6 +192,7 @@ describe('ExamTimerBlock', () => {
   it('stops exam if time has not reached 00:00 and user clicks end my exam button', async () => {
     render(
       <ExamTimerBlock />,
+      { specialExams },
     );
 
     await screen.findByText('00:00:23');
@@ -205,11 +202,11 @@ describe('ExamTimerBlock', () => {
   });
 
   it('expires the exam once when the limit is reached after a remount', async () => {
-    const first = render(<ExamTimerBlock />);
+    const first = render(<ExamTimerBlock />, { specialExams });
     await screen.findByText('00:00:23');
     first.unmount();
 
-    render(<ExamTimerBlock />);
+    render(<ExamTimerBlock />, { specialExams });
     await screen.findByText('00:00:23');
     act(() => {
       Emitter.emit(TIMER_LIMIT_REACHED);
@@ -219,45 +216,35 @@ describe('ExamTimerBlock', () => {
   });
 
   it('Update exam timer when attempt time_remaining_seconds is smaller than displayed time', async () => {
-    const preloadedState = {
-      specialExams: {
-        isLoading: true,
-        timeIsOver: false,
-        activeAttempt: appendTimerEnd({
-          attempt_status: 'started',
-          exam_url_path: 'exam_url_path',
-          exam_display_name: 'exam name',
-          time_remaining_seconds: 240,
-          exam_started_poll_url: '',
-          taking_as_proctored: false,
-          exam_type: 'a timed exam',
-        }),
-        proctoringSettings: {},
-        exam: {
-          time_limit_mins: 30,
-        },
+    specialExams = {
+      isLoading: true,
+      timeIsOver: false,
+      activeAttempt: {
+        attempt_status: 'started',
+        exam_url_path: 'exam_url_path',
+        exam_display_name: 'exam name',
+        time_remaining_seconds: 240,
+        exam_started_poll_url: '',
+        taking_as_proctored: false,
+        exam_type: 'a timed exam',
+      },
+      proctoringSettings: {},
+      exam: {
+        time_limit_mins: 30,
       },
     };
-    let testStore = initializeTestStore(preloadedState);
-    attempt = testStore.getState().specialExams.activeAttempt;
-    const { rerender } = render(
-      <ExamTimerBlock />,
-    );
+    const queryClient = createTestQueryClient();
+    render(<ExamTimerBlock />, { queryClient, specialExams });
 
     await screen.findByText('00:03:59');
 
-    preloadedState.specialExams.activeAttempt = appendTimerEnd({
-      ...attempt,
-      time_remaining_seconds: 20,
+    // The poll writes a shorter remaining time over the attempt.
+    act(() => {
+      queryClient.setQueryData(specialExamsQueryKeys.exam(undefined, undefined), (state) => ({
+        ...state,
+        activeAttempt: { ...state.activeAttempt, time_remaining_seconds: 20 },
+      }));
     });
-    testStore = initializeTestStore(preloadedState);
-    const updatedAttempt = testStore.getState().specialExams.activeAttempt;
-
-    expect(updatedAttempt.time_remaining_seconds).toBe(20);
-
-    rerender(
-      <ExamTimerBlock />,
-    );
 
     await screen.findByText('00:00:19');
   });
@@ -276,33 +263,31 @@ describe('ExamTimerBlock', () => {
   Object.keys(timesToTest).forEach((timeString) => {
     it(`Accessibility time string ${timeString} appears as expected based seconds remaining: ${timesToTest[timeString]}`, () => {
       // create a state with the respective number of seconds
-      const preloadedState = {
-        specialExams: {
-          isLoading: true,
-          timeIsOver: false,
-          activeAttempt: appendTimerEnd({
-            attempt_status: 'started',
-            exam_url_path: 'exam_url_path',
-            exam_display_name: 'exam name',
-            time_remaining_seconds: timesToTest[timeString],
-            exam_started_poll_url: '',
-            taking_as_proctored: false,
-            exam_type: 'a timed exam',
-          }),
-          proctoringSettings: {},
-          exam: {
-            time_limit_mins: 30,
-          },
+      specialExams = {
+        isLoading: true,
+        timeIsOver: false,
+        activeAttempt: {
+          attempt_status: 'started',
+          exam_url_path: 'exam_url_path',
+          exam_display_name: 'exam name',
+          time_remaining_seconds: timesToTest[timeString],
+          exam_started_poll_url: '',
+          taking_as_proctored: false,
+          exam_type: 'a timed exam',
+        },
+        proctoringSettings: {},
+        exam: {
+          time_limit_mins: 30,
         },
       };
 
       // Store it in the state
-      const testStore = initializeTestStore(preloadedState);
-      attempt = testStore.getState().specialExams.activeAttempt;
+      attempt = specialExams.activeAttempt;
 
       // render an exam timer block with that data
       render(
         <ExamTimerBlock />,
+        { specialExams },
       );
 
       // expect the a11y string to be a certain output

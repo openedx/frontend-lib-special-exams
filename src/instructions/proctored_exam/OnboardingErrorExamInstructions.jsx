@@ -1,12 +1,13 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Container, MailtoLink, Hyperlink } from '@openedx/paragon';
+import { useExam, useProctoringSettings } from '../../data';
 import { ExamStatus } from '../../constants';
 import Footer from './Footer';
 
 const OnboardingErrorProctoredExamInstructions = () => {
-  const { exam, proctoringSettings } = useSelector(state => state.specialExams);
+  const exam = useExam();
+  const proctoringSettings = useProctoringSettings();
   const { attempt, onboarding_link: onboardingLink } = exam;
   const {
     integration_specific_email: integrationSpecificEmail,

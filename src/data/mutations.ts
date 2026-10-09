@@ -1,25 +1,22 @@
-import { useMutation } from '@tanstack/react-query';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { useDispatch } from 'react-redux';
 import { logError } from '@edx/frontend-platform/logging';
 
 import {
-  continueAttempt, createExamAttempt, declineAttempt, resetAttempt, stopAttempt, submitAttempt,
+  continueAttempt, createExamAttempt, declineAttempt, endExamWithFailure, resetAttempt, stopAttempt, submitAttempt,
 } from './api';
-import { getExamAttemptsData } from './thunks';
+import {
+  specialExamsQueryKeys, useActiveAttempt, useExam, useExamStateKey,
+} from './queries';
 import { expireExamAttempt, setApiError } from './slice';
 import { workerPromiseForEventNames } from './messages/handlers';
 import actionToMessageTypesMap from './messages/constants';
 import { notifyStartExam } from './messages/proctorio';
-import type { AttemptPayload, ExamPayload } from './types';
+import { useSequenceExam } from '../core/SequenceExamContext';
 
 const EXAM_START_TIMEOUT_MILLISECONDS = 5000;
 
 export const specialExamsMutationKey = ['specialExams'];
-
-interface SpecialExamsState {
-  exam: ExamPayload;
-  activeAttempt: AttemptPayload | null;
-}
 
 interface AttemptResponse {
   exam_attempt_id?: number;
@@ -29,8 +26,6 @@ interface ApiError {
   message?: string;
   detail?: string;
 }
-
-const useExamState = () => useSelector((state: { specialExams: SpecialExamsState }) => state.specialExams);
 
 const useApiError = () => {
   const dispatch = useDispatch();
@@ -48,15 +43,18 @@ const useFailAction = () => {
   };
 };
 
-interface AttemptActionOptions {
-  run: () => Promise<AttemptResponse | undefined>;
-  refetchArgs?: () => [string, string];
+interface AttemptActionOptions<Variables> {
+  run: (variables: Variables) => Promise<AttemptResponse | undefined>;
+  refetchKey?: () => QueryKey;
   after?: () => void;
 }
 
-const useAttemptAction = (action: string, { run, refetchArgs, after }: AttemptActionOptions) => {
-  const { exam } = useExamState();
-  const dispatch = useDispatch();
+const useAttemptAction = <Variables = void>(
+  action: string,
+  { run, refetchKey, after }: AttemptActionOptions<Variables>,
+) => {
+  const queryClient = useQueryClient();
+  const examStateKey = useExamStateKey();
   const apiError = useApiError();
   return useMutation({
     mutationKey: [...specialExamsMutationKey, 'attempt', action],
@@ -67,8 +65,7 @@ const useAttemptAction = (action: string, { run, refetchArgs, after }: AttemptAc
         return;
       }
       if (error || response?.exam_attempt_id) {
-        const [courseId, sequenceId] = refetchArgs ? refetchArgs() : [exam.course_id, exam.content_id];
-        await dispatch(getExamAttemptsData(courseId, sequenceId));
+        await queryClient.invalidateQueries({ queryKey: refetchKey ? refetchKey() : examStateKey });
       }
       after?.();
     },
@@ -77,7 +74,7 @@ const useAttemptAction = (action: string, { run, refetchArgs, after }: AttemptAc
 
 // Tell the proctoring desktop app, when there is one, that the attempt was submitted.
 const useNotifyWorkerOfSubmit = () => {
-  const { activeAttempt } = useExamState();
+  const activeAttempt = useActiveAttempt();
   const apiError = useApiError();
   return () => {
     const workerUrl = activeAttempt?.desktop_application_js_url;
@@ -91,7 +88,7 @@ const useNotifyWorkerOfSubmit = () => {
 };
 
 export const useStartTimedExam = () => {
-  const { exam } = useExamState();
+  const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('startTimedExam', {
     run: async () => {
@@ -104,7 +101,7 @@ export const useStartTimedExam = () => {
 };
 
 export const useCreateProctoredExamAttempt = () => {
-  const { exam } = useExamState();
+  const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('createProctoredExamAttempt', {
     run: async () => {
@@ -117,7 +114,7 @@ export const useCreateProctoredExamAttempt = () => {
 };
 
 export const useStartProctoredExam = () => {
-  const { exam } = useExamState();
+  const exam = useExam();
   const fail = useFailAction();
   const apiError = useApiError();
   return useAttemptAction('startProctoredExam', {
@@ -156,7 +153,7 @@ export const useStartProctoredExam = () => {
 };
 
 export const useSkipProctoringExam = () => {
-  const { exam } = useExamState();
+  const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('skipProctoringExam', {
     run: async () => {
@@ -173,7 +170,8 @@ export const useSkipProctoringExam = () => {
 };
 
 export const useStopExam = () => {
-  const { exam, activeAttempt } = useExamState();
+  const exam = useExam();
+  const activeAttempt = useActiveAttempt();
   const fail = useFailAction();
   const apiError = useApiError();
   return useAttemptAction('stopExam', {
@@ -201,7 +199,7 @@ export const useStopExam = () => {
 };
 
 export const useContinueExam = () => {
-  const { exam } = useExamState();
+  const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('continueExam', {
     run: async () => {
@@ -216,7 +214,7 @@ export const useContinueExam = () => {
 };
 
 export const useResetExam = () => {
-  const { exam } = useExamState();
+  const exam = useExam();
   const fail = useFailAction();
   return useAttemptAction('resetExam', {
     run: async () => {
@@ -231,7 +229,8 @@ export const useResetExam = () => {
 };
 
 export const useSubmitExam = () => {
-  const { exam, activeAttempt } = useExamState();
+  const exam = useExam();
+  const activeAttempt = useActiveAttempt();
   const fail = useFailAction();
   const apiError = useApiError();
   const notifyWorkerOfSubmit = useNotifyWorkerOfSubmit();
@@ -262,7 +261,8 @@ export const useSubmitExam = () => {
 };
 
 export const useExpireExam = () => {
-  const { exam, activeAttempt } = useExamState();
+  const activeAttempt = useActiveAttempt();
+  const { sequenceId, isTimeLimited } = useSequenceExam();
   const dispatch = useDispatch();
   const fail = useFailAction();
   const notifyWorkerOfSubmit = useNotifyWorkerOfSubmit();
@@ -276,10 +276,22 @@ export const useExpireExam = () => {
       return submitAttempt(attemptId, useLegacyAttemptAPI);
     },
     // this sure looks like a bug
-    refetchArgs: () => [activeAttempt!.course_id, exam.content_id],
+    refetchKey: () => (isTimeLimited
+      ? specialExamsQueryKeys.exam(activeAttempt!.course_id, sequenceId)
+      : specialExamsQueryKeys.activeAttempt(activeAttempt!.course_id)),
     after: () => {
       dispatch(expireExamAttempt());
       notifyWorkerOfSubmit();
     },
   });
 };
+
+interface EndExamWithFailureVariables {
+  attemptId: number;
+  message: string;
+  useLegacyAttemptAPI?: boolean;
+}
+
+export const useEndExamWithFailure = () => useAttemptAction<EndExamWithFailureVariables>('endExamWithFailure', {
+  run: ({ attemptId, message, useLegacyAttemptAPI }) => endExamWithFailure(attemptId, message, useLegacyAttemptAPI),
+});

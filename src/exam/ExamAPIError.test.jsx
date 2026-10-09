@@ -21,11 +21,9 @@ describe('ExamAPIError', () => {
   });
 
   it('renders with the default information', () => {
-    store.getState = () => ({ specialExams: {} });
-
     const tree = render(
       <ExamAPIError />,
-      { store },
+      { specialExams: {} },
     );
 
     expect(tree).toMatchSnapshot();
@@ -38,11 +36,9 @@ describe('ExamAPIError', () => {
     };
     getConfig.mockImplementation(() => config);
 
-    store.getState = () => ({ specialExams: {} });
-
     const { getByTestId } = render(
       <ExamAPIError />,
-      { store },
+      { specialExams: {} },
     );
 
     const supportLink = getByTestId('support-link');
@@ -51,9 +47,7 @@ describe('ExamAPIError', () => {
   });
 
   it('renders error details when provided', () => {
-    store.getState = () => ({
-      specialExams: { apiErrorMsg: 'Something bad has happened' },
-    });
+    store = initializeTestStore({ specialExams: { apiErrorMsg: 'Something bad has happened' } });
 
     const { queryByTestId } = render(
       <ExamAPIError />,
@@ -64,9 +58,7 @@ describe('ExamAPIError', () => {
   });
 
   it('renders default message when error is HTML', () => {
-    store.getState = () => ({
-      specialExams: { apiErrorMsg: '<Response is HTML>' },
-    });
+    store = initializeTestStore({ specialExams: { apiErrorMsg: '<Response is HTML>' } });
 
     const { queryByTestId } = render(
       <ExamAPIError />,
@@ -77,9 +69,7 @@ describe('ExamAPIError', () => {
   });
 
   it('renders default message when there is no error message', () => {
-    store.getState = () => ({
-      specialExams: { apiErrorMsg: '' },
-    });
+    store = initializeTestStore({ specialExams: { apiErrorMsg: '' } });
 
     const { queryByTestId } = render(
       <ExamAPIError />,

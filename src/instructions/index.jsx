@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import {
   DownloadSoftwareProctoredExamInstructions,
@@ -9,6 +8,7 @@ import {
   OnboardingErrorProctoredExamInstructions,
 } from './proctored_exam';
 import { isEmpty, shouldRenderExpiredPage } from '../helpers';
+import { useExam } from '../data';
 import {
   ExamStatus,
   ExamType,
@@ -24,7 +24,7 @@ import ExpiredInstructions from './ExpiredInstructions';
 import UnknownAttemptStatusError from './UnknownAttemptStatusError';
 
 const Instructions = ({ children }) => {
-  const { exam } = useSelector(state => state.specialExams);
+  const exam = useExam();
   const {
     attempt,
     type: examType,

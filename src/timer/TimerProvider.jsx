@@ -1,9 +1,10 @@
 import React, {
   useEffect, useState, useCallback, useRef,
 } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Emitter, pollAttempt, pingAttempt } from '../data';
+import {
+  Emitter, useActiveAttempt, useEndExamWithFailure, useExam, usePingAttempt, usePollQuery,
+} from '../data';
 import {
   TIMER_IS_CRITICALLY_LOW,
   TIMER_IS_LOW,
@@ -13,7 +14,6 @@ import {
 
 // Give an extra 5 seconds where the timer holds at 00:00 before page refreshes
 const GRACE_PERIOD_SECS = 5;
-const POLL_INTERVAL = 60;
 const TIME_LIMIT_CRITICAL_PCT = 0.05;
 const TIME_LIMIT_LOW_PCT = 0.2;
 const LIMIT = GRACE_PERIOD_SECS ? 0 - GRACE_PERIOD_SECS : 0;
@@ -29,10 +29,14 @@ const getFormattedRemainingTime = (timeLeft) => ({
 const TimerProvider = ({
   children,
 }) => {
-  const { activeAttempt: attempt, exam } = useSelector(state => state.specialExams);
+  const attempt = useActiveAttempt();
+  const exam = useExam();
   const [timeState, setTimeState] = useState({});
+  const [inGracePeriod, setInGracePeriod] = useState(false);
   const lastSignal = useRef(null);
-  const dispatch = useDispatch();
+  const pingAttempt = usePingAttempt(useEndExamWithFailure());
+  // No polling during grace period.
+  usePollQuery(!inGracePeriod);
   const { time_limit_mins: timeLimitMins } = exam;
   const {
     desktop_application_js_url: workerUrl,
@@ -48,11 +52,6 @@ const TimerProvider = ({
       return (value < 10 ? `0${value}` : value);
     },
   ).join(':');
-
-  const pollExam = useCallback(() => {
-    // Poll url may be null if this is an LTI exam.
-    dispatch(pollAttempt(attempt.exam_started_poll_url));
-  }, [attempt.exam_started_poll_url, dispatch]);
 
   const processTimeLeft = useCallback((secondsLeft) => {
     const emit = (signal) => {
@@ -112,15 +111,13 @@ const TimerProvider = ({
       const secondsLeft = Math.floor(remainingTime);
 
       setTimeState(getFormattedRemainingTime(secondsLeft));
-
-      // No polling during grace period.
-      if (timerTick % POLL_INTERVAL === 0 && secondsLeft >= 0) {
-        pollExam();
+      if (secondsLeft < 0) {
+        setInGracePeriod(true);
       }
 
       // If exam is proctored ping provider app.
       if (workerUrl && timerTick % pingInterval === pingInterval / 2) {
-        dispatch(pingAttempt(pingInterval, workerUrl));
+        pingAttempt(pingInterval, workerUrl);
       }
 
       const killTimer = processTimeLeft(secondsLeft);
@@ -151,8 +148,7 @@ const TimerProvider = ({
     pingInterval,
     workerUrl,
     processTimeLeft,
-    pollExam,
-    dispatch,
+    pingAttempt,
   ]);
 
   return (

@@ -2,13 +2,15 @@ import React from 'react';
 import { Factory } from 'rosie';
 import MockAdapter from 'axios-mock-adapter';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { QueryClientProvider, useIsMutating } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useIsMutating } from '@tanstack/react-query';
 import { Provider } from 'react-redux';
 
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { getConfig, mergeConfig } from '@edx/frontend-platform';
 
-import { getExamAttemptsData } from './thunks';
+import {
+  activeAttemptQueryOptions, examQueryOptions, specialExamsQueryKeys, useActiveAttemptQuery, useExamQuery,
+} from './queries';
 import {
   useContinueExam,
   useCreateProctoredExamAttempt,
@@ -21,12 +23,12 @@ import {
   useSubmitExam,
   specialExamsMutationKey,
 } from './mutations';
-import executeThunk from '../utils';
 import {
   createTestQueryClient, initializeMockApp, initializeTestConfig, initializeTestStore,
 } from '../setupTest';
 import { ExamStatus } from '../constants';
-import type { AttemptPayload, ExamPayload } from './types';
+import SequenceExamContext, { type SequenceExam } from '../core/SequenceExamContext';
+import type { ExamState } from './types';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
 
@@ -52,24 +54,34 @@ describe('Attempt action mutations', () => {
   const fetchExamAttemptsDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
   const latestAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
   let store: ReturnType<typeof initializeTestStore>;
+  let queryClient: QueryClient;
+  const sequenceExam = { courseId, sequenceId: contentId, isTimeLimited: true };
 
   const initWithExamAttempt = async (testExam = exam, testAttempt = attempt) => {
     axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: testExam });
     axiosMock.onGet(latestAttemptURL).reply(200, testAttempt);
-    await executeThunk(getExamAttemptsData(courseId, contentId), store.dispatch);
+    await queryClient.fetchQuery(examQueryOptions(courseId, contentId));
   };
   const initLegacy = async () => {
-    await executeThunk(getExamAttemptsData(courseId, contentId), store.dispatch);
+    await queryClient.fetchQuery(examQueryOptions(courseId, contentId));
   };
 
-  function renderAction<T>(useAction: () => T) {
-    const queryClient = createTestQueryClient();
+  // Renders the hook under the exam's context, beside the owner observer the wrapper mounts in the
+  // app, so an invalidation after the action re-fetches as it does there.
+  function renderAction<T>(useAction: () => T, context: SequenceExam = sequenceExam) {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <Provider store={store}>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          <SequenceExamContext.Provider value={context}>{children}</SequenceExamContext.Provider>
+        </QueryClientProvider>
       </Provider>
     );
-    return renderHook(useAction, { wrapper });
+    return renderHook(() => {
+      // The owner `ExamWrapper` mounts: the sequence's exam, or the course's attempt outside an exam.
+      useExamQuery(courseId, contentId, { enabled: !!context.isTimeLimited });
+      useActiveAttemptQuery(courseId, { enabled: !context.isTimeLimited });
+      return useAction();
+    }, { wrapper });
   }
   // Runs the action and resolves once its request and the refetch after it have settled.
   const runAction = async (useAction: () => { mutateAsync: () => Promise<unknown> }) => {
@@ -78,14 +90,9 @@ describe('Attempt action mutations', () => {
       await result.current.mutateAsync();
     });
   };
-  // The slice is JavaScript, so its state type is inferred from the initial values (`activeAttempt: null`).
-  interface ExamsState {
-    exam: ExamPayload;
-    activeAttempt: AttemptPayload | null;
-    apiErrorMsg: string;
-    timeIsOver: boolean;
-  }
-  const state = () => store.getState().specialExams as unknown as ExamsState;
+  const examState = () => queryClient.getQueryData<ExamState>(specialExamsQueryKeys.exam(courseId, contentId));
+  // The slice is JavaScript, so its state type is inferred from the initial values.
+  const clientState = () => store.getState().specialExams as { apiErrorMsg: string; timeIsOver: boolean };
   const startedAttempt = (attemptId: number) => ({ attempt_id: attemptId, attempt_status: ExamStatus.STARTED });
   // Global stubs register their undo here so a failed assertion cannot leak them into the next test.
   const cleanups: Array<() => void> = [];
@@ -112,6 +119,7 @@ describe('Attempt action mutations', () => {
     loggingService.logError.mockReset();
     loggingService.logInfo.mockReset();
     store = initializeTestStore();
+    queryClient = createTestQueryClient();
   });
 
   afterEach(() => {
@@ -138,7 +146,7 @@ describe('Attempt action mutations', () => {
       expect(result.current.pending).toBe(true);
       release();
       await waitFor(() => expect(result.current.pending).toBe(false));
-      expect(state().activeAttempt).toMatchObject(startedAttempt(attempt.attempt_id));
+      expect(examState()?.activeAttempt).toMatchObject(startedAttempt(attempt.attempt_id));
     });
   });
 
@@ -154,10 +162,10 @@ describe('Attempt action mutations', () => {
         axiosMock.onPost(createExamAttemptLegacyUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
 
         await initLegacy();
-        expect(state().activeAttempt).toBeNull();
+        expect(examState()?.activeAttempt).toBeNull();
 
         await runAction(useStartTimedExam);
-        expect(state().activeAttempt).toMatchObject(startedAttempt(attempt.attempt_id));
+        expect(examState()?.activeAttempt).toMatchObject(startedAttempt(attempt.attempt_id));
         expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
           exam_id: exam.id,
           start_clock: 'true',
@@ -173,7 +181,7 @@ describe('Attempt action mutations', () => {
       axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: attempt.attempt_id });
 
       await runAction(useStartTimedExam);
-      expect(state().activeAttempt).toMatchObject(startedAttempt(attempt.attempt_id));
+      expect(examState()?.activeAttempt).toMatchObject(startedAttempt(attempt.attempt_id));
       expect(axiosMock.history.post[0].data).toEqual(JSON.stringify({
         exam_id: exam.id,
         start_clock: 'true',
@@ -196,7 +204,7 @@ describe('Attempt action mutations', () => {
 
       expect(axiosMock.history.post).toHaveLength(0);
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state().apiErrorMsg).toBe('Failed to start exam. No exam id was found.');
+      expect(clientState().apiErrorMsg).toBe('Failed to start exam. No exam id was found.');
     });
   });
 
@@ -215,10 +223,10 @@ describe('Attempt action mutations', () => {
         axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
 
         await initLegacy();
-        expect(state().activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
+        expect(examState()?.activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
 
         await runAction(useStopExam);
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
         expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
         expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'stop' }));
       });
@@ -230,7 +238,7 @@ describe('Attempt action mutations', () => {
         axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
 
         await initLegacy();
-        expect(state().activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
+        expect(examState()?.activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
 
         await runAction(useStopExam);
         expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
@@ -241,7 +249,7 @@ describe('Attempt action mutations', () => {
 
     it('Should stop exam, and update attempt', async () => {
       await initWithExamAttempt();
-      expect(state().activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
+      expect(examState()?.activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`)
         .reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
@@ -249,7 +257,7 @@ describe('Attempt action mutations', () => {
       axiosMock.onGet(latestAttemptURL).reply(200, readyToSubmitAttempt);
 
       await runAction(useStopExam);
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'stop' }));
     });
@@ -258,7 +266,7 @@ describe('Attempt action mutations', () => {
       stubLocation();
 
       await initWithExamAttempt({}, attempt);
-      expect(state().activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
+      expect(examState()?.activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${readyToSubmitAttempt.attempt_id}`)
         .reply(200, { exam_attempt_id: readyToSubmitAttempt.attempt_id });
@@ -281,7 +289,7 @@ describe('Attempt action mutations', () => {
 
     it('Should fail to fetch if error occurs', async () => {
       await initWithExamAttempt();
-      expect(state().activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
+      expect(examState()?.activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).networkError();
 
@@ -289,7 +297,7 @@ describe('Attempt action mutations', () => {
       await act(async () => {
         await expect(result.current.mutateAsync()).rejects.toThrow('Network Error');
       });
-      expect(state().apiErrorMsg).toBe('Network Error');
+      expect(clientState().apiErrorMsg).toBe('Network Error');
     });
 
     it('Should show the error and stay if stopping fails outside the exam section', async () => {
@@ -299,7 +307,7 @@ describe('Attempt action mutations', () => {
 
       await runAction(useStopExam);
 
-      expect(state().apiErrorMsg).toBe('Network Error');
+      expect(clientState().apiErrorMsg).toBe('Network Error');
       expect(window.location.href).toEqual('');
     });
 
@@ -309,7 +317,7 @@ describe('Attempt action mutations', () => {
       await runAction(useStopExam);
 
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state().apiErrorMsg).toBe('Failed to stop exam. No active attempt was found.');
+      expect(clientState().apiErrorMsg).toBe('Failed to stop exam. No active attempt was found.');
     });
   });
 
@@ -328,10 +336,10 @@ describe('Attempt action mutations', () => {
         axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
 
         await initLegacy();
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
 
         await runAction(useContinueExam);
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
         expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
         expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'start' }));
       });
@@ -339,14 +347,14 @@ describe('Attempt action mutations', () => {
 
     it('Should return to exam, and update attempt', async () => {
       await initWithExamAttempt(readyToSubmitExam, {});
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.READY_TO_SUBMIT);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam });
       axiosMock.onGet(latestAttemptURL).reply(200, { attempt });
       axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: attempt.attempt_id });
 
       await runAction(useContinueExam);
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'start' }));
     });
@@ -358,7 +366,7 @@ describe('Attempt action mutations', () => {
 
       expect(axiosMock.history.put).toHaveLength(0);
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state().apiErrorMsg).toBe('Failed to continue exam. No attempt id was found.');
+      expect(clientState().apiErrorMsg).toBe('Failed to continue exam. No attempt id was found.');
     });
   });
 
@@ -378,11 +386,11 @@ describe('Attempt action mutations', () => {
         axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
 
         await initLegacy();
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
         await runAction(useResetExam);
-        expect(state().exam.attempt).toMatchObject({ attempt_id: 2, attempt_status: ExamStatus.CREATED });
-        expect(state().activeAttempt).toBeNull();
+        expect(examState()?.exam.attempt).toMatchObject({ attempt_id: 2, attempt_status: ExamStatus.CREATED });
+        expect(examState()?.activeAttempt).toBeNull();
         expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
         expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'reset_attempt' }));
       });
@@ -390,7 +398,7 @@ describe('Attempt action mutations', () => {
 
     it('Should reset exam attempt', async () => {
       await initWithExamAttempt();
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: examWithCreatedAttempt });
       axiosMock.onGet(latestAttemptURL).reply(200, {});
@@ -398,8 +406,8 @@ describe('Attempt action mutations', () => {
         .reply(200, { exam_attempt_id: createdAttempt.attempt_id });
 
       await runAction(useResetExam);
-      expect(state().exam.attempt).toMatchObject({ attempt_id: 2, attempt_status: ExamStatus.CREATED });
-      expect(state().activeAttempt).toBeNull();
+      expect(examState()?.exam.attempt).toMatchObject({ attempt_id: 2, attempt_status: ExamStatus.CREATED });
+      expect(examState()?.activeAttempt).toBeNull();
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'reset_attempt' }));
     });
@@ -411,7 +419,7 @@ describe('Attempt action mutations', () => {
 
       expect(axiosMock.history.put).toHaveLength(0);
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state().apiErrorMsg).toBe('Failed to reset exam attempt. No attempt id was found.');
+      expect(clientState().apiErrorMsg).toBe('Failed to reset exam attempt. No attempt id was found.');
     });
   });
 
@@ -430,10 +438,10 @@ describe('Attempt action mutations', () => {
         axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
         await initLegacy();
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
         await runAction(useSubmitExam);
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
         expect(axiosMock.history.put[0].url).toEqual(updateAttemptStatusLegacyUrl);
         expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'submit' }));
       });
@@ -441,13 +449,13 @@ describe('Attempt action mutations', () => {
 
     it('Should submit exam, and update attempt and exam', async () => {
       await initWithExamAttempt();
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam });
       axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
       await runAction(useSubmitExam);
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'submit' }));
     });
@@ -459,7 +467,7 @@ describe('Attempt action mutations', () => {
 
       expect(axiosMock.history.put).toHaveLength(0);
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state().apiErrorMsg).toBe('Failed to submit exam. No active attempt was found.');
+      expect(clientState().apiErrorMsg).toBe('Failed to submit exam. No active attempt was found.');
     });
 
     it('Should submit exam and redirect to sequence if no exam attempt', async () => {
@@ -469,7 +477,7 @@ describe('Attempt action mutations', () => {
       stubLocation();
 
       await initWithExamAttempt({}, attempt);
-      expect(state().activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
+      expect(examState()?.activeAttempt?.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
@@ -485,7 +493,7 @@ describe('Attempt action mutations', () => {
 
       await runAction(useSubmitExam);
 
-      expect(state().apiErrorMsg).toBe('Network Error');
+      expect(clientState().apiErrorMsg).toBe('Network Error');
       expect(window.location.href).toEqual('');
     });
 
@@ -498,7 +506,7 @@ describe('Attempt action mutations', () => {
 
       await runAction(useSubmitExam);
 
-      await waitFor(() => expect(state().apiErrorMsg).toBe(
+      await waitFor(() => expect(clientState().apiErrorMsg).toBe(
         'Something has gone wrong submitting your exam. Please double-check that the application is running.',
       ));
     });
@@ -530,27 +538,43 @@ describe('Attempt action mutations', () => {
         axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
         await initLegacy();
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
         await runAction(useExpireExam);
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
-        expect(state().timeIsOver).toBe(true);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+        expect(clientState().timeIsOver).toBe(true);
       });
     });
 
     it('Should submit expired exam, and update attempt', async () => {
       await initWithExamAttempt();
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.STARTED);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: submittedExam });
       axiosMock.onGet(latestAttemptURL).reply(200, submittedAttempt);
       axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
 
       await runAction(useExpireExam);
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
-      expect(state().timeIsOver).toBe(true);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.SUBMITTED);
+      expect(clientState().timeIsOver).toBe(true);
       expect(axiosMock.history.put[0].url).toEqual(`${createUpdateAttemptURL}/${attempt.attempt_id}`);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'submit' }));
+    });
+
+    it('Should refresh the course\'s latest attempt when expired outside an exam sequence', async () => {
+      axiosMock.onGet(latestAttemptURL).replyOnce(200, attempt);
+      await queryClient.fetchQuery(activeAttemptQueryOptions(courseId));
+      axiosMock.onGet(latestAttemptURL).reply(200, submittedAttempt);
+      axiosMock.onPut(`${createUpdateAttemptURL}/${attempt.attempt_id}`).reply(200, { exam_attempt_id: submittedAttempt.attempt_id });
+
+      const { result } = renderAction(useExpireExam, { courseId, isTimeLimited: false });
+      await act(async () => {
+        await result.current.mutateAsync();
+      });
+
+      const latest = queryClient.getQueryData<ExamState>(specialExamsQueryKeys.activeAttempt(courseId));
+      expect(latest?.activeAttempt?.attempt_status).toBe(ExamStatus.SUBMITTED);
+      expect(clientState().timeIsOver).toBe(true);
     });
 
     it('Should fail to fetch if no attempt id', async () => {
@@ -559,8 +583,8 @@ describe('Attempt action mutations', () => {
 
       expect(axiosMock.history.put).toHaveLength(0);
       expect(loggingService.logError).toHaveBeenCalled();
-      expect(state().apiErrorMsg).toBe('Failed to expire exam. No attempt id was found.');
-      expect(state().timeIsOver).toBe(false);
+      expect(clientState().apiErrorMsg).toBe('Failed to expire exam. No attempt id was found.');
+      expect(clientState().timeIsOver).toBe(false);
     });
   });
 
@@ -579,10 +603,10 @@ describe('Attempt action mutations', () => {
         axiosMock.onPost(createExamAttemptLegacyUrl).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
 
         await initLegacy();
-        expect(state().exam.attempt).toEqual({});
+        expect(examState()?.exam.attempt).toEqual({});
 
         await runAction(useCreateProctoredExamAttempt);
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
         expect(JSON.parse(axiosMock.history.post[0].data)).toEqual({
           exam_id: exam.id, start_clock: 'false', attempt_proctored: 'true',
         });
@@ -596,7 +620,7 @@ describe('Attempt action mutations', () => {
       axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: createdAttempt.attempt_id });
 
       await runAction(useCreateProctoredExamAttempt);
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.CREATED);
       expect(axiosMock.history.post).toHaveLength(1);
       expect(axiosMock.history.post[0].url).toBe(createUpdateAttemptURL);
     });
@@ -637,24 +661,24 @@ describe('Attempt action mutations', () => {
         axiosMock.onPut(continueAttemptLegacyUrl).reply(200, { exam_attempt_id: startedFixture.attempt_id });
 
         await initLegacy();
-        expect(state().activeAttempt?.attempt_status).toBe(ExamStatus.CREATED);
+        expect(examState()?.activeAttempt?.attempt_status).toBe(ExamStatus.CREATED);
 
         await runAction(useStartProctoredExam);
-        expect(state().activeAttempt).toMatchObject(startedAttempt(startedFixture.attempt_id));
+        expect(examState()?.activeAttempt).toMatchObject(startedAttempt(startedFixture.attempt_id));
         expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'start' }));
       });
     });
 
     it('Should start exam, and update attempt and exam', async () => {
       await initWithExamAttempt(createdExam, createdAttempt);
-      expect(state().activeAttempt?.attempt_status).toBe(ExamStatus.CREATED);
+      expect(examState()?.activeAttempt?.attempt_status).toBe(ExamStatus.CREATED);
 
       axiosMock.onPut(`${createUpdateAttemptURL}/${createdAttempt.attempt_id}`).reply(200, { exam_attempt_id: startedFixture.attempt_id });
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: startedExam });
       axiosMock.onGet(latestAttemptURL).reply(200, startedFixture);
 
       await runAction(useStartProctoredExam);
-      expect(state().activeAttempt).toMatchObject(startedAttempt(startedFixture.attempt_id));
+      expect(examState()?.activeAttempt).toMatchObject(startedAttempt(startedFixture.attempt_id));
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'start' }));
     });
 
@@ -684,7 +708,7 @@ describe('Attempt action mutations', () => {
         courseId: createdWorkerAttempt.course_id,
         examId: createdWorkerExam.id,
       });
-      expect(state().apiErrorMsg)
+      expect(clientState().apiErrorMsg)
         .toBe('Something has gone wrong starting your exam. Please double-check that the application is running.');
       expect(axiosMock.history.put).toHaveLength(0);
     });
@@ -736,10 +760,10 @@ describe('Attempt action mutations', () => {
         axiosMock.onPost(createExamAttemptLegacyUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
 
         await initLegacy();
-        expect(state().exam.attempt).toEqual({});
+        expect(examState()?.exam.attempt).toEqual({});
 
         await runAction(useSkipProctoringExam);
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
         // edx-proctoring declines a proctored exam's new attempt only when attempt_proctored is false.
         expect(axiosMock.history.post).toHaveLength(1);
         expect(axiosMock.history.post[0].url).toBe(createExamAttemptLegacyUrl);
@@ -754,10 +778,10 @@ describe('Attempt action mutations', () => {
         axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
 
         await initLegacy();
-        expect(state().exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
+        expect(examState()?.exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
 
         await runAction(useSkipProctoringExam);
-        expect(state().exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+        expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
         expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'decline' }));
       });
     });
@@ -768,7 +792,7 @@ describe('Attempt action mutations', () => {
       axiosMock.onPost(createUpdateAttemptURL).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
 
       await runAction(useSkipProctoringExam);
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
       expect(axiosMock.history.post).toHaveLength(1);
       expect(axiosMock.history.post[0].url).toBe(createUpdateAttemptURL);
       expect(JSON.parse(axiosMock.history.post[0].data)).toEqual({
@@ -791,13 +815,13 @@ describe('Attempt action mutations', () => {
 
     it('Should change existing attempt status to declined, and update attempt and exam', async () => {
       await initWithExamAttempt(createdExam, {});
-      expect(state().exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
+      expect(examState()?.exam.attempt.attempt_status).toEqual(ExamStatus.CREATED);
 
       axiosMock.onGet(fetchExamAttemptsDataUrl).reply(200, { exam: declinedExam, active_attempt: {} });
       axiosMock.onPut(`${createUpdateAttemptURL}/${declinedAttempt.attempt_id}`).reply(200, { exam_attempt_id: declinedAttempt.attempt_id });
 
       await runAction(useSkipProctoringExam);
-      expect(state().exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
+      expect(examState()?.exam.attempt.attempt_status).toBe(ExamStatus.DECLINED);
       expect(axiosMock.history.put[0].data).toEqual(JSON.stringify({ action: 'decline' }));
     });
 

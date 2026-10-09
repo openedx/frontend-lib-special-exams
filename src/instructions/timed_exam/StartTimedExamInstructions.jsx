@@ -1,11 +1,10 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Button } from '@openedx/paragon';
-import { useStartTimedExam } from '../../data';
+import { useStartTimedExam, useExam } from '../../data';
 
 const StartTimedExamInstructions = () => {
-  const { exam } = useSelector(state => state.specialExams);
+  const exam = useExam();
   const startTimedExam = useStartTimedExam();
   const examDuration = exam.total_time;
 

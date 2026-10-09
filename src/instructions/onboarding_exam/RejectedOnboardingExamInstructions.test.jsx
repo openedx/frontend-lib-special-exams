@@ -4,7 +4,7 @@ import React from 'react';
 import { fireEvent } from '@testing-library/react';
 import RejectedOnboardingExamInstructions from './RejectedOnboardingExamInstructions';
 import {
-  render, screen, initializeMockApp, initializeTestStore,
+  render, screen, initializeMockApp,
 } from '../../setupTest';
 
 const mockResetExam = jest.fn();
@@ -17,11 +17,8 @@ jest.mock('../../data', () => {
 });
 
 describe('RejectedOnboardingExamInstructions', () => {
-  let store;
-
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
     // Reset the mock before each test
     jest.clearAllMocks();
   });
@@ -32,15 +29,13 @@ describe('RejectedOnboardingExamInstructions', () => {
    */
   it('renders correctly with integration email', () => {
     // Set up the store with proctoringSettings containing integration_specific_email
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          integration_specific_email: 'test@example.com',
-        }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        integration_specific_email: 'test@example.com',
       }),
     });
 
-    render(<RejectedOnboardingExamInstructions />, { store });
+    render(<RejectedOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly with the title
     expect(screen.getByTestId('rejected-onboarding-title')).toHaveTextContent(
@@ -62,13 +57,11 @@ describe('RejectedOnboardingExamInstructions', () => {
    */
   it('renders correctly when proctoringSettings is null', () => {
     // Set up the store with proctoringSettings as null
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: null,
-      }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: null,
     });
 
-    render(<RejectedOnboardingExamInstructions />, { store });
+    render(<RejectedOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly with the title
     expect(screen.getByTestId('rejected-onboarding-title')).toHaveTextContent(
@@ -85,15 +78,13 @@ describe('RejectedOnboardingExamInstructions', () => {
    */
   it('renders correctly when integration_specific_email is empty', () => {
     // Set up the store with proctoringSettings containing an empty integration_specific_email
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          integration_specific_email: '',
-        }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        integration_specific_email: '',
       }),
     });
 
-    render(<RejectedOnboardingExamInstructions />, { store });
+    render(<RejectedOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly with the title
     expect(screen.getByTestId('rejected-onboarding-title')).toHaveTextContent(
@@ -110,11 +101,9 @@ describe('RejectedOnboardingExamInstructions', () => {
    */
   it('dispatches resetExam action when retry button is clicked', () => {
     // Set up the store
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
+    const specialExams = Factory.build('specialExams');
 
-    render(<RejectedOnboardingExamInstructions />, { store });
+    render(<RejectedOnboardingExamInstructions />, { specialExams });
 
     // Find and click the retry button
     const retryButton = screen.getByTestId('reset-exam-button');

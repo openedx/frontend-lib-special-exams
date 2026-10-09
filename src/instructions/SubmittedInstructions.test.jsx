@@ -33,6 +33,8 @@ jest.mock('./proctored_exam/Footer', () => function Footer() {
 describe('SubmittedExamInstructions', () => {
   let store;
 
+  const specialExams = Factory.build('specialExams');
+
   beforeEach(() => {
     initializeMockApp();
     store = initializeTestStore();
@@ -43,11 +45,7 @@ describe('SubmittedExamInstructions', () => {
    * This tests the first branch of the switch statement in renderInstructions
    */
   it('renders correctly for ONBOARDING exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<SubmittedExamInstructions examType={ExamType.ONBOARDING} />, { store });
+    render(<SubmittedExamInstructions examType={ExamType.ONBOARDING} />, { specialExams });
 
     // Verify the component renders the correct instructions
     expect(screen.getByTestId('submitted-onboarding-exam-instructions')).toBeInTheDocument();
@@ -61,11 +59,7 @@ describe('SubmittedExamInstructions', () => {
    * This tests the second branch of the switch statement in renderInstructions
    */
   it('renders correctly for PRACTICE exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<SubmittedExamInstructions examType={ExamType.PRACTICE} />, { store });
+    render(<SubmittedExamInstructions examType={ExamType.PRACTICE} />, { specialExams });
 
     // Verify the component renders the correct instructions
     expect(screen.getByTestId('submitted-practice-exam-instructions')).toBeInTheDocument();
@@ -79,11 +73,7 @@ describe('SubmittedExamInstructions', () => {
    * This tests the third branch of the switch statement in renderInstructions
    */
   it('renders correctly for PROCTORED exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<SubmittedExamInstructions examType={ExamType.PROCTORED} />, { store });
+    render(<SubmittedExamInstructions examType={ExamType.PROCTORED} />, { specialExams });
 
     // Verify the component renders the correct instructions
     expect(screen.getByTestId('submitted-proctored-exam-instructions')).toBeInTheDocument();
@@ -98,11 +88,7 @@ describe('SubmittedExamInstructions', () => {
    * and the conditional rendering of the Footer component
    */
   it('renders correctly for TIMED exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<SubmittedExamInstructions examType={ExamType.TIMED} />, { store });
+    render(<SubmittedExamInstructions examType={ExamType.TIMED} />, { specialExams });
 
     // Verify the component renders the correct instructions
     expect(screen.getByTestId('submitted-timed-exam-instructions')).toBeInTheDocument();
@@ -112,11 +98,9 @@ describe('SubmittedExamInstructions', () => {
   });
 
   it('passes the store\'s timeIsOver to the timed instructions', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', { timeIsOver: true }),
-    });
+    store = initializeTestStore({ specialExams: { timeIsOver: true } });
 
-    render(<SubmittedExamInstructions examType={ExamType.TIMED} />, { store });
+    render(<SubmittedExamInstructions examType={ExamType.TIMED} />, { specialExams, store });
 
     expect(SubmittedTimedExamInstructions).toHaveBeenCalledWith(
       expect.objectContaining({ timeIsOver: true }),
@@ -125,16 +109,14 @@ describe('SubmittedExamInstructions', () => {
   });
 
   it('renders the timed instructions component the wrapper provides, with timeIsOver', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', { timeIsOver: true }),
-    });
+    store = initializeTestStore({ specialExams: { timeIsOver: true } });
     const Custom = jest.fn(() => <div data-testid="custom-timed-instructions" />);
 
     render(
       <SequenceExamContext.Provider value={{ submittedTimedExamInstructions: Custom }}>
         <SubmittedExamInstructions examType={ExamType.TIMED} />
       </SequenceExamContext.Provider>,
-      { store },
+      { specialExams, store },
     );
 
     expect(screen.getByTestId('custom-timed-instructions')).toBeInTheDocument();
@@ -147,11 +129,7 @@ describe('SubmittedExamInstructions', () => {
    * This tests the default branch of the switch statement in renderInstructions
    */
   it('renders correctly for unknown exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<SubmittedExamInstructions examType="UNKNOWN_TYPE" />, { store });
+    render(<SubmittedExamInstructions examType="UNKNOWN_TYPE" />, { specialExams });
 
     // Verify the container is rendered but no instructions (default case returns null)
     expect(screen.queryByTestId('submitted-onboarding-exam-instructions')).not.toBeInTheDocument();

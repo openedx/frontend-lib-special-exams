@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Button, Container } from '@openedx/paragon';
 import { FormattedMessage } from '@edx/frontend-platform/i18n';
 import Emitter from '../data/emitter';
 import { ExamType } from '../constants';
-import { useContinueExam } from '../data';
+import { useContinueExam, useActiveAttempt, useExam } from '../data';
 import { SubmitProctoredExamInstructions } from './proctored_exam';
 import { SubmitTimedExamInstructions } from './timed_exam';
 import Footer from './proctored_exam/Footer';
 import { TIMER_REACHED_NULL } from '../timer/events';
 
 const SubmitExamInstructions = () => {
-  const { exam, activeAttempt } = useSelector(state => state.specialExams);
+  const exam = useExam();
+  const activeAttempt = useActiveAttempt();
 
   const continueExam = useContinueExam();
 

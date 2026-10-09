@@ -8,6 +8,7 @@ import ErrorOnboardingExamInstructions from './ErrorOnboardingExamInstructions';
 
 const mockResetExam = jest.fn();
 jest.mock('../../data', () => ({
+  ...jest.requireActual('../../data'),
   useResetExam: () => ({ mutate: mockResetExam }),
 }));
 

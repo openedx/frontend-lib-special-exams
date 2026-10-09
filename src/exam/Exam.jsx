@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useIntl, FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Alert, Spinner } from '@openedx/paragon';
@@ -10,7 +10,14 @@ import Instructions from '../instructions';
 import ExamAPIError from './ExamAPIError';
 import { ExamStatus, ExamType, IS_STARTED_STATUS } from '../constants';
 import messages from './messages';
-import { getProctoringSettings, specialExamsMutationKey } from '../data';
+import {
+  specialExamsMutationKey,
+  useActiveAttempt,
+  useExam,
+  useIsExamLoading,
+  useProctoringSettingsQuery,
+  useReportQueryError,
+} from '../data';
 
 /**
  * Exam component is intended to render exam instructions before and after exam.
@@ -23,13 +30,12 @@ import { getProctoringSettings, specialExamsMutationKey } from '../data';
 const Exam = ({
   isGated, isTimeLimited, originalUserIsStaff, canAccessProctoredExams, children,
 }) => {
-  const {
-    isLoading: isExamLoading, activeAttempt, exam, apiErrorMsg,
-  } = useSelector(state => state.specialExams);
-  const dispatch = useDispatch();
+  const { apiErrorMsg } = useSelector(state => state.specialExams);
+  const exam = useExam();
+  const activeAttempt = useActiveAttempt();
   const intl = useIntl();
   const isMutating = useIsMutating({ mutationKey: specialExamsMutationKey }) > 0;
-  const isLoading = isExamLoading || isMutating;
+  const isLoading = useIsExamLoading() || isMutating;
 
   const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
 
@@ -60,13 +66,13 @@ const Exam = ({
 
   const proctoredExamTypes = [ExamType.ONBOARDING, ExamType.PRACTICE, ExamType.PROCTORED];
 
+  // only fetch proctoring settings for a proctored exam
+  useReportQueryError(useProctoringSettingsQuery(exam.course_id, examId, {
+    enabled: proctoredExamTypes.includes(examType) && !!examId,
+  }));
+
   useEffect(() => {
     if (proctoredExamTypes.includes(examType)) {
-      // only fetch proctoring settings for a proctored exam
-      if (examId) {
-        dispatch(getProctoringSettings());
-      }
-
       // Only exclude Timed Exam when restricting access to exams
       setHasProctoredExamAccess(canAccessProctoredExams);
     }
@@ -74,7 +80,7 @@ const Exam = ({
     // we can't leave this empty since initially exam is just an empty object, so
     // API calls above would not get triggered
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [examId, dispatch]);
+  }, [examId]);
 
   if (isLoading) {
     return (
