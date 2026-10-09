@@ -4,7 +4,6 @@ import {
   render,
   screen,
   initializeMockApp,
-  initializeTestStore,
 } from '../setupTest';
 import ErrorExamInstructions from './ErrorInstructions';
 import { ExamType } from '../constants';
@@ -23,11 +22,8 @@ jest.mock('./proctored_exam', () => ({
 }));
 
 describe('ErrorExamInstructions', () => {
-  let store;
-
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
     jest.clearAllMocks();
   });
 
@@ -35,7 +31,6 @@ describe('ErrorExamInstructions', () => {
     // Test for PROCTORED exam type
     const { rerender } = render(
       <ErrorExamInstructions examType={ExamType.PROCTORED} />,
-      { store },
     );
     expect(screen.getByText('Error Proctored Exam Instructions')).toBeInTheDocument();
 
@@ -55,7 +50,6 @@ describe('ErrorExamInstructions', () => {
   it('renders Footer component when examType is not TIMED', () => {
     render(
       <ErrorExamInstructions examType={ExamType.PROCTORED} />,
-      { store },
     );
 
     // Verify that the Footer component is rendered
@@ -68,7 +62,6 @@ describe('ErrorExamInstructions', () => {
   it('does not render Footer component when examType is TIMED', () => {
     render(
       <ErrorExamInstructions examType={ExamType.TIMED} />,
-      { store },
     );
 
     // Verify that the Footer component is not rendered
@@ -82,7 +75,6 @@ describe('ErrorExamInstructions', () => {
     // This test specifically targets line 20 in ErrorInstructions.jsx
     render(
       <ErrorExamInstructions examType="UNKNOWN_TYPE" />,
-      { store },
     );
 
     // Verify that no instruction components are rendered

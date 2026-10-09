@@ -3,7 +3,6 @@ import { Factory } from 'rosie';
 import MockAdapter from 'axios-mock-adapter';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider, useIsMutating } from '@tanstack/react-query';
-import { Provider } from 'react-redux';
 
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { getConfig, mergeConfig } from '@edx/frontend-platform';
@@ -24,10 +23,10 @@ import {
   specialExamsMutationKey,
 } from './mutations';
 import {
-  createTestQueryClient, initializeMockApp, initializeTestConfig, initializeTestStore,
+  createTestQueryClient, createTestSequenceExam, initializeMockApp, initializeTestConfig,
 } from '../setupTest';
 import { ExamStatus } from '../constants';
-import SequenceExamContext, { type SequenceExam } from '../core/SequenceExamContext';
+import type { SequenceExamIdentity } from '../core/SequenceExamContext';
 import type { ExamState } from './types';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
@@ -53,7 +52,7 @@ describe('Attempt action mutations', () => {
   const createUpdateAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt`;
   const fetchExamAttemptsDataUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/student/exam/attempt/course_id/${courseId}/content_id/${contentId}`;
   const latestAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
-  let store: ReturnType<typeof initializeTestStore>;
+  let clientState: () => { timeIsOver: boolean; apiErrorMsg: string };
   let queryClient: QueryClient;
   const sequenceExam = { courseId, sequenceId: contentId, isTimeLimited: true };
 
@@ -68,13 +67,13 @@ describe('Attempt action mutations', () => {
 
   // Renders the hook under the exam's context, beside the owner observer the wrapper mounts in the
   // app, so an invalidation after the action re-fetches as it does there.
-  function renderAction<T>(useAction: () => T, context: SequenceExam = sequenceExam) {
+  function renderAction<T>(useAction: () => T, context: SequenceExamIdentity = sequenceExam) {
+    const testSequenceExam = createTestSequenceExam(context);
+    clientState = testSequenceExam.clientState;
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <Provider store={store}>
-        <QueryClientProvider client={queryClient}>
-          <SequenceExamContext.Provider value={context}>{children}</SequenceExamContext.Provider>
-        </QueryClientProvider>
-      </Provider>
+      <QueryClientProvider client={queryClient}>
+        <testSequenceExam.SequenceExamProvider>{children}</testSequenceExam.SequenceExamProvider>
+      </QueryClientProvider>
     );
     return renderHook(() => {
       // The owner `ExamWrapper` mounts: the sequence's exam, or the course's attempt outside an exam.
@@ -91,8 +90,6 @@ describe('Attempt action mutations', () => {
     });
   };
   const examState = () => queryClient.getQueryData<ExamState>(specialExamsQueryKeys.exam(courseId, contentId));
-  // The slice is JavaScript, so its state type is inferred from the initial values.
-  const clientState = () => store.getState().specialExams as { apiErrorMsg: string; timeIsOver: boolean };
   const startedAttempt = (attemptId: number) => ({ attempt_id: attemptId, attempt_status: ExamStatus.STARTED });
   // Global stubs register their undo here so a failed assertion cannot leak them into the next test.
   const cleanups: Array<() => void> = [];
@@ -118,7 +115,6 @@ describe('Attempt action mutations', () => {
     axiosMock.reset();
     loggingService.logError.mockReset();
     loggingService.logInfo.mockReset();
-    store = initializeTestStore();
     queryClient = createTestQueryClient();
   });
 

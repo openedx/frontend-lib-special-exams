@@ -3,7 +3,6 @@ import { Factory } from 'rosie';
 import MockAdapter from 'axios-mock-adapter';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Provider } from 'react-redux';
 
 import { getAuthenticatedHttpClient } from '@edx/frontend-platform/auth';
 import { getConfig, mergeConfig } from '@edx/frontend-platform';
@@ -24,10 +23,10 @@ import {
 } from './queries';
 import { useEndExamWithFailure } from './mutations';
 import {
-  createTestQueryClient, initializeMockApp, initializeTestConfig, initializeTestStore,
+  createTestQueryClient, createTestSequenceExam, initializeMockApp, initializeTestConfig,
 } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
-import SequenceExamContext, { type SequenceExam } from '../core/SequenceExamContext';
+import type { SequenceExamIdentity } from '../core/SequenceExamContext';
 import type { ExamState } from './types';
 
 const BASE_API_URL = '/api/edx_proctoring/v1/proctored_exam/attempt';
@@ -53,9 +52,9 @@ describe('Exam queries', () => {
   const latestAttemptURL = `${getConfig().EXAMS_BASE_URL}/api/v1/exams/attempt/latest`;
   const fetchProctoringSettingsUrl = `${getConfig().EXAMS_BASE_URL}/api/v1/exam/provider_settings/course_id/${courseId}/exam_id/${exam.id}`;
   const examKey = specialExamsQueryKeys.exam(courseId, contentId);
-  const inSequence: SequenceExam = { courseId, sequenceId: contentId, isTimeLimited: true };
+  const inSequence: SequenceExamIdentity = { courseId, sequenceId: contentId, isTimeLimited: true };
 
-  let store: ReturnType<typeof initializeTestStore>;
+  let clientState: () => { timeIsOver: boolean; apiErrorMsg: string };
   let queryClient: QueryClient;
 
   const initWithExamAttempt = async (testExam = exam, testAttempt = attempt) => {
@@ -64,15 +63,14 @@ describe('Exam queries', () => {
     return queryClient.fetchQuery(examQueryOptions(courseId, contentId));
   };
   const examState = () => queryClient.getQueryData<ExamState>(examKey);
-  const clientState = () => store.getState().specialExams as { apiErrorMsg: string; timeIsOver: boolean };
 
-  function renderIn<T>(useHook: () => T, sequenceExam: SequenceExam = inSequence) {
+  function renderIn<T>(useHook: () => T, sequenceExam: SequenceExamIdentity = inSequence) {
+    const testSequenceExam = createTestSequenceExam(sequenceExam);
+    clientState = testSequenceExam.clientState;
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <Provider store={store}>
-        <QueryClientProvider client={queryClient}>
-          <SequenceExamContext.Provider value={sequenceExam}>{children}</SequenceExamContext.Provider>
-        </QueryClientProvider>
-      </Provider>
+      <QueryClientProvider client={queryClient}>
+        <testSequenceExam.SequenceExamProvider>{children}</testSequenceExam.SequenceExamProvider>
+      </QueryClientProvider>
     );
     return renderHook(useHook, { wrapper });
   }
@@ -87,7 +85,6 @@ describe('Exam queries', () => {
     initializeTestConfig();
     axiosMock.reset();
     loggingService.logError.mockReset();
-    store = initializeTestStore();
     queryClient = createTestQueryClient();
   });
 

@@ -1,15 +1,14 @@
 import React, { useContext, useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { AppContext } from '@edx/frontend-platform/react';
 import { ExamTimerBlock } from '../timer';
 import ExamAPIError from '../exam/ExamAPIError';
 import { useActiveAttempt, useActiveAttemptQuery, useReportQueryError } from '../data';
 import { IS_STARTED_STATUS } from '../constants';
-import SequenceExamContext from './SequenceExamContext';
+import SequenceExamContext, { useExamClientState, useSequenceExam } from './SequenceExamContext';
 
 const ExamTimer = ({ courseId }) => {
-  const { apiErrorMsg } = useSelector(state => state.specialExams);
+  const { apiErrorMsg } = useSequenceExam();
   const { authenticatedUser } = useContext(AppContext);
   useReportQueryError(useActiveAttemptQuery(courseId, { refetchOnMount: 'always' }));
   const activeAttempt = useActiveAttempt();
@@ -41,7 +40,8 @@ ExamTimer.propTypes = {
  * will be shown.
  */
 const OuterExamTimer = ({ courseId }) => {
-  const sequenceExam = useMemo(() => ({ courseId }), [courseId]);
+  const clientState = useExamClientState();
+  const sequenceExam = useMemo(() => ({ courseId, ...clientState }), [courseId, clientState]);
   return (
     <SequenceExamContext.Provider value={sequenceExam}>
       <ExamTimer courseId={courseId} />

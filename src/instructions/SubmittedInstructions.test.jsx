@@ -3,10 +3,9 @@ import { Factory } from 'rosie';
 import React from 'react';
 import SubmittedExamInstructions from './SubmittedInstructions';
 import {
-  render, screen, initializeMockApp, initializeTestStore,
+  render, screen, initializeMockApp,
 } from '../setupTest';
 import { ExamType } from '../constants';
-import SequenceExamContext from '../core/SequenceExamContext';
 import { SubmittedTimedExamInstructions } from './timed_exam';
 
 // Mock the imported components
@@ -31,13 +30,10 @@ jest.mock('./proctored_exam/Footer', () => function Footer() {
 });
 
 describe('SubmittedExamInstructions', () => {
-  let store;
-
   const specialExams = Factory.build('specialExams');
 
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
   });
 
   /**
@@ -97,10 +93,11 @@ describe('SubmittedExamInstructions', () => {
     expect(screen.queryByTestId('footer')).not.toBeInTheDocument();
   });
 
-  it('passes the store\'s timeIsOver to the timed instructions', () => {
-    store = initializeTestStore({ specialExams: { timeIsOver: true } });
-
-    render(<SubmittedExamInstructions examType={ExamType.TIMED} />, { specialExams, store });
+  it('passes timeIsOver to the timed instructions', () => {
+    render(
+      <SubmittedExamInstructions examType={ExamType.TIMED} />,
+      { specialExams, clientState: { timeIsOver: true } },
+    );
 
     expect(SubmittedTimedExamInstructions).toHaveBeenCalledWith(
       expect.objectContaining({ timeIsOver: true }),
@@ -109,14 +106,15 @@ describe('SubmittedExamInstructions', () => {
   });
 
   it('renders the timed instructions component the wrapper provides, with timeIsOver', () => {
-    store = initializeTestStore({ specialExams: { timeIsOver: true } });
     const Custom = jest.fn(() => <div data-testid="custom-timed-instructions" />);
 
     render(
-      <SequenceExamContext.Provider value={{ submittedTimedExamInstructions: Custom }}>
-        <SubmittedExamInstructions examType={ExamType.TIMED} />
-      </SequenceExamContext.Provider>,
-      { specialExams, store },
+      <SubmittedExamInstructions examType={ExamType.TIMED} />,
+      {
+        specialExams,
+        sequenceExam: { submittedTimedExamInstructions: Custom },
+        clientState: { timeIsOver: true },
+      },
     );
 
     expect(screen.getByTestId('custom-timed-instructions')).toBeInTheDocument();

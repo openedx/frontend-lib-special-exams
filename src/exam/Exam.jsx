@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { useIntl, FormattedMessage } from '@edx/frontend-platform/i18n';
 import { Alert, Spinner } from '@openedx/paragon';
@@ -10,6 +9,7 @@ import Instructions from '../instructions';
 import ExamAPIError from './ExamAPIError';
 import { ExamStatus, ExamType, IS_STARTED_STATUS } from '../constants';
 import messages from './messages';
+import { useSequenceExam } from '../core/SequenceExamContext';
 import {
   specialExamsMutationKey,
   useActiveAttempt,
@@ -30,7 +30,7 @@ import {
 const Exam = ({
   isGated, isTimeLimited, originalUserIsStaff, canAccessProctoredExams, children,
 }) => {
-  const { apiErrorMsg } = useSelector(state => state.specialExams);
+  const { apiErrorMsg } = useSequenceExam();
   const exam = useExam();
   const activeAttempt = useActiveAttempt();
   const intl = useIntl();

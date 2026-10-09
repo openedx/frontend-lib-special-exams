@@ -7,7 +7,7 @@ import { pollExamAttempt, softwareDownloadAttempt } from '../data/api';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
 import {
-  render, screen, act, initializeMockApp, initializeTestStore,
+  render, screen, act, initializeMockApp,
 } from '../setupTest';
 import {
   ExamStatus, ExamType, INCOMPLETE_STATUSES, IS_ONBOARDING_ERROR,
@@ -51,13 +51,9 @@ describe('SequenceExamWrapper', () => {
       }),
     }),
   });
-  let store;
 
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
-    store.subscribe = jest.fn();
-    store.dispatch = jest.fn();
     jest.clearAllMocks();
   });
 
@@ -290,13 +286,11 @@ describe('SequenceExamWrapper', () => {
         },
       }),
     });
-    store = initializeTestStore({ specialExams: { timeIsOver: true } });
-
     const { getByTestId } = render(
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { specialExams, store },
+      { specialExams, clientState: { timeIsOver: true } },
     );
 
     expect(getByTestId('failed-prerequisites')).toBeInTheDocument();
@@ -323,13 +317,11 @@ describe('SequenceExamWrapper', () => {
         },
       }),
     });
-    store = initializeTestStore({ specialExams: { timeIsOver: true } });
-
     const { getByTestId } = render(
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { specialExams, store },
+      { specialExams, clientState: { timeIsOver: true } },
     );
 
     const skipProctoredExamButton = screen.queryByText('Take this exam without proctoring.');
@@ -346,13 +338,11 @@ describe('SequenceExamWrapper', () => {
         }),
       }),
     });
-    store = initializeTestStore({ specialExams: { timeIsOver: true } });
-
     render(
       <Instructions>
         <div data-testid="sequence-content">Sequence</div>
       </Instructions>,
-      { specialExams, store },
+      { specialExams, clientState: { timeIsOver: true } },
     );
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
   });
@@ -367,13 +357,11 @@ describe('SequenceExamWrapper', () => {
         }),
       }),
     });
-    store = initializeTestStore({ specialExams: { timeIsOver: true } });
-
     render(
       <Instructions>
         <div data-testid="sequence-content">Sequence</div>
       </Instructions>,
-      { specialExams, store },
+      { specialExams, clientState: { timeIsOver: true } },
     );
     expect(screen.getByText('Your exam is ready to be resumed.')).toBeInTheDocument();
     expect(screen.getByTestId('start-exam-button')).toHaveTextContent('Continue to my proctored exam.');
@@ -426,13 +414,11 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Instructions when exam time is over', () => {
-    store = initializeTestStore({ specialExams: { timeIsOver: true } });
-
     const { getByTestId } = render(
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { specialExams: submittedExam, store },
+      { specialExams: submittedExam, clientState: { timeIsOver: true } },
     );
     expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('The time allotted for this exam has expired.');
   });

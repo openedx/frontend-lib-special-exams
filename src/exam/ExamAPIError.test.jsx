@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { getConfig } from '@edx/frontend-platform';
-import { initializeTestStore, render } from '../setupTest';
+import { render } from '../setupTest';
 import ExamAPIError from './ExamAPIError';
 
 const originalConfig = jest.requireActual('@edx/frontend-platform').getConfig();
@@ -14,10 +14,7 @@ getConfig.mockImplementation(() => originalConfig);
 describe('ExamAPIError', () => {
   const defaultMessage = 'A system error has occurred with your exam.';
 
-  let store;
-
   beforeEach(() => {
-    store = initializeTestStore();
   });
 
   it('renders with the default information', () => {
@@ -47,33 +44,27 @@ describe('ExamAPIError', () => {
   });
 
   it('renders error details when provided', () => {
-    store = initializeTestStore({ specialExams: { apiErrorMsg: 'Something bad has happened' } });
-
     const { queryByTestId } = render(
       <ExamAPIError />,
-      { store },
+      { clientState: { apiErrorMsg: 'Something bad has happened' } },
     );
 
-    expect(queryByTestId('error-details')).toHaveTextContent(store.getState().specialExams.apiErrorMsg);
+    expect(queryByTestId('error-details')).toHaveTextContent('Something bad has happened');
   });
 
   it('renders default message when error is HTML', () => {
-    store = initializeTestStore({ specialExams: { apiErrorMsg: '<Response is HTML>' } });
-
     const { queryByTestId } = render(
       <ExamAPIError />,
-      { store },
+      { clientState: { apiErrorMsg: '<Response is HTML>' } },
     );
 
     expect(queryByTestId('error-details')).toHaveTextContent(defaultMessage);
   });
 
   it('renders default message when there is no error message', () => {
-    store = initializeTestStore({ specialExams: { apiErrorMsg: '' } });
-
     const { queryByTestId } = render(
       <ExamAPIError />,
-      { store },
+      { clientState: { apiErrorMsg: '' } },
     );
 
     expect(queryByTestId('error-details')).toHaveTextContent(defaultMessage);

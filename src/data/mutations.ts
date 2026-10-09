@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
-import { useDispatch } from 'react-redux';
 import { logError } from '@edx/frontend-platform/logging';
 
 import {
@@ -8,7 +7,6 @@ import {
 import {
   specialExamsQueryKeys, useActiveAttempt, useExam, useExamStateKey,
 } from './queries';
-import { expireExamAttempt, setApiError } from './slice';
 import { workerPromiseForEventNames } from './messages/handlers';
 import actionToMessageTypesMap from './messages/constants';
 import { notifyStartExam } from './messages/proctorio';
@@ -28,16 +26,16 @@ interface ApiError {
 }
 
 const useApiError = () => {
-  const dispatch = useDispatch();
-  return (error: ApiError) => dispatch(setApiError({ errorMsg: error.message || error.detail }));
+  const { setApiError } = useSequenceExam();
+  return (error: ApiError) => setApiError(error.message || error.detail || '');
 };
 
 const useFailAction = () => {
-  const dispatch = useDispatch();
+  const { setApiError } = useSequenceExam();
   return (logMessage: string, errorMsg?: string) => {
     logError(logMessage);
     if (errorMsg) {
-      dispatch(setApiError({ errorMsg }));
+      setApiError(errorMsg);
     }
     return undefined;
   };
@@ -262,8 +260,7 @@ export const useSubmitExam = () => {
 
 export const useExpireExam = () => {
   const activeAttempt = useActiveAttempt();
-  const { sequenceId, isTimeLimited } = useSequenceExam();
-  const dispatch = useDispatch();
+  const { sequenceId, isTimeLimited, setTimeIsOver } = useSequenceExam();
   const fail = useFailAction();
   const notifyWorkerOfSubmit = useNotifyWorkerOfSubmit();
   return useAttemptAction('expireExam', {
@@ -280,7 +277,7 @@ export const useExpireExam = () => {
       ? specialExamsQueryKeys.exam(activeAttempt!.course_id, sequenceId)
       : specialExamsQueryKeys.activeAttempt(activeAttempt!.course_id)),
     after: () => {
-      dispatch(expireExamAttempt());
+      setTimeIsOver(true);
       notifyWorkerOfSubmit();
     },
   });

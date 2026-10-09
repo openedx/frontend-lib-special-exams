@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { useSelector } from 'react-redux';
 import { Container } from '@openedx/paragon';
 import { ExamType } from '../constants';
 import { SubmittedPracticeExamInstructions } from './practice_exam';
@@ -11,8 +10,8 @@ import Footer from './proctored_exam/Footer';
 import { useSequenceExam } from '../core/SequenceExamContext';
 
 const SubmittedExamInstructions = ({ examType }) => {
-  const timeIsOver = useSelector(state => state.specialExams?.timeIsOver || false);
   const {
+    timeIsOver,
     submittedTimedExamInstructions: SubmittedTimedExamInstructions = SubmittedTimedExamInstructionsDefault,
   } = useSequenceExam();
 

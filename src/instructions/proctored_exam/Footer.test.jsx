@@ -4,7 +4,6 @@ import { getConfig } from '@edx/frontend-platform';
 import Footer from './Footer';
 import {
   initializeMockApp,
-  initializeTestStore,
   render,
   screen,
 } from '../../setupTest';
@@ -15,15 +14,12 @@ jest.mock('@edx/frontend-platform', () => ({
 }));
 
 describe('Footer', () => {
-  let store;
-
   // Mock FAQ URL for testing
   const mockFaqUrl = 'https://example.com/faq';
 
   beforeEach(() => {
     initializeMockApp();
     jest.clearAllMocks();
-    store = initializeTestStore();
   });
 
   /**
@@ -36,7 +32,7 @@ describe('Footer', () => {
       PROCTORED_EXAM_FAQ_URL: mockFaqUrl,
     });
 
-    render(<Footer />, { store });
+    render(<Footer />);
 
     // Verify the button is rendered with the correct attributes
     const button = screen.getByTestId('request-exam-time-button');
@@ -58,7 +54,7 @@ describe('Footer', () => {
       // No PROCTORED_EXAM_FAQ_URL
     });
 
-    render(<Footer />, { store });
+    render(<Footer />);
 
     // Verify the button is not rendered
     expect(screen.queryByTestId('request-exam-time-button')).not.toBeInTheDocument();
@@ -75,7 +71,7 @@ describe('Footer', () => {
       PROCTORED_EXAM_FAQ_URL: null,
     });
 
-    render(<Footer />, { store });
+    render(<Footer />);
 
     // Verify the button is not rendered
     expect(screen.queryByTestId('request-exam-time-button')).not.toBeInTheDocument();
@@ -92,7 +88,7 @@ describe('Footer', () => {
       PROCTORED_EXAM_FAQ_URL: '',
     });
 
-    render(<Footer />, { store });
+    render(<Footer />);
 
     // Verify the button is not rendered
     expect(screen.queryByTestId('request-exam-time-button')).not.toBeInTheDocument();

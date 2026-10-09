@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import ExamWrapper from '../exam/ExamWrapper';
-import SequenceExamContext from './SequenceExamContext';
+import SequenceExamContext, { useExamClientState } from './SequenceExamContext';
 
 export interface SequenceExamWrapperProps {
   courseId: string;
@@ -33,13 +33,18 @@ export interface SequenceExamWrapperProps {
  */
 const SequenceExamWrapper = ({ submittedTimedExamInstructions, ...props }: SequenceExamWrapperProps) => {
   const { courseId, sequence } = props;
+  const clientState = useExamClientState();
   const sequenceExam = useMemo(() => ({
     courseId,
     sequenceId: sequence.id,
     isTimeLimited: sequence.isTimeLimited,
     allowProctoringOptOut: sequence.allowProctoringOptOut,
     submittedTimedExamInstructions,
-  }), [courseId, sequence.id, sequence.isTimeLimited, sequence.allowProctoringOptOut, submittedTimedExamInstructions]);
+    ...clientState,
+  }), [
+    courseId, sequence.id, sequence.isTimeLimited, sequence.allowProctoringOptOut,
+    submittedTimedExamInstructions, clientState,
+  ]);
   return (
     <SequenceExamContext.Provider value={sequenceExam}>
       <ExamWrapper {...props} />

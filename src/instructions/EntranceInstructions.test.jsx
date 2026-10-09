@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import {
-  render, screen, initializeMockApp, initializeTestStore,
+  render, screen, initializeMockApp,
 } from '../setupTest';
 import EntranceExamInstructions from './EntranceInstructions';
 import { ExamType } from '../constants';
@@ -26,11 +26,9 @@ jest.mock('./practice_exam', () => ({
 
 describe('EntranceExamInstructions', () => {
   const skipProctoredExam = jest.fn();
-  let store;
 
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
     jest.clearAllMocks();
   });
 
@@ -41,7 +39,6 @@ describe('EntranceExamInstructions', () => {
         examType={ExamType.PROCTORED}
         skipProctoredExam={skipProctoredExam}
       />,
-      { store },
     );
 
     // Verify that the Footer component is rendered
@@ -60,7 +57,6 @@ describe('EntranceExamInstructions', () => {
         examType={ExamType.TIMED}
         skipProctoredExam={skipProctoredExam}
       />,
-      { store },
     );
 
     // Verify that the TimedExamFooter component is rendered
@@ -80,7 +76,6 @@ describe('EntranceExamInstructions', () => {
         examType={ExamType.PROCTORED}
         skipProctoredExam={skipProctoredExam}
       />,
-      { store },
     );
     expect(screen.getByText('Entrance Proctored Exam Instructions')).toBeInTheDocument();
 
@@ -118,7 +113,6 @@ describe('EntranceExamInstructions', () => {
         examType="UNKNOWN_TYPE"
         skipProctoredExam={skipProctoredExam}
       />,
-      { store },
     );
 
     // The container should only have the Footer component

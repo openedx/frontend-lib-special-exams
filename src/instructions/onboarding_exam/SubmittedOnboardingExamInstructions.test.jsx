@@ -5,7 +5,7 @@ import { useToggle } from '@openedx/paragon';
 
 import { useResetExam } from '../../data';
 import SubmittedOnboardingExamInstructions from './SubmittedOnboardingExamInstructions';
-import { render, initializeTestStore, initializeMockApp } from '../../setupTest';
+import { render, initializeMockApp } from '../../setupTest';
 
 jest.mock('../../data', () => ({
   ...jest.requireActual('../../data'),
@@ -23,7 +23,6 @@ jest.mock('@openedx/paragon', () => {
 
 describe('SubmittedOnboardingExamInstructions', () => {
   // Setup common test variables
-  let store;
   const mockResetExam = jest.fn();
 
   beforeEach(() => {
@@ -32,13 +31,11 @@ describe('SubmittedOnboardingExamInstructions', () => {
 
     // Initialize the mock app and store
     initializeMockApp();
-    store = initializeTestStore();
 
     // Setup mock implementations
     useResetExam.mockReturnValue({ mutate: mockResetExam });
 
     // Mock the dispatch function
-    store.dispatch = jest.fn();
 
     // Default mock for useToggle - returns [false, toggleFn]
     useToggle.mockImplementation(() => [false, jest.fn()]);

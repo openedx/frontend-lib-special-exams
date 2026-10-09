@@ -3,7 +3,7 @@ import { Factory } from 'rosie';
 import React from 'react';
 import SequenceExamWrapper from './SequenceExamWrapper';
 import { fetchExamAttemptsData } from '../data/api';
-import { initializeTestStore, render, screen } from '../setupTest';
+import { render, screen } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
 
 // The wrapper fetches on mount; the fetcher answers with the submitted exam.
@@ -20,7 +20,7 @@ describe('SequenceExamWrapper', () => {
   const courseId = 'course-v1:test+special+exam';
 
   describe('once a timed exam is submitted', () => {
-    const submittedTimedExam = (timeIsOver) => {
+    const submittedTimedExam = () => {
       const specialExams = Factory.build('specialExams', {
         exam: Factory.build('exam', {
           type: ExamType.TIMED,
@@ -28,7 +28,7 @@ describe('SequenceExamWrapper', () => {
         }),
       });
       fetchExamAttemptsData.mockResolvedValue({ exam: specialExams.exam, active_attempt: {} });
-      return { specialExams, store: initializeTestStore({ specialExams: { timeIsOver } }) };
+      return { specialExams };
     };
 
     it('shows the default heading when no component is given', () => {
@@ -36,7 +36,7 @@ describe('SequenceExamWrapper', () => {
         <SequenceExamWrapper sequence={sequence} courseId={courseId}>
           <div>Test Content</div>
         </SequenceExamWrapper>,
-        submittedTimedExam(false),
+        submittedTimedExam(),
       );
 
       expect(screen.getByText('You have submitted your timed exam.')).toBeInTheDocument();
@@ -49,11 +49,11 @@ describe('SequenceExamWrapper', () => {
         <SequenceExamWrapper sequence={sequence} courseId={courseId} submittedTimedExamInstructions={Custom}>
           <div>Test Content</div>
         </SequenceExamWrapper>,
-        submittedTimedExam(true),
+        submittedTimedExam(),
       );
 
       expect(screen.getByTestId('custom-timed-instructions')).toBeInTheDocument();
-      expect(Custom).toHaveBeenCalledWith(expect.objectContaining({ timeIsOver: true }), expect.anything());
+      expect(Custom).toHaveBeenCalledWith(expect.objectContaining({ timeIsOver: false }), expect.anything());
       expect(screen.queryByText('You have submitted your timed exam.')).not.toBeInTheDocument();
     });
   });

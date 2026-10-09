@@ -1,11 +1,10 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import SubmittedTimedExamInstructions from './SubmittedTimedExamInstructions';
-import { render, screen, initializeTestStore } from '../../setupTest';
+import { render, screen } from '../../setupTest';
 
 describe('SubmittedTimedExamInstructions', () => {
   beforeEach(() => {
-    initializeTestStore();
   });
 
   it('tells the learner the exam was submitted', () => {

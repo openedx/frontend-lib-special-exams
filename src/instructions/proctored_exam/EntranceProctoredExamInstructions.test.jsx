@@ -4,7 +4,6 @@ import { fireEvent } from '@testing-library/dom';
 import EntranceProctoredExamInstructions from './EntranceProctoredExamInstructions';
 import {
   initializeMockApp,
-  initializeTestStore,
   render,
   screen,
 } from '../../setupTest';
@@ -42,14 +41,11 @@ describe('EntranceProctoredExamInstructions', () => {
     },
     allowProctoringOptOut: true,
   };
-  let store;
   const skipProctoredExamMock = jest.fn();
 
   beforeEach(() => {
     initializeMockApp();
     jest.clearAllMocks();
-    store = initializeTestStore();
-    store.dispatch = jest.fn();
   });
 
   /**

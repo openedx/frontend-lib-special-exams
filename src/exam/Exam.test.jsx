@@ -3,7 +3,7 @@ import { Factory } from 'rosie';
 import React from 'react';
 import { useIsMutating } from '@tanstack/react-query';
 import {
-  createTestQueryClient, render, initializeTestStore, waitFor,
+  createTestQueryClient, render, waitFor,
 } from '../setupTest';
 import Exam from './Exam';
 import { ExamType, ExamStatus } from '../constants';
@@ -45,8 +45,6 @@ describe('Exam', () => {
     canAccessProctoredExams: true,
     children: <div data-testid="exam-content">Exam Content</div>,
   };
-
-  let store;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -108,11 +106,9 @@ describe('Exam', () => {
 
   it('shows API error when isTimeLimited is true and apiErrorMsg exists', () => {
     const specialExams = Factory.build('specialExams');
-    store = initializeTestStore({ specialExams: { apiErrorMsg: 'Test error message' } });
-
     const { queryByTestId } = render(
       <Exam {...defaultProps} />,
-      { specialExams, store },
+      { specialExams, clientState: { apiErrorMsg: 'Test error message' } },
     );
 
     // ExamAPIError is rendered
@@ -121,11 +117,9 @@ describe('Exam', () => {
 
   it('does not show API error when isTimeLimited is false', () => {
     const specialExams = Factory.build('specialExams');
-    store = initializeTestStore({ specialExams: { apiErrorMsg: 'Test error message' } });
-
     const { container } = render(
       <Exam {...defaultProps} isTimeLimited={false} />,
-      { specialExams, store },
+      { specialExams, clientState: { apiErrorMsg: 'Test error message' } },
     );
 
     // ExamAPIError is not rendered

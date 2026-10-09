@@ -6,4 +6,3 @@ export {
   useExamAccessToken,
   useIsExam,
 } from './apiHooks';
-export { reducer } from './data';

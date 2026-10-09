@@ -5,7 +5,6 @@ import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from '../index';
 import {
   initializeMockApp,
-  initializeTestStore,
   render,
   screen,
 } from '../../setupTest';
@@ -32,14 +31,9 @@ jest.mock('../../data/api', () => ({
 }));
 
 describe('SequenceExamWrapper', () => {
-  let store;
-
   beforeEach(() => {
     initializeMockApp();
     jest.clearAllMocks();
-    store = initializeTestStore();
-    store.subscribe = jest.fn();
-    store.dispatch = jest.fn();
   });
 
   it('Start exam instructions can be successfully rendered', () => {

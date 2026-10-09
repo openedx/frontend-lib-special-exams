@@ -4,7 +4,7 @@ import React from 'react';
 import OuterExamTimer from './OuterExamTimer';
 import { fetchLatestAttempt } from '../data/api';
 import {
-  initializeTestStore, render, screen, waitFor,
+  render, screen, waitFor,
 } from '../setupTest';
 import { ExamStatus } from '../constants';
 
@@ -16,11 +16,8 @@ jest.mock('../data/api', () => ({
 describe('OuterExamTimer', () => {
   const courseId = 'course-v1:test+test+test';
 
-  let store;
-
   beforeEach(() => {
     fetchLatestAttempt.mockResolvedValue({ exam: {}, active_attempt: {} });
-    store = initializeTestStore();
   });
 
   it('returns null if there is no authenticated user', () => {
@@ -58,14 +55,6 @@ describe('OuterExamTimer', () => {
 
     await waitFor(() => expect(fetchLatestAttempt).toHaveBeenCalled());
     expect(screen.queryByTestId('exam-timer')).not.toBeInTheDocument();
-  });
-
-  it('renders error component when apiErrorMsg is present', () => {
-    store = initializeTestStore({ specialExams: { apiErrorMsg: 'Test error message' } });
-
-    render(<OuterExamTimer courseId={courseId} />, { store });
-
-    expect(screen.getByTestId('exam-api-error-component')).toBeInTheDocument();
   });
 
   it('shows the error when the latest-attempt request fails', async () => {

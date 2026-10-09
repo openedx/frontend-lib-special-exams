@@ -4,7 +4,7 @@ import React from 'react';
 import SequenceExamWrapper from './ExamWrapper';
 import { fetchExamAttemptsData, fetchLatestAttempt } from '../data/api';
 import {
-  render, screen, waitFor, initializeTestStore,
+  render, screen, waitFor,
 } from '../setupTest';
 import { ExamStatus, ExamType } from '../constants';
 
@@ -77,13 +77,11 @@ describe('SequenceExamWrapper', () => {
 
   it('shows exam api error component together with other content if there is an error', async () => {
     setState(Factory.build('specialExams'));
-    const store = initializeTestStore({ specialExams: { apiErrorMsg: 'Something bad has happened.' } });
-
     const { queryByTestId } = render(
       <SequenceExamWrapper sequence={sequence} courseId={courseId}>
         <div>children</div>
       </SequenceExamWrapper>,
-      { specialExams, store },
+      { specialExams, clientState: { apiErrorMsg: 'Something bad has happened.' } },
     );
     await loaded();
     expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Subsection is a Timed Exam (30 minutes)');
@@ -92,13 +90,11 @@ describe('SequenceExamWrapper', () => {
 
   it('does not show exam api error component on a non-exam sequence', async () => {
     setState(Factory.build('specialExams'));
-    const store = initializeTestStore({ specialExams: { apiErrorMsg: 'Something bad has happened.' } });
-
     const { queryByTestId } = render(
       <SequenceExamWrapper sequence={{ ...sequence, isTimeLimited: false }} courseId={courseId}>
         <div>children</div>
       </SequenceExamWrapper>,
-      { specialExams, store },
+      { specialExams, clientState: { apiErrorMsg: 'Something bad has happened.' } },
     );
     await loaded();
     expect(queryByTestId('exam-instructions-title')).not.toBeInTheDocument();

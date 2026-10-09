@@ -1,14 +1,14 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { getConfig } from '@edx/frontend-platform';
 import { Alert, Hyperlink, Icon } from '@openedx/paragon';
 import { Info } from '@openedx/paragon/icons';
 import { useIntl, FormattedMessage } from '@edx/frontend-platform/i18n';
 import messages from './messages';
+import { useSequenceExam } from '../core/SequenceExamContext';
 
 const ExamAPIError = () => {
   const { SITE_NAME, SUPPORT_URL } = getConfig();
-  const { apiErrorMsg } = useSelector(state => state.specialExams);
+  const { apiErrorMsg } = useSequenceExam();
   const shouldShowApiErrorMsg = !!apiErrorMsg && !apiErrorMsg.includes('<');
   const intl = useIntl();
 

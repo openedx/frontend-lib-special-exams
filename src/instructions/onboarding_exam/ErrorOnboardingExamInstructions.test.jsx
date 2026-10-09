@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
 import {
-  render, screen, initializeMockApp, initializeTestStore,
+  render, screen, initializeMockApp,
 } from '../../setupTest';
 import ErrorOnboardingExamInstructions from './ErrorOnboardingExamInstructions';
 
@@ -13,18 +13,13 @@ jest.mock('../../data', () => ({
 }));
 
 describe('ErrorOnboardingExamInstructions', () => {
-  let store;
-
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
-    store.subscribe = jest.fn();
-    store.dispatch = jest.fn();
     jest.clearAllMocks();
   });
 
   it('renders the error message correctly', () => {
-    render(<ErrorOnboardingExamInstructions />, { store });
+    render(<ErrorOnboardingExamInstructions />);
 
     expect(screen.getByText('Error: There was a problem with your onboarding session')).toBeInTheDocument();
     expect(screen.getByText(/Your proctoring session ended before you completed this onboarding exam/)).toBeInTheDocument();
@@ -32,7 +27,7 @@ describe('ErrorOnboardingExamInstructions', () => {
   });
 
   it('dispatches resetExam action when retry button is clicked', () => {
-    render(<ErrorOnboardingExamInstructions />, { store });
+    render(<ErrorOnboardingExamInstructions />);
 
     const retryButton = screen.getByTestId('retry-exam-button');
     expect(retryButton).toBeInTheDocument();

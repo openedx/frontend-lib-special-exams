@@ -4,7 +4,6 @@ import {
 import {
   queryOptions, useQuery, useQueryClient, type QueryKey, type UseQueryOptions, type UseQueryResult,
 } from '@tanstack/react-query';
-import { useDispatch } from 'react-redux';
 import { getConfig } from '@edx/frontend-platform';
 import { logError } from '@edx/frontend-platform/logging';
 
@@ -16,7 +15,6 @@ import {
   fetchProctoringSettings,
   pollExamAttempt,
 } from './api';
-import { expireExamAttempt, setApiError } from './slice';
 import { pingApplication } from './messages/handlers';
 import { checkAppStatus } from './messages/proctorio';
 import { specialExamsQueryKeys } from './queryKeys';
@@ -104,13 +102,13 @@ export const useAccessTokenQuery = (examId?: number | null) => useQuery<ExamAcce
 
 // Surfaces a query's failure the way the thunks did, as the error message the page shows.
 export const useReportQueryError = (query: { error: unknown }) => {
-  const dispatch = useDispatch();
+  const { setApiError } = useSequenceExam();
   useEffect(() => {
     if (query.error) {
       const { message, detail } = query.error as ApiError;
-      dispatch(setApiError({ errorMsg: message || detail }));
+      setApiError(message || detail || '');
     }
-  }, [query.error, dispatch]);
+  }, [query.error, setApiError]);
 };
 
 // Readers. The query that holds the exam state depends on where the reader renders: under an exam
@@ -184,7 +182,7 @@ export const withPolledAttempt = (data: PollPayload) => (state?: ExamState) => (
 // over the attempt in whichever query holds it. A `submitted` / `error` status ends the exam.
 export const usePollQuery = (enabled: boolean) => {
   const queryClient = useQueryClient();
-  const dispatch = useDispatch();
+  const { setApiError, setTimeIsOver } = useSequenceExam();
   const queryKey = useExamStateKey();
   const attempt = useActiveAttempt();
   const exam = useExam();
@@ -207,12 +205,12 @@ export const usePollQuery = (enabled: boolean) => {
     }
     // Dated at the poll's reply, so `timer_ends` is re-anchored from the time the server answered.
     queryClient.setQueryData<ExamState>(queryKey, withPolledAttempt(data), { updatedAt: dataUpdatedAt });
-    dispatch(setApiError({ errorMsg: '' }));
+    setApiError('');
     if (([ExamStatus.SUBMITTED, ExamStatus.ERROR] as string[]).includes(data.status)) {
-      dispatch(expireExamAttempt());
+      setTimeIsOver(true);
       invalidateExamState();
     }
-  }, [data, dataUpdatedAt, queryClient, queryKey, dispatch, invalidateExamState]);
+  }, [data, dataUpdatedAt, queryClient, queryKey, setApiError, setTimeIsOver, invalidateExamState]);
 };
 
 interface EndExamWithFailure {
@@ -266,7 +264,7 @@ export const useCheckExamEntry = (
   examQuery: { data?: ExamState; isFetching: boolean },
   endExamWithFailure: EndExamWithFailure,
 ) => {
-  const dispatch = useDispatch();
+  const { setApiError } = useSequenceExam();
   const checked = useRef(false);
   const mounted = useRef(true);
   const timeout = useRef<ReturnType<typeof setTimeout>>();
@@ -300,9 +298,9 @@ export const useCheckExamEntry = (
         if (!mounted.current) {
           return;
         }
-        dispatch(setApiError({ errorMsg: 'Something has gone wrong with your exam. Proctoring application not detected.' }));
+        setApiError('Something has gone wrong with your exam. Proctoring application not detected.');
         endExamWithFailure.mutate({ attemptId: exam.attempt.attempt_id!, message: 'exam reentry disallowed', useLegacyAttemptAPI: false });
       });
     }
-  }, [data, isFetching, dispatch, endExamWithFailure]);
+  }, [data, isFetching, setApiError, endExamWithFailure]);
 };

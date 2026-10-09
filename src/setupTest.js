@@ -5,14 +5,11 @@ import { getConfig, mergeConfig } from '@edx/frontend-platform';
 import { configure as configureLogging } from '@edx/frontend-platform/logging';
 import { configure as configureAuth, MockAuthService } from '@edx/frontend-platform/auth';
 import { AppContext } from '@edx/frontend-platform/react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Provider } from 'react-redux';
 import { render as rtlRender } from '@testing-library/react';
-import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IntlProvider } from '@edx/frontend-platform/i18n';
-import examReducer from './data/slice';
 import SequenceExamContext from './core/SequenceExamContext';
 import { specialExamsQueryKeys } from './data/queryKeys';
 import { defaultExam } from './data/defaults';
@@ -53,8 +50,6 @@ export function initializeMockApp() {
   return { loggingService, authService };
 }
 
-let globalStore;
-
 export const createTestQueryClient = () => new QueryClient({
   defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
 });
@@ -91,33 +86,41 @@ export const seedSpecialExams = (queryClient, specialExams) => {
   };
 };
 
-// The store holds client state only (`timeIsOver`, `apiErrorMsg`); exam data is seeded through `render`'s
-// `specialExams` option.
-export function initializeTestStore(preloadedState = null, overrideStore = true) {
-  const store = configureStore({
-    reducer: {
-      specialExams: examReducer,
-    },
-    preloadedState: preloadedState || undefined,
-  });
-  if (overrideStore) {
-    globalStore = store;
-  }
-  return store;
+// A `SequenceExamContext` provider for tests: the identity is fixed, the client state is real state
+// seeded from `clientState`, and `clientState()` reads what the provider holds now.
+export function createTestSequenceExam(sequenceExam = {}, initialClientState = {}) {
+  const latest = { current: null };
+  /** @param {{ children: React.ReactNode }} props */
+  const SequenceExamProvider = ({ children }) => {
+    const [timeIsOver, setTimeIsOver] = useState(initialClientState.timeIsOver ?? false);
+    const [apiErrorMsg, setApiError] = useState(initialClientState.apiErrorMsg ?? '');
+    const value = useMemo(() => ({
+      ...sequenceExam, timeIsOver, apiErrorMsg, setTimeIsOver, setApiError,
+    }), [timeIsOver, apiErrorMsg]);
+    latest.current = value;
+    // eslint-disable-next-line react/jsx-filename-extension
+    return <SequenceExamContext.Provider value={value}>{children}</SequenceExamContext.Provider>;
+  };
+  SequenceExamProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+  };
+  const clientState = () => ({ timeIsOver: latest.current.timeIsOver, apiErrorMsg: latest.current.apiErrorMsg });
+  return { SequenceExamProvider, clientState };
 }
 
 function render(
   ui,
   {
-    store = null,
     appContext = null,
     queryClient = createTestQueryClient(),
     specialExams = null,
+    sequenceExam = {},
+    clientState = {},
     ...renderOptions
   } = {},
 ) {
-  const sequenceExam = specialExams ? seedSpecialExams(queryClient, specialExams) : {};
-  const reduxStore = store || globalStore || initializeTestStore(null, false);
+  const identity = { ...(specialExams ? seedSpecialExams(queryClient, specialExams) : {}), ...sequenceExam };
+  const { SequenceExamProvider } = createTestSequenceExam(identity, clientState);
   const Wrapper = ({ children }) => {
     const defaultAppContext = useMemo(() => ({
       authenticatedUser: {
@@ -131,13 +134,11 @@ function render(
       // eslint-disable-next-line react/jsx-filename-extension
       <AppContext.Provider value={appContext || defaultAppContext}>
         <IntlProvider locale="en">
-          <Provider store={reduxStore}>
-            <QueryClientProvider client={queryClient}>
-              <SequenceExamContext.Provider value={sequenceExam}>
-                {children}
-              </SequenceExamContext.Provider>
-            </QueryClientProvider>
-          </Provider>
+          <QueryClientProvider client={queryClient}>
+            <SequenceExamProvider>
+              {children}
+            </SequenceExamProvider>
+          </QueryClientProvider>
         </IntlProvider>
       </AppContext.Provider>
     );
