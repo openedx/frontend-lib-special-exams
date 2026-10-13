@@ -1,9 +1,10 @@
 import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
+import MockAdapter from 'axios-mock-adapter';
 import { useIsMutating } from '@tanstack/react-query';
 import {
-  createTestQueryClient, render, testServices, waitFor,
+  createTestQueryClient, httpClient, render, testServices, waitFor,
 } from '../setupTest';
 import Exam from './Exam';
 import { ExamType, ExamStatus } from '../constants';
@@ -20,7 +21,13 @@ jest.mock('@tanstack/react-query', () => ({
   useIsMutating: jest.fn(() => 0),
 }));
 
+const axiosMock = new MockAdapter(httpClient);
+
 describe('Exam', () => {
+  afterEach(() => {
+    axiosMock.reset();
+  });
+
   const proctoredExam = Factory.build('specialExams', {
     exam: Factory.build('exam', {
       type: ExamType.PROCTORED,

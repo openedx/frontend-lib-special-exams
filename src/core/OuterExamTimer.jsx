@@ -10,7 +10,7 @@ import { useSpecialExams } from './SpecialExamsProvider';
 const ExamTimer = ({ courseId }) => {
   const { apiErrorMsg } = useSequenceExam();
   const { isAuthenticated } = useSpecialExams();
-  useReportQueryError(useActiveAttemptQuery(courseId, { refetchOnMount: 'always' }));
+  useReportQueryError(useActiveAttemptQuery(courseId, { enabled: isAuthenticated, refetchOnMount: 'always' }));
   const activeAttempt = useActiveAttempt();
   const showTimer = !!(activeAttempt && IS_STARTED_STATUS(activeAttempt.attempt_status));
 

@@ -143,6 +143,8 @@ describe('SequenceExamWrapper', () => {
     );
     await loaded();
     expect(getByTestId('sequence-content')).toHaveTextContent('children');
+    expect(fetchExamAttemptsData).not.toHaveBeenCalled();
+    expect(fetchLatestAttempt).not.toHaveBeenCalled();
   });
 
   it('renders exam content without an active attempt if the user is staff', async () => {

@@ -1,10 +1,11 @@
 import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
+import MockAdapter from 'axios-mock-adapter';
 import OuterExamTimer from './OuterExamTimer';
 import { fetchLatestAttempt } from '../data/api';
 import {
-  render, screen, waitFor,
+  httpClient, render, screen, waitFor,
 } from '../setupTest';
 import { ExamStatus } from '../constants';
 
@@ -13,7 +14,13 @@ jest.mock('../data/api', () => ({
   fetchLatestAttempt: jest.fn(),
 }));
 
+const axiosMock = new MockAdapter(httpClient);
+
 describe('OuterExamTimer', () => {
+  afterEach(() => {
+    axiosMock.reset();
+  });
+
   const courseId = 'course-v1:test+test+test';
 
   beforeEach(() => {
@@ -27,6 +34,7 @@ describe('OuterExamTimer', () => {
     );
 
     expect(container.firstChild).toBeNull();
+    expect(fetchLatestAttempt).not.toHaveBeenCalled();
   });
 
   it('asks for the latest attempt in the course', async () => {

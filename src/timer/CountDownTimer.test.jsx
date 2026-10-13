@@ -1,10 +1,11 @@
 import React from 'react';
+import MockAdapter from 'axios-mock-adapter';
 import { waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { ExamTimerBlock } from './index';
 import {
   render, screen, fireEvent, act,
-  createTestQueryClient,
+  createTestQueryClient, httpClient,
 } from '../setupTest';
 import { Emitter } from '../data';
 import { specialExamsQueryKeys } from '../data/queryKeys';
@@ -26,7 +27,13 @@ jest.mock('../data', () => {
   };
 });
 
+const axiosMock = new MockAdapter(httpClient);
+
 describe('ExamTimerBlock', () => {
+  afterEach(() => {
+    axiosMock.reset();
+  });
+
   let specialExams;
   let attempt;
 

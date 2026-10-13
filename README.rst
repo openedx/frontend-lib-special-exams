@@ -42,7 +42,7 @@ frontend-platform host passes its own services:
    import { logError } from '@edx/frontend-platform/logging';
    import { SpecialExamsProvider } from '@edx/frontend-lib-special-exams';
 
-   const config = {
+   const getSpecialExamsConfig = () => ({
      examsBaseUrl: getConfig().EXAMS_BASE_URL,
      lmsBaseUrl: getConfig().LMS_BASE_URL,
      siteName: getConfig().SITE_NAME,
@@ -50,10 +50,10 @@ frontend-platform host passes its own services:
      contactUrl: getConfig().CONTACT_URL,
      proctoredExamFaqUrl: getConfig().PROCTORED_EXAM_FAQ_URL,
      proctoredExamRulesUrl: getConfig().PROCTORED_EXAM_RULES_URL,
-   };
+   });
 
    <SpecialExamsProvider
-     config={config}
+     config={getSpecialExamsConfig()}
      httpClient={getAuthenticatedHttpClient()}
      logError={logError}
      isAuthenticated={!!getAuthenticatedUser()}

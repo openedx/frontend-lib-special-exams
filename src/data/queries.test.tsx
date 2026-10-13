@@ -1,7 +1,9 @@
 import React from 'react';
 import { Factory } from 'rosie';
 import MockAdapter from 'axios-mock-adapter';
-import { act, renderHook, waitFor } from '@testing-library/react';
+import {
+  act, configure, renderHook, waitFor,
+} from '@testing-library/react';
 import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import {
@@ -399,14 +401,15 @@ describe('Exam queries', () => {
     const proctoredExam = Factory.build('exam', { type: ExamType.PROCTORED, attempt: proctoredAttempt });
     let postMessage: jest.SpyInstance;
 
-    const renderCheck = (data: ExamState | undefined, isFetching = false) => renderIn(
-      () => useCheckExamEntry({ data, isFetching }, useEndExamWithFailure()),
+    const renderCheck = (data: ExamState | undefined, isFetchedAfterMount = true) => renderIn(
+      () => useCheckExamEntry({ data, isFetchedAfterMount }, useEndExamWithFailure()),
     );
     const answer = (active: boolean) => act(() => {
       window.dispatchEvent(new MessageEvent('message', { data: { active }, origin: testConfig.examsBaseUrl }));
     });
 
     beforeEach(() => {
+      configure({ reactStrictMode: true });
       postMessage = jest.spyOn(window, 'postMessage').mockImplementation(() => {});
     });
 
@@ -414,6 +417,7 @@ describe('Exam queries', () => {
       // A probe nobody answered keeps its listener; answer it so it cannot act in a later test.
       await answer(true);
       postMessage.mockRestore();
+      configure({ reactStrictMode: false });
     });
 
     it('probes the proctoring app for an LTI proctored exam in a proctored state', () => {
@@ -422,7 +426,7 @@ describe('Exam queries', () => {
     });
 
     it('waits for the fetch to finish before probing', () => {
-      renderCheck({ exam: proctoredExam, activeAttempt: proctoredAttempt }, true);
+      renderCheck({ exam: proctoredExam, activeAttempt: proctoredAttempt }, false);
       expect(postMessage).not.toHaveBeenCalled();
     });
 
@@ -433,7 +437,7 @@ describe('Exam queries', () => {
     });
 
     it('does not probe an attempt that is not in a proctored state', () => {
-      const createdAttempt = Factory.build('attempt', { attempt_status: ExamStatus.CREATED });
+      const createdAttempt = Factory.build('attempt', { attempt_status: ExamStatus.CREATED, exam_type: ExamType.PROCTORED });
       renderCheck({ exam: Factory.build('exam', { attempt: createdAttempt }), activeAttempt: createdAttempt });
       expect(postMessage).not.toHaveBeenCalled();
     });
@@ -474,6 +478,17 @@ describe('Exam queries', () => {
       unmount();
       await answer(false);
       await new Promise(process.nextTick);
+
+      expect(axiosMock.history.put).toHaveLength(0);
+    });
+
+    it('leaves the attempt alone when the sequence unmounts before the probe times out', async () => {
+      jest.useFakeTimers();
+      const { unmount } = renderCheck({ exam: proctoredExam, activeAttempt: proctoredAttempt });
+
+      unmount();
+      await act(async () => { await jest.advanceTimersByTimeAsync(5000); });
+      jest.useRealTimers();
 
       expect(axiosMock.history.put).toHaveLength(0);
     });

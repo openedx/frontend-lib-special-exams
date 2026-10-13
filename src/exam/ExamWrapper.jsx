@@ -24,8 +24,8 @@ const ExamWrapper = ({ children, ...props }) => {
 
   // An exam sequence fetches its exam (with the course's running attempt); any other sequence fetches
   // only the running attempt, for the timer.
-  const examQuery = useExamQuery(courseId, sequence.id, { enabled: !!sequence.isTimeLimited, refetchOnMount: 'always' });
-  const attemptQuery = useActiveAttemptQuery(courseId, { enabled: !sequence.isTimeLimited, refetchOnMount: 'always' });
+  const examQuery = useExamQuery(courseId, sequence.id, { enabled: isAuthenticated && !!sequence.isTimeLimited, refetchOnMount: 'always' });
+  const attemptQuery = useActiveAttemptQuery(courseId, { enabled: isAuthenticated && !sequence.isTimeLimited, refetchOnMount: 'always' });
   useReportQueryError(examQuery);
   useReportQueryError(attemptQuery);
   useCheckExamEntry(examQuery, useEndExamWithFailure());

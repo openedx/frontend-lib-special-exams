@@ -284,47 +284,50 @@ export const usePingAttempt = (endExamWithFailure: EndExamWithFailure) => {
  * content unproctored.
  */
 export const useCheckExamEntry = (
-  examQuery: { data?: ExamState; isFetching: boolean },
+  examQuery: { data?: ExamState; isFetchedAfterMount: boolean },
   endExamWithFailure: EndExamWithFailure,
 ) => {
   const { setApiError } = useSequenceExam();
   const { config: { examsBaseUrl } } = useSpecialExams();
-  const checked = useRef(false);
-  const mounted = useRef(true);
-  const timeout = useRef<ReturnType<typeof setTimeout>>();
-  const { data, isFetching } = examQuery;
-  // A probe still waiting when the sequence unmounts must not end the attempt.
-  useEffect(() => () => {
-    mounted.current = false;
-    clearTimeout(timeout.current);
-  }, []);
+  const { data, isFetchedAfterMount } = examQuery;
+  const { mutate } = endExamWithFailure;
+  const latestData = useRef(data);
+  useEffect(() => {
+    latestData.current = data;
+  });
   useEffect(() => {
     // Once per mount, against the attempt this mount's fetch returned, not a cached one.
-    if (checked.current || isFetching || !data) {
-      return;
+    if (!isFetchedAfterMount || !latestData.current) {
+      return undefined;
     }
-    checked.current = true;
-    const { exam } = data;
+    const { exam } = latestData.current;
     // Check only applies to LTI exams
     if (
       !exam?.attempt
       || exam.attempt.exam_type !== ExamType.PROCTORED
       || exam.attempt.use_legacy_attempt_api
-    ) { return; }
+    ) { return undefined; }
 
     if (IS_PROCTORED_STATUS(exam.attempt.attempt_status)) {
+      let ignore = false;
+      let timeout: ReturnType<typeof setTimeout>;
       Promise.race([
         checkAppStatus(examsBaseUrl),
         new Promise((_, reject) => {
-          timeout.current = setTimeout(() => reject(), EXAM_START_TIMEOUT_MILLISECONDS);
+          timeout = setTimeout(() => reject(), EXAM_START_TIMEOUT_MILLISECONDS);
         }),
-      ]).then(() => clearTimeout(timeout.current), () => {
-        if (!mounted.current) {
+      ]).then(() => clearTimeout(timeout), () => {
+        if (ignore) {
           return;
         }
         setApiError('Something has gone wrong with your exam. Proctoring application not detected.');
-        endExamWithFailure.mutate({ attemptId: exam.attempt.attempt_id!, message: 'exam reentry disallowed', useLegacyAttemptAPI: false });
+        mutate({ attemptId: exam.attempt.attempt_id!, message: 'exam reentry disallowed', useLegacyAttemptAPI: false });
       });
+      return () => {
+        ignore = true;
+        clearTimeout(timeout);
+      };
     }
-  }, [data, isFetching, setApiError, endExamWithFailure, examsBaseUrl]);
+    return undefined;
+  }, [isFetchedAfterMount, setApiError, mutate, examsBaseUrl]);
 };
