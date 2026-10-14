@@ -1,14 +1,13 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import { Button, MailtoLink } from '@openedx/paragon';
 
-import { createProctoredExamAttempt } from '../../data';
+import { useCreateProctoredExamAttempt, useProctoringSettings } from '../../data';
 
 const EntranceOnboardingExamInstructions = () => {
-  const { proctoringSettings } = useSelector(state => state.specialExams);
+  const proctoringSettings = useProctoringSettings();
 
-  const dispatch = useDispatch();
+  const createProctoredExamAttempt = useCreateProctoredExamAttempt();
 
   const {
     provider_name: providerName,
@@ -93,7 +92,7 @@ const EntranceOnboardingExamInstructions = () => {
         <Button
           data-testid="start-exam-button"
           variant="primary"
-          onClick={() => dispatch(createProctoredExamAttempt())}
+          onClick={() => createProctoredExamAttempt.mutate()}
         >
           <FormattedMessage
             id="exam.EntranceOnboardingExamInstructions.startExamButtonText"

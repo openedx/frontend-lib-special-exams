@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Button, Container } from '@openedx/paragon';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import Emitter from '../data/emitter';
 import { ExamType } from '../constants';
-import { continueExam } from '../data';
+import { useContinueExam, useActiveAttempt, useExam } from '../data';
 import { SubmitProctoredExamInstructions } from './proctored_exam';
 import { SubmitTimedExamInstructions } from './timed_exam';
 import Footer from './proctored_exam/Footer';
 import { TIMER_REACHED_NULL } from '../timer/events';
 
 const SubmitExamInstructions = () => {
-  const { exam, activeAttempt } = useSelector(state => state.specialExams);
+  const exam = useExam();
+  const activeAttempt = useActiveAttempt();
 
-  const dispatch = useDispatch();
+  const continueExam = useContinueExam();
 
   const { time_remaining_seconds: timeRemaining } = activeAttempt;
   const { type: examType } = exam || {};
@@ -36,7 +36,7 @@ const SubmitExamInstructions = () => {
           ? <SubmitTimedExamInstructions />
           : <SubmitProctoredExamInstructions />}
         {canContinue && (
-          <Button variant="outline-primary" onClick={() => dispatch(continueExam())} data-testid="continue-exam-button">
+          <Button variant="outline-primary" onClick={() => continueExam.mutate()} data-testid="continue-exam-button">
             <FormattedMessage
               id="exam.SubmitExamInstructions.continueButton"
               defaultMessage="No, I'd like to continue working"

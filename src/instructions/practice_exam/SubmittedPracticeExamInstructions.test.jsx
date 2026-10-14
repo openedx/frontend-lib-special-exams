@@ -2,43 +2,33 @@ import React from 'react';
 import { Factory } from 'rosie';
 import { SubmittedPracticeExamInstructions } from './index';
 import {
-  render, screen, initializeTestStore, fireEvent,
+  render, screen, fireEvent,
 } from '../../setupTest';
 import { ExamStatus, ExamType } from '../../constants';
 
-const mockresetReturn = {};
-const mockDispatch = jest.fn();
-
-jest.mock('react-redux', () => ({
-  ...jest.requireActual('react-redux'),
-  useDispatch: () => mockDispatch,
-}));
-
+const mockResetExam = jest.fn();
 jest.mock('../../data', () => ({
   ...jest.requireActual('../../data'),
-  resetExam: () => mockresetReturn,
+  useResetExam: () => ({ mutate: mockResetExam }),
 }));
 
 describe('ExamTimerBlock', () => {
+  const onboardingExam = {
+    exam: Factory.build('exam', {
+      is_proctored: false,
+      type: ExamType.ONBOARDING,
+      attempt: Factory.build('attempt'),
+    }),
+  };
   afterEach(() => {
     jest.resetAllMocks();
   });
 
   describe('when the exam is not proctored', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: false,
-            type: ExamType.ONBOARDING,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams: onboardingExam },
       );
     });
 
@@ -51,31 +41,20 @@ describe('ExamTimerBlock', () => {
       expect(screen.queryByTestId('retry-exam-button')).toBeInTheDocument();
     });
 
-    it('calls resetExam() when clicking the retry button', () => {
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockresetReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('when the exam is not proctored', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: false,
-            type: ExamType.ONBOARDING,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams: onboardingExam },
       );
     });
 
@@ -88,33 +67,30 @@ describe('ExamTimerBlock', () => {
       expect(screen.queryByTestId('retry-exam-button')).toBeInTheDocument();
     });
 
-    it('calls resetExam() when clicking the retry button', () => {
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockresetReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('when a legacy proctoring attempt API is used', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PROCTORED,
-            attempt: Factory.build('attempt', {
-              use_legacy_attempt_api: true,
-            }),
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            use_legacy_attempt_api: true,
           }),
-        },
+        }),
       };
-      initializeTestStore(preloadedState);
 
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams },
       );
     });
 
@@ -127,34 +103,31 @@ describe('ExamTimerBlock', () => {
       expect(screen.queryByTestId('retry-exam-button')).toBeInTheDocument();
     });
 
-    it('calls resetExam() when clicking the retry button', () => {
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockresetReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('when an LTI provider is used but it has an error', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PROCTORED,
-            attempt: Factory.build('attempt', {
-              use_legacy_attempt_api: false,
-              attempt_status: ExamStatus.ERROR,
-            }),
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            use_legacy_attempt_api: false,
+            attempt_status: ExamStatus.ERROR,
           }),
-        },
+        }),
       };
-      initializeTestStore(preloadedState);
 
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams },
       );
     });
 
@@ -167,34 +140,31 @@ describe('ExamTimerBlock', () => {
       expect(screen.queryByTestId('retry-exam-button')).toBeInTheDocument();
     });
 
-    it('calls resetExam() when clicking the retry button', () => {
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockresetReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('when an LTI provider is used and the exam is submitted', () => {
     beforeEach(() => {
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PROCTORED,
-            attempt: Factory.build('attempt', {
-              use_legacy_attempt_api: false,
-              attempt_status: ExamStatus.SUBMITTED,
-            }),
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: true,
+          type: ExamType.PROCTORED,
+          attempt: Factory.build('attempt', {
+            use_legacy_attempt_api: false,
+            attempt_status: ExamStatus.SUBMITTED,
           }),
-        },
+        }),
       };
-      initializeTestStore(preloadedState);
 
       render(
         <SubmittedPracticeExamInstructions />,
+        { specialExams },
       );
     });
 

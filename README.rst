@@ -26,6 +26,46 @@ Installation
 
   ``cd frontend-lib-special-exams && npm install``
 
+*****
+Setup
+*****
+
+The library takes what it needs from the host through ``SpecialExamsProvider``, mounted once above the
+special exams components: the URLs it reads from the host's configuration, an HTTP client that
+authenticates its requests, the host's error logger, and whether a user is signed in. A
+frontend-platform host passes its own services:
+
+.. code-block:: jsx
+
+   import { getConfig } from '@edx/frontend-platform';
+   import { getAuthenticatedHttpClient, getAuthenticatedUser } from '@edx/frontend-platform/auth';
+   import { logError } from '@edx/frontend-platform/logging';
+   import { SpecialExamsProvider } from '@edx/frontend-lib-special-exams';
+
+   const getSpecialExamsConfig = () => ({
+     examsBaseUrl: getConfig().EXAMS_BASE_URL,
+     lmsBaseUrl: getConfig().LMS_BASE_URL,
+     siteName: getConfig().SITE_NAME,
+     supportUrl: getConfig().SUPPORT_URL,
+     contactUrl: getConfig().CONTACT_URL,
+     proctoredExamFaqUrl: getConfig().PROCTORED_EXAM_FAQ_URL,
+     proctoredExamRulesUrl: getConfig().PROCTORED_EXAM_RULES_URL,
+   });
+
+   <SpecialExamsProvider
+     config={getSpecialExamsConfig()}
+     httpClient={getAuthenticatedHttpClient()}
+     logError={logError}
+     isAuthenticated={!!getAuthenticatedUser()}
+   >
+     <App />
+   </SpecialExamsProvider>
+
+``examsBaseUrl`` unset selects the LMS ``edx_proctoring`` endpoints; set, the edx-exams service. A
+frontend-base host passes the equivalent values from its site configuration and runtime. The library
+also expects ``react-intl``'s ``IntlProvider`` and ``@tanstack/react-query``'s ``QueryClientProvider``
+above it, as both hosts already provide.
+
 *******************
 Build Process Notes
 *******************
@@ -38,15 +78,38 @@ The production build is created with ``npm run build``.
 Internationalization
 *********************
 
-Please see `edx/frontend-platform's i18n module <https://edx.github.io/frontend-platform/module-Internationalization.html>`_ for documentation on internationalization.  The documentation explains how to use it, and the `How To <https://github.com/edx/frontend-i18n/blob/master/docs/how_tos/i18n.rst>`_ has more detail.
+Messages are defined with `react-intl <https://formatjs.io/docs/react-intl/>`_ and extracted with ``make extract_translations``; the host provides the ``IntlProvider`` and the translations.
 
 *******
-Plugins
+Testing
 *******
 
-This MFE can be customized using `Frontend Plugin Framework <https://github.com/openedx/frontend-plugin-framework>`_.
+``@edx/frontend-lib-special-exams/testing`` ships a stateful mock of the special-exams backend for a consumer's Jest tests, built on `axios-mock-adapter <https://github.com/ctimmerm/axios-mock-adapter>`_. Register it before any catch-all handler, then describe each exam sequence with ``setExam``:
 
-The parts of this MFE that can be customized in that manner are documented `here </src/plugin-slots>`_.
+.. code-block:: js
+
+   import MockAdapter from 'axios-mock-adapter';
+   import { mockSpecialExams } from '@edx/frontend-lib-special-exams/testing';
+
+   const axiosMock = new MockAdapter(httpClient); // the client given to SpecialExamsProvider
+   const specialExams = mockSpecialExams(axiosMock, courseId, config); // the same config object
+   specialExams.setExam(sequenceId, { status: 'started', exam: { time_limit_mins: 30 } });
+
+It answers both URL families the library talks to: the LMS ``edx_proctoring`` endpoints under ``lmsBaseUrl``, and edx-exams when ``examsBaseUrl`` is set. Each sequence's attempt status carries across requests: POST creates an attempt, PUT applies its ``action``, polls count the time down from ``time_limit_mins``. Every request it answered is recorded in ``requests``. The payload builders it uses (``buildExam``, ``buildAttempt``, ``buildProctoringSettings``, ``buildExamAccessToken``) are exported as well.
+
+*************
+Customization
+*************
+
+``SequenceExamWrapper`` takes an optional ``submittedTimedExamInstructions`` component, rendered in
+place of the default "You have submitted your timed exam." heading once a timed exam is submitted. It
+receives ``timeIsOver``, true when the time limit forced the submission.
+
+.. code-block:: jsx
+
+    <SequenceExamWrapper sequence={sequence} courseId={courseId} submittedTimedExamInstructions={MyInstructions}>
+      {sequenceContent}
+    </SequenceExamWrapper>
 
 ************
 Contributing

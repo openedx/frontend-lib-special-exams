@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import PropTypes from 'prop-types';
 import { Icon, useToggle } from '@openedx/paragon';
 import { Visibility, VisibilityOff } from '@openedx/paragon/icons';
-import { useIntl } from '@edx/frontend-platform/i18n';
+import { useIntl } from 'react-intl';
 import { TimerContext } from './TimerProvider';
 import { generateHumanizedTime } from '../helpers';
 

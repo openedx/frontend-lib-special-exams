@@ -3,10 +3,8 @@ import { Factory } from 'rosie';
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from '../index';
-import { getExamAttemptsData, submitExam } from '../../data';
 import {
   initializeMockApp,
-  initializeTestStore,
   render,
   screen,
 } from '../../setupTest';
@@ -16,34 +14,34 @@ import {
   ONBOARDING_ERRORS,
 } from '../../constants';
 
+const mockSubmitExam = jest.fn();
 jest.mock('../../data', () => ({
-  getExamAttemptsData: jest.fn(),
-  getExamReviewPolicy: jest.fn(),
-  submitExam: jest.fn(),
+  ...jest.requireActual('../../data'),
+  useContinueExam: () => ({ mutate: jest.fn() }),
+  useCreateProctoredExamAttempt: () => ({ mutate: jest.fn() }),
+  useResetExam: () => ({ mutate: jest.fn() }),
+  useSkipProctoringExam: () => ({ mutate: jest.fn() }),
+  useStartProctoredExam: () => ({ mutate: jest.fn() }),
+  useStartTimedExam: () => ({ mutate: jest.fn() }),
+  useSubmitExam: () => ({ mutate: mockSubmitExam }),
+}));
+jest.mock('../../data/api', () => ({
+  ...jest.requireActual('../../data/api'),
+  fetchExamReviewPolicy: jest.fn(() => Promise.resolve({ review_policy: '' })),
 }));
 
-submitExam.mockReturnValue(jest.fn());
-getExamAttemptsData.mockReturnValue(jest.fn());
-
 describe('SequenceExamWrapper', () => {
-  let store;
-
   beforeEach(() => {
     initializeMockApp();
     jest.clearAllMocks();
-    store = initializeTestStore();
-    store.subscribe = jest.fn();
-    store.dispatch = jest.fn();
   });
 
   it('Start exam instructions can be successfully rendered', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        allowProctoringOptOut: true,
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      allowProctoringOptOut: true,
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        is_proctored: true,
       }),
     });
 
@@ -51,7 +49,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByTestId('start-exam-button')).toHaveTextContent('Continue to my proctored exam.');
     fireEvent.click(getByTestId('start-exam-without-proctoring-button'));
@@ -66,14 +64,12 @@ describe('SequenceExamWrapper', () => {
     const attempt = Factory.build('attempt', {
       attempt_status: ExamStatus.STARTED,
     });
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: attempt,
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-          attempt,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: attempt,
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        is_proctored: true,
+        attempt,
       }),
     });
 
@@ -81,21 +77,19 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div data-testid="sequence-content">Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
   });
 
   it('Shows correct instructions when attempt status is ready_to_start', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-          reviewPolicy: 'review policy',
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.READY_TO_START,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        is_proctored: true,
+        reviewPolicy: 'review policy',
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.READY_TO_START,
         }),
       }),
     });
@@ -104,7 +98,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(screen.getByTestId('proctored-exam-instructions-rulesLink')).toHaveTextContent('Rules for Online Proctored Exams');
     expect(screen.getByTestId('duration-text')).toHaveTextContent('You have 30 minutes to complete this exam.');
@@ -112,17 +106,15 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows correct instructions when attempt status is ready_to_start and attempt has no total time', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-          reviewPolicy: 'review policy',
-          total_time: '30 minutes',
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.READY_TO_START,
-            total_time: undefined,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        is_proctored: true,
+        reviewPolicy: 'review policy',
+        total_time: '30 minutes',
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.READY_TO_START,
+          total_time: undefined,
         }),
       }),
     });
@@ -131,7 +123,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(screen.getByTestId('proctored-exam-instructions-rulesLink')).toHaveTextContent('Rules for Online Proctored Exams');
     expect(screen.getByTestId('duration-text')).toHaveTextContent('You have 30 minutes to complete this exam.');
@@ -139,14 +131,12 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Instructions are shown when attempt status is submitted', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        is_proctored: true,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.SUBMITTED,
         }),
       }),
     });
@@ -155,7 +145,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByTestId('proctored-exam-instructions-title')).toHaveTextContent('You have submitted this proctored exam for review');
   });
@@ -165,14 +155,12 @@ describe('SequenceExamWrapper', () => {
       attempt_status: ExamStatus.READY_TO_SUBMIT,
       use_legacy_attempt_api: true,
     });
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: attempt,
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-          attempt,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: attempt,
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        is_proctored: true,
+        attempt,
       }),
     });
 
@@ -180,12 +168,12 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('proctored-exam-instructions-title')).toHaveTextContent('Are you sure you want to end your proctored exam?');
     fireEvent.click(queryByTestId('end-exam-button'));
-    expect(submitExam).toHaveBeenCalled();
+    expect(mockSubmitExam).toHaveBeenCalled();
   });
 
   it('Initiates an LTI launch in a new window when the user clicks the submit button', async () => {
@@ -200,14 +188,12 @@ describe('SequenceExamWrapper', () => {
       use_legacy_attempt_api: false,
       attempt_id: 1,
     });
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: attempt,
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          attempt,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: attempt,
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        attempt,
       }),
     });
 
@@ -215,7 +201,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('proctored-exam-instructions-title')).toHaveTextContent('Are you sure you want to end your proctored exam?');
@@ -227,14 +213,12 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Instructions are shown when attempt status is verified', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.VERIFIED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        is_proctored: true,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.VERIFIED,
         }),
       }),
     });
@@ -243,20 +227,18 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByTestId('proctored-exam-instructions-title')).toHaveTextContent('Your proctoring session was reviewed successfully.');
   });
 
   it('Instructions are shown when attempt status is rejected', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.REJECTED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        is_proctored: true,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.REJECTED,
         }),
       }),
     });
@@ -265,21 +247,19 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByTestId('proctored-exam-instructions-title'))
       .toHaveTextContent('Your proctoring session was reviewed, but did not pass all requirements');
   });
 
   it.each(ONBOARDING_ERRORS)('Renders correct onboarding error instructions when status is %s ', (status) => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          is_proctored: true,
-          attempt: Factory.build('attempt', {
-            attempt_status: status,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        is_proctored: true,
+        attempt: Factory.build('attempt', {
+          attempt_status: status,
         }),
       }),
     });
@@ -288,7 +268,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     const testId = status === ExamStatus.ONBOARDING_EXPIRED ? ExamStatus.ONBOARDING_MISSING : status;

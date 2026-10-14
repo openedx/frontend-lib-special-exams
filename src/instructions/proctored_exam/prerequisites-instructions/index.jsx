@@ -1,14 +1,16 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Container } from '@openedx/paragon';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import PendingPrerequisitesProctoredExamInstructions from './Pending';
 import FailedPrerequisitesProctoredExamInstructions from './Failed';
 import Footer from '../Footer';
+import { useExam } from '../../../data';
+import { useSequenceExam } from '../../../core/SequenceExamContext';
 
 const PrerequisitesProctoredExamInstructions = ({ skipProctoredExam }) => {
-  const { exam, allowProctoringOptOut } = useSelector(state => state.specialExams);
+  const exam = useExam();
+  const { allowProctoringOptOut } = useSequenceExam();
 
   const { prerequisite_status: prerequisitesData } = exam;
   const { pending_prerequisites: pending, failed_prerequisites: failed } = prerequisitesData;

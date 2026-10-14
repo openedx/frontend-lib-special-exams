@@ -5,12 +5,10 @@
  * vendor-specific integrations long term. As of now these events
  * will trigger on ANY lti integration, not just Proctorio.
  */
-import { getConfig } from '@edx/frontend-platform';
-
-export async function checkAppStatus() {
+export async function checkAppStatus(examsBaseUrl) {
   return new Promise((resolve, reject) => {
     const handleResponse = event => {
-      if (event.origin === getConfig().EXAMS_BASE_URL) {
+      if (event.origin === examsBaseUrl) {
         window.removeEventListener('message', handleResponse);
         if (event?.data?.active) {
           resolve();

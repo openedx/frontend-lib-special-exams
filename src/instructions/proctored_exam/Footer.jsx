@@ -1,10 +1,10 @@
 import React from 'react';
 import { Button } from '@openedx/paragon';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { getConfig } from '@edx/frontend-platform';
+import { FormattedMessage } from 'react-intl';
+import { useSpecialExams } from '../../core/SpecialExamsProvider';
 
 const Footer = () => {
-  const faqUrl = getConfig().PROCTORED_EXAM_FAQ_URL;
+  const faqUrl = useSpecialExams().config.proctoredExamFaqUrl;
 
   return (
     <div className="footer-sequence">

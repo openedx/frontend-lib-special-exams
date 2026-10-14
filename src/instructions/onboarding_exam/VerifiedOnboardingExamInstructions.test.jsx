@@ -3,15 +3,12 @@ import { Factory } from 'rosie';
 import React from 'react';
 import VerifiedOnboardingExamInstructions from './VerifiedOnboardingExamInstructions';
 import {
-  render, screen, initializeMockApp, initializeTestStore,
+  render, screen, initializeMockApp,
 } from '../../setupTest';
 
 describe('VerifiedOnboardingExamInstructions', () => {
-  let store;
-
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
   });
 
   /**
@@ -20,15 +17,13 @@ describe('VerifiedOnboardingExamInstructions', () => {
    */
   it('renders correctly with integration email', () => {
     // Set up the store with proctoringSettings containing integration_specific_email
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          integration_specific_email: 'test@example.com',
-        }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        integration_specific_email: 'test@example.com',
       }),
     });
 
-    render(<VerifiedOnboardingExamInstructions />, { store });
+    render(<VerifiedOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly
     expect(screen.getByTestId('exam-instructions-title')).toHaveTextContent(
@@ -47,13 +42,11 @@ describe('VerifiedOnboardingExamInstructions', () => {
    */
   it('renders correctly when proctoringSettings is null', () => {
     // Set up the store with proctoringSettings as null
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: null,
-      }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: null,
     });
 
-    render(<VerifiedOnboardingExamInstructions />, { store });
+    render(<VerifiedOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly
     expect(screen.getByTestId('exam-instructions-title')).toHaveTextContent(
@@ -75,15 +68,13 @@ describe('VerifiedOnboardingExamInstructions', () => {
    */
   it('renders correctly when integration_specific_email is empty', () => {
     // Set up the store with proctoringSettings containing an empty integration_specific_email
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          integration_specific_email: '',
-        }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        integration_specific_email: '',
       }),
     });
 
-    render(<VerifiedOnboardingExamInstructions />, { store });
+    render(<VerifiedOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly
     expect(screen.getByTestId('exam-instructions-title')).toHaveTextContent(

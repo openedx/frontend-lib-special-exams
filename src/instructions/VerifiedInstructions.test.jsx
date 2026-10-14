@@ -3,7 +3,7 @@ import { Factory } from 'rosie';
 import React from 'react';
 import VerifiedExamInstructions from './VerifiedInstructions';
 import {
-  render, screen, initializeMockApp, initializeTestStore,
+  render, screen, initializeMockApp,
 } from '../setupTest';
 import { ExamType } from '../constants';
 
@@ -21,11 +21,10 @@ jest.mock('./proctored_exam/Footer', () => function Footer() {
 });
 
 describe('VerifiedExamInstructions', () => {
-  let store;
+  const specialExams = Factory.build('specialExams');
 
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
   });
 
   /**
@@ -33,11 +32,7 @@ describe('VerifiedExamInstructions', () => {
    * This tests the first branch of the switch statement in renderInstructions
    */
   it('renders correctly for PROCTORED exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<VerifiedExamInstructions examType={ExamType.PROCTORED} />, { store });
+    render(<VerifiedExamInstructions examType={ExamType.PROCTORED} />, { specialExams });
 
     // Verify the component renders the correct instructions
     expect(screen.getByTestId('verified-proctored-exam-instructions')).toBeInTheDocument();
@@ -51,11 +46,7 @@ describe('VerifiedExamInstructions', () => {
    * This tests the second branch of the switch statement in renderInstructions
    */
   it('renders correctly for PRACTICE exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<VerifiedExamInstructions examType={ExamType.PRACTICE} />, { store });
+    render(<VerifiedExamInstructions examType={ExamType.PRACTICE} />, { specialExams });
 
     // Verify the component renders the correct instructions
     expect(screen.getByTestId('verified-proctored-exam-instructions')).toBeInTheDocument();
@@ -69,11 +60,7 @@ describe('VerifiedExamInstructions', () => {
    * This tests the third branch of the switch statement in renderInstructions
    */
   it('renders correctly for ONBOARDING exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<VerifiedExamInstructions examType={ExamType.ONBOARDING} />, { store });
+    render(<VerifiedExamInstructions examType={ExamType.ONBOARDING} />, { specialExams });
 
     // Verify the component renders the correct instructions
     expect(screen.getByTestId('verified-onboarding-exam-instructions')).toBeInTheDocument();
@@ -88,11 +75,7 @@ describe('VerifiedExamInstructions', () => {
    * and the conditional rendering of the Footer component
    */
   it('renders correctly for TIMED exam type (default case)', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<VerifiedExamInstructions examType={ExamType.TIMED} />, { store });
+    render(<VerifiedExamInstructions examType={ExamType.TIMED} />, { specialExams });
 
     // Verify the container is rendered but no instructions (default case returns null)
     expect(screen.queryByTestId('verified-proctored-exam-instructions')).not.toBeInTheDocument();
@@ -107,11 +90,7 @@ describe('VerifiedExamInstructions', () => {
    * This tests the default branch of the switch statement in renderInstructions
    */
   it('renders correctly for unknown exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
-
-    render(<VerifiedExamInstructions examType="UNKNOWN_TYPE" />, { store });
+    render(<VerifiedExamInstructions examType="UNKNOWN_TYPE" />, { specialExams });
 
     // Verify the container is rendered but no instructions (default case returns null)
     expect(screen.queryByTestId('verified-proctored-exam-instructions')).not.toBeInTheDocument();

@@ -1,12 +1,11 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import { Button } from '@openedx/paragon';
 
-import { createProctoredExamAttempt } from '../../data';
+import { useCreateProctoredExamAttempt } from '../../data';
 
 const EntrancePracticeExamInstructions = () => {
-  const dispatch = useDispatch();
+  const createProctoredExamAttempt = useCreateProctoredExamAttempt();
 
   return (
     <>
@@ -27,7 +26,7 @@ const EntrancePracticeExamInstructions = () => {
         <Button
           data-testid="start-exam-button"
           variant="primary"
-          onClick={() => dispatch(createProctoredExamAttempt())}
+          onClick={() => createProctoredExamAttempt.mutate()}
         >
           <FormattedMessage
             id="exam.EntrancePracticeExamInstructions.startExamButtonText"

@@ -1,31 +1,25 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
-import { resetExam } from '../../data';
 import {
-  render, screen, initializeMockApp, initializeTestStore,
+  render, screen, initializeMockApp,
 } from '../../setupTest';
 import ErrorOnboardingExamInstructions from './ErrorOnboardingExamInstructions';
 
+const mockResetExam = jest.fn();
 jest.mock('../../data', () => ({
-  resetExam: jest.fn(),
+  ...jest.requireActual('../../data'),
+  useResetExam: () => ({ mutate: mockResetExam }),
 }));
 
-resetExam.mockReturnValue(jest.fn());
-
 describe('ErrorOnboardingExamInstructions', () => {
-  let store;
-
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
-    store.subscribe = jest.fn();
-    store.dispatch = jest.fn();
     jest.clearAllMocks();
   });
 
   it('renders the error message correctly', () => {
-    render(<ErrorOnboardingExamInstructions />, { store });
+    render(<ErrorOnboardingExamInstructions />);
 
     expect(screen.getByText('Error: There was a problem with your onboarding session')).toBeInTheDocument();
     expect(screen.getByText(/Your proctoring session ended before you completed this onboarding exam/)).toBeInTheDocument();
@@ -33,14 +27,13 @@ describe('ErrorOnboardingExamInstructions', () => {
   });
 
   it('dispatches resetExam action when retry button is clicked', () => {
-    render(<ErrorOnboardingExamInstructions />, { store });
+    render(<ErrorOnboardingExamInstructions />);
 
     const retryButton = screen.getByTestId('retry-exam-button');
     expect(retryButton).toBeInTheDocument();
 
     fireEvent.click(retryButton);
 
-    expect(resetExam).toHaveBeenCalledTimes(1);
-    expect(store.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockResetExam).toHaveBeenCalledTimes(1);
   });
 });

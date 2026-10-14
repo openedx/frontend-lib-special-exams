@@ -4,25 +4,21 @@ import React from 'react';
 import { fireEvent } from '@testing-library/react';
 import EntranceOnboardingExamInstructions from './EntranceOnboardingExamInstructions';
 import {
-  render, screen, initializeMockApp, initializeTestStore,
+  render, screen, initializeMockApp,
 } from '../../setupTest';
-import * as dataModule from '../../data';
 
-// Mock the createProctoredExamAttempt function to test if it's called
+const mockCreateProctoredExamAttempt = jest.fn();
 jest.mock('../../data', () => {
   const originalModule = jest.requireActual('../../data');
   return {
     ...originalModule,
-    createProctoredExamAttempt: jest.fn(() => ({ type: 'MOCK_CREATE_PROCTORED_EXAM_ATTEMPT' })),
+    useCreateProctoredExamAttempt: () => ({ mutate: mockCreateProctoredExamAttempt }),
   };
 });
 
 describe('EntranceOnboardingExamInstructions', () => {
-  let store;
-
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
     // Reset the mock before each test
     jest.clearAllMocks();
   });
@@ -33,17 +29,15 @@ describe('EntranceOnboardingExamInstructions', () => {
    */
   it('renders correctly with both learner notification and integration emails', () => {
     // Set up the store with proctoringSettings containing both email types
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'Test Provider',
-          learner_notification_from_email: 'notification@example.com',
-          integration_specific_email: 'support@example.com',
-        }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'Test Provider',
+        learner_notification_from_email: 'notification@example.com',
+        integration_specific_email: 'support@example.com',
       }),
     });
 
-    render(<EntranceOnboardingExamInstructions />, { store });
+    render(<EntranceOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly with the title
     expect(screen.getByTestId('exam-instructions-title')).toHaveTextContent(
@@ -73,17 +67,15 @@ describe('EntranceOnboardingExamInstructions', () => {
    */
   it('renders correctly with only learner notification email', () => {
     // Set up the store with proctoringSettings containing only learner_notification_from_email
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'Test Provider',
-          learner_notification_from_email: 'notification@example.com',
-          integration_specific_email: '',
-        }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'Test Provider',
+        learner_notification_from_email: 'notification@example.com',
+        integration_specific_email: '',
       }),
     });
 
-    render(<EntranceOnboardingExamInstructions />, { store });
+    render(<EntranceOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly with the title
     expect(screen.getByTestId('exam-instructions-title')).toHaveTextContent(
@@ -108,17 +100,15 @@ describe('EntranceOnboardingExamInstructions', () => {
    */
   it('renders correctly with only integration specific email', () => {
     // Set up the store with proctoringSettings containing only integration_specific_email
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'Test Provider',
-          learner_notification_from_email: '',
-          integration_specific_email: 'support@example.com',
-        }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'Test Provider',
+        learner_notification_from_email: '',
+        integration_specific_email: 'support@example.com',
       }),
     });
 
-    render(<EntranceOnboardingExamInstructions />, { store });
+    render(<EntranceOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly with the title
     expect(screen.getByTestId('exam-instructions-title')).toHaveTextContent(
@@ -143,13 +133,11 @@ describe('EntranceOnboardingExamInstructions', () => {
    */
   it('renders correctly when proctoringSettings is null', () => {
     // Set up the store with proctoringSettings as null
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: null,
-      }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: null,
     });
 
-    render(<EntranceOnboardingExamInstructions />, { store });
+    render(<EntranceOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly with the title
     expect(screen.getByTestId('exam-instructions-title')).toHaveTextContent(
@@ -167,17 +155,15 @@ describe('EntranceOnboardingExamInstructions', () => {
    */
   it('renders correctly when both email properties are empty', () => {
     // Set up the store with proctoringSettings containing empty email properties
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'Test Provider',
-          learner_notification_from_email: '',
-          integration_specific_email: '',
-        }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'Test Provider',
+        learner_notification_from_email: '',
+        integration_specific_email: '',
       }),
     });
 
-    render(<EntranceOnboardingExamInstructions />, { store });
+    render(<EntranceOnboardingExamInstructions />, { specialExams });
 
     // Verify the component renders correctly with the title
     expect(screen.getByTestId('exam-instructions-title')).toHaveTextContent(
@@ -195,11 +181,9 @@ describe('EntranceOnboardingExamInstructions', () => {
    */
   it('dispatches createProctoredExamAttempt action when button is clicked', () => {
     // Set up the store
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams'),
-    });
+    const specialExams = Factory.build('specialExams');
 
-    render(<EntranceOnboardingExamInstructions />, { store });
+    render(<EntranceOnboardingExamInstructions />, { specialExams });
 
     // Find and click the start exam button
     const startButton = screen.getByTestId('start-exam-button');
@@ -208,6 +192,6 @@ describe('EntranceOnboardingExamInstructions', () => {
     fireEvent.click(startButton);
 
     // Verify that createProctoredExamAttempt was called
-    expect(dataModule.createProctoredExamAttempt).toHaveBeenCalledTimes(1);
+    expect(mockCreateProctoredExamAttempt).toHaveBeenCalledTimes(1);
   });
 });

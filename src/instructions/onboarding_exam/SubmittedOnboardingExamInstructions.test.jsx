@@ -3,13 +3,13 @@ import { fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useToggle } from '@openedx/paragon';
 
-import { resetExam } from '../../data';
+import { useResetExam } from '../../data';
 import SubmittedOnboardingExamInstructions from './SubmittedOnboardingExamInstructions';
-import { render, initializeTestStore, initializeMockApp } from '../../setupTest';
+import { render, initializeMockApp } from '../../setupTest';
 
-// Mock the resetExam action
 jest.mock('../../data', () => ({
-  resetExam: jest.fn(),
+  ...jest.requireActual('../../data'),
+  useResetExam: jest.fn(),
 }));
 
 // Mock the useToggle hook
@@ -23,7 +23,6 @@ jest.mock('@openedx/paragon', () => {
 
 describe('SubmittedOnboardingExamInstructions', () => {
   // Setup common test variables
-  let store;
   const mockResetExam = jest.fn();
 
   beforeEach(() => {
@@ -32,13 +31,11 @@ describe('SubmittedOnboardingExamInstructions', () => {
 
     // Initialize the mock app and store
     initializeMockApp();
-    store = initializeTestStore();
 
     // Setup mock implementations
-    resetExam.mockReturnValue(mockResetExam);
+    useResetExam.mockReturnValue({ mutate: mockResetExam });
 
     // Mock the dispatch function
-    store.dispatch = jest.fn();
 
     // Default mock for useToggle - returns [false, toggleFn]
     useToggle.mockImplementation(() => [false, jest.fn()]);
@@ -51,13 +48,7 @@ describe('SubmittedOnboardingExamInstructions', () => {
       integration_specific_email: 'test@example.com',
     };
 
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings,
-      },
-    });
-
-    render(<SubmittedOnboardingExamInstructions />, { store });
+    render(<SubmittedOnboardingExamInstructions />, { specialExams: { proctoringSettings } });
 
     // Verify title is rendered
     expect(screen.getByTestId('exam-instructions-title')).toHaveTextContent(
@@ -79,13 +70,7 @@ describe('SubmittedOnboardingExamInstructions', () => {
       integration_specific_email: 'test@example.com',
     };
 
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings,
-      },
-    });
-
-    render(<SubmittedOnboardingExamInstructions />, { store });
+    render(<SubmittedOnboardingExamInstructions />, { specialExams: { proctoringSettings } });
 
     // Verify the integration email is still present
     expect(screen.getByRole('link', { name: 'test@example.com' })).toBeInTheDocument();
@@ -103,13 +88,7 @@ describe('SubmittedOnboardingExamInstructions', () => {
       integration_specific_email: null, // Missing email
     };
 
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings,
-      },
-    });
-
-    render(<SubmittedOnboardingExamInstructions />, { store });
+    render(<SubmittedOnboardingExamInstructions />, { specialExams: { proctoringSettings } });
 
     // Verify the learner notification email is still present
     expect(screen.getByRole('link', { name: 'test_notification@example.com' })).toBeInTheDocument();
@@ -126,13 +105,7 @@ describe('SubmittedOnboardingExamInstructions', () => {
       integration_specific_email: null,
     };
 
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings,
-      },
-    });
-
-    render(<SubmittedOnboardingExamInstructions />, { store });
+    render(<SubmittedOnboardingExamInstructions />, { specialExams: { proctoringSettings } });
 
     // Verify the component still renders without errors
     expect(screen.getByTestId('exam-instructions-title')).toBeInTheDocument();
@@ -147,13 +120,11 @@ describe('SubmittedOnboardingExamInstructions', () => {
 
   it('renders the component with undefined proctoringSettings', () => {
     // Set up the store with undefined proctoringSettings
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings: undefined,
-      },
-    });
+    const specialExams = {
+      proctoringSettings: undefined,
+    };
 
-    render(<SubmittedOnboardingExamInstructions />, { store });
+    render(<SubmittedOnboardingExamInstructions />, { specialExams });
 
     // Verify the component still renders without errors
     expect(screen.getByTestId('exam-instructions-title')).toBeInTheDocument();
@@ -173,12 +144,6 @@ describe('SubmittedOnboardingExamInstructions', () => {
       integration_specific_email: 'test@example.com',
     };
 
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings,
-      },
-    });
-
     // Setup toggle to simulate confirmation
     // First call returns [false, confirmFn], then after the click it should return [true, confirmFn]
     const confirmFn = jest.fn().mockImplementation(() => {
@@ -187,7 +152,7 @@ describe('SubmittedOnboardingExamInstructions', () => {
     });
     useToggle.mockReturnValue([false, confirmFn]);
 
-    const { rerender } = render(<SubmittedOnboardingExamInstructions />, { store });
+    const { rerender } = render(<SubmittedOnboardingExamInstructions />, { specialExams: { proctoringSettings } });
 
     // Verify button is initially disabled
     const retryButton = screen.getByTestId('retry-exam-button');
@@ -215,17 +180,11 @@ describe('SubmittedOnboardingExamInstructions', () => {
       integration_specific_email: 'test@example.com',
     };
 
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings,
-      },
-    });
-
     // Setup toggle to simulate confirmation already done
     // This needs to be the default implementation for this test
     useToggle.mockImplementation(() => [true, jest.fn()]);
 
-    render(<SubmittedOnboardingExamInstructions />, { store });
+    render(<SubmittedOnboardingExamInstructions />, { specialExams: { proctoringSettings } });
 
     // Verify button is enabled
     const retryButton = screen.getByTestId('retry-exam-button');
@@ -234,8 +193,6 @@ describe('SubmittedOnboardingExamInstructions', () => {
     // Click the retry button
     fireEvent.click(retryButton);
 
-    // Verify resetExam was called and the result was dispatched
-    expect(resetExam).toHaveBeenCalled();
-    expect(store.dispatch).toHaveBeenCalledWith(mockResetExam);
+    expect(mockResetExam).toHaveBeenCalled();
   });
 });

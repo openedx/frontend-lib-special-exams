@@ -1,4 +1,3 @@
-import { logError } from '@edx/frontend-platform/logging';
 import actionToMessageTypesMap from './constants';
 
 function createWorker(url) {
@@ -16,7 +15,7 @@ function workerTimeoutPromise(timeoutMilliseconds) {
   });
 }
 
-export function workerPromiseForEventNames(eventNames, workerUrl) {
+export function workerPromiseForEventNames(eventNames, workerUrl, logError) {
   return (timeout, attemptExternalId) => {
     const proctoringBackendWorker = createWorker(workerUrl);
     return new Promise((resolve, reject) => {
@@ -36,11 +35,14 @@ export function workerPromiseForEventNames(eventNames, workerUrl) {
   };
 }
 
-export function pingApplication(timeoutInSeconds, attemptExternalId, workerUrl) {
+export function pingApplication(timeoutInSeconds, attemptExternalId, workerUrl, logError) {
   const TIMEOUT_BUFFER_SECONDS = 10;
   const workerPingTimeout = timeoutInSeconds - TIMEOUT_BUFFER_SECONDS; // 10s buffer for worker to respond
   return Promise.race([
-    workerPromiseForEventNames(actionToMessageTypesMap.ping, workerUrl)(workerPingTimeout * 1000, attemptExternalId),
+    workerPromiseForEventNames(actionToMessageTypesMap.ping, workerUrl, logError)(
+      workerPingTimeout * 1000,
+      attemptExternalId,
+    ),
     workerTimeoutPromise(timeoutInSeconds * 1000),
   ]);
 }

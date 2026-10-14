@@ -1,37 +1,21 @@
 import '@testing-library/jest-dom';
 import React from 'react';
-import { getConfig } from '@edx/frontend-platform';
 import ErrorProctoredExamInstructions from './ErrorProctoredExamInstructions';
 import {
   initializeMockApp,
-  initializeTestStore,
   render,
   screen,
 } from '../../setupTest';
 
-// Mock the getConfig function
-jest.mock('@edx/frontend-platform', () => ({
-  getConfig: jest.fn(),
-}));
-
 describe('ErrorProctoredExamInstructions', () => {
-  let store;
-
   // Mock configuration values
   const mockSiteName = 'Test Platform';
   const mockContactUrl = 'https://example.com/contact';
+  const services = { config: { siteName: mockSiteName, contactUrl: mockContactUrl } };
 
   beforeEach(() => {
     initializeMockApp();
     jest.clearAllMocks();
-
-    // Set up the mock configuration
-    getConfig.mockReturnValue({
-      SITE_NAME: mockSiteName,
-      CONTACT_URL: mockContactUrl,
-    });
-
-    store = initializeTestStore();
   });
 
   /**
@@ -41,15 +25,13 @@ describe('ErrorProctoredExamInstructions', () => {
   it('renders correctly with proctoringEscalationEmail', () => {
     // Set up the store state with proctoringEscalationEmail
     const testEmail = 'support@example.com';
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings: {
-          proctoring_escalation_email: testEmail,
-        },
+    const specialExams = {
+      proctoringSettings: {
+        proctoring_escalation_email: testEmail,
       },
-    });
+    };
 
-    render(<ErrorProctoredExamInstructions />, { store });
+    render(<ErrorProctoredExamInstructions />, { specialExams, services });
 
     // Verify the title is rendered correctly
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
@@ -72,15 +54,13 @@ describe('ErrorProctoredExamInstructions', () => {
    */
   it('renders correctly without proctoringEscalationEmail', () => {
     // Set up the store state without proctoringEscalationEmail
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings: {
-          // No proctoring_escalation_email
-        },
+    const specialExams = {
+      proctoringSettings: {
+        // No proctoring_escalation_email
       },
-    });
+    };
 
-    render(<ErrorProctoredExamInstructions />, { store });
+    render(<ErrorProctoredExamInstructions />, { specialExams, services });
 
     // Verify the title is rendered correctly
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
@@ -104,11 +84,7 @@ describe('ErrorProctoredExamInstructions', () => {
    */
   it('handles undefined specialExams or proctoringSettings', () => {
     // Set up the store state with undefined specialExams
-    store.getState = () => ({
-      // No specialExams
-    });
-
-    render(<ErrorProctoredExamInstructions />, { store });
+    render(<ErrorProctoredExamInstructions />, { services });
 
     // Verify the title is rendered correctly
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
@@ -130,13 +106,11 @@ describe('ErrorProctoredExamInstructions', () => {
    */
   it('handles null proctoringSettings', () => {
     // Set up the store state with null proctoringSettings
-    store.getState = () => ({
-      specialExams: {
-        proctoringSettings: null,
-      },
-    });
+    const specialExams = {
+      proctoringSettings: null,
+    };
 
-    render(<ErrorProctoredExamInstructions />, { store });
+    render(<ErrorProctoredExamInstructions />, { specialExams, services });
 
     // Verify the title is rendered correctly
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();

@@ -1,9 +1,6 @@
-import { getConfig } from '@edx/frontend-platform';
 import { checkAppStatus, notifyStartExam } from './proctorio';
 
-jest.mock('@edx/frontend-platform', () => ({
-  getConfig: jest.fn(),
-}));
+const examsBaseUrl = 'https://example.com';
 
 describe('proctorio', () => {
   let originalWindowTop;
@@ -29,7 +26,7 @@ describe('proctorio', () => {
         // Immediately call the handler with the appropriate data
         setTimeout(() => {
           handler({
-            origin: getConfig().EXAMS_BASE_URL,
+            origin: examsBaseUrl,
             data: { active: true }, // Added trailing comma
           });
         }, 0);
@@ -37,10 +34,6 @@ describe('proctorio', () => {
     });
 
     jest.spyOn(window, 'removeEventListener').mockImplementation();
-
-    getConfig.mockReturnValue({
-      EXAMS_BASE_URL: 'https://example.com',
-    });
   });
 
   afterEach(() => {
@@ -70,7 +63,7 @@ describe('proctorio', () => {
         }
       });
 
-      await expect(checkAppStatus()).resolves.toBeUndefined();
+      await expect(checkAppStatus(examsBaseUrl)).resolves.toBeUndefined();
       expect(window.addEventListener).toHaveBeenCalledWith('message', expect.any(Function));
       expect(window.removeEventListener).toHaveBeenCalledWith('message', expect.any(Function));
       expect(postMessageMock).toHaveBeenCalledWith(['proctorio_status'], '*');
@@ -89,7 +82,7 @@ describe('proctorio', () => {
         }
       });
 
-      await expect(checkAppStatus()).rejects.toBeUndefined();
+      await expect(checkAppStatus(examsBaseUrl)).rejects.toBeUndefined();
       expect(window.addEventListener).toHaveBeenCalledWith('message', expect.any(Function));
       expect(window.removeEventListener).toHaveBeenCalledWith('message', expect.any(Function));
       expect(postMessageMock).toHaveBeenCalledWith(['proctorio_status'], '*');
@@ -108,7 +101,7 @@ describe('proctorio', () => {
         }
       });
 
-      await expect(checkAppStatus()).rejects.toBeUndefined();
+      await expect(checkAppStatus(examsBaseUrl)).rejects.toBeUndefined();
       expect(window.addEventListener).toHaveBeenCalledWith('message', expect.any(Function));
       expect(window.removeEventListener).toHaveBeenCalledWith('message', expect.any(Function));
       expect(postMessageMock).toHaveBeenCalledWith(['proctorio_status'], '*');
@@ -124,7 +117,7 @@ describe('proctorio', () => {
         }
       });
 
-      const promise = checkAppStatus();
+      const promise = checkAppStatus(examsBaseUrl);
 
       // Simulate a message event from a different origin
       messageHandler({

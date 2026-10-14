@@ -1,9 +1,9 @@
 import React from 'react';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
-import { getConfig } from '@edx/frontend-platform';
+import { FormattedMessage } from 'react-intl';
+import { useSpecialExams } from '../../core/SpecialExamsProvider';
 
 const RejectedProctoredExamInstructions = () => {
-  const platformName = getConfig().SITE_NAME;
+  const platformName = useSpecialExams().config.siteName;
 
   return (
     <>

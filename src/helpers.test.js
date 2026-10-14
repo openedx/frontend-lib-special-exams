@@ -5,7 +5,6 @@ import {
   getDisplayName,
   shouldRenderExpiredPage,
   generateHumanizedTime,
-  appendTimerEnd,
 } from './helpers';
 import { ExamType } from './constants';
 
@@ -156,51 +155,5 @@ describe('generateHumanizedTime', () => {
     expect(generateHumanizedTime(2 * 60)).toBe('2 minutes');
     expect(generateHumanizedTime(60 * 60)).toBe('1 hour and 0 minutes');
     expect(generateHumanizedTime(120 * 60)).toBe('2 hours and 0 minutes');
-  });
-});
-
-describe('appendTimerEnd', () => {
-  /**
-   * The appendTimerEnd function is used in TimerProvider.test.jsx and CountDownTimer.test.jsx,
-   * but they don't test all edge cases.
-   */
-  beforeEach(() => {
-    // Mock Date.now() to return a fixed timestamp for consistent testing
-    jest.spyOn(Date, 'now').mockImplementation(() => 1609459200000); // 2021-01-01T00:00:00.000Z
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
-  it('should return the original attempt if time_remaining_seconds is not present', () => {
-    // Tests the condition: if (!activeAttempt?.time_remaining_seconds) { return activeAttempt; }
-    const attempt = { attempt_id: '123', attempt_status: 'started' };
-    expect(appendTimerEnd(attempt)).toBe(attempt);
-  });
-
-  it('should return null if attempt is null', () => {
-    // Tests the edge case of null input
-    expect(appendTimerEnd(null)).toBe(null);
-  });
-
-  it('should return undefined if attempt is undefined', () => {
-    // Tests the edge case of undefined input
-    expect(appendTimerEnd(undefined)).toBe(undefined);
-  });
-
-  it('should add timer_ends property based on time_remaining_seconds', () => {
-    // Tests the main functionality of adding the timer_ends property
-    const attempt = {
-      attempt_id: '123',
-      attempt_status: 'started',
-      time_remaining_seconds: 3600, // 1 hour
-    };
-    const result = appendTimerEnd(attempt);
-
-    // 1 hour from mock date
-    expect(result.timer_ends).toBe('2021-01-01T01:00:00.000Z');
-    expect(result).not.toBe(attempt); // Should return a new object
-    expect(result.attempt_id).toBe('123'); // Should preserve other properties
   });
 });

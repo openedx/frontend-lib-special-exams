@@ -1,23 +1,50 @@
 import '@testing-library/jest-dom';
 import { Factory } from 'rosie';
 import React from 'react';
-import { render, initializeTestStore } from '../setupTest';
+import MockAdapter from 'axios-mock-adapter';
+import { useIsMutating } from '@tanstack/react-query';
+import {
+  createTestQueryClient, httpClient, render, testServices, waitFor,
+} from '../setupTest';
 import Exam from './Exam';
 import { ExamType, ExamStatus } from '../constants';
-import { getProctoringSettings } from '../data';
+import { fetchExamAttemptsData, fetchProctoringSettings } from '../data/api';
+import { examQueryOptions } from '../data/queries';
 
-// Mock the getProctoringSettings function
-jest.mock('../data', () => {
-  const originalModule = jest.requireActual('../data');
-  return {
-    ...originalModule,
-    getProctoringSettings: jest.fn(),
-  };
-});
+jest.mock('../data/api', () => ({
+  ...jest.requireActual('../data/api'),
+  fetchExamAttemptsData: jest.fn(),
+  fetchProctoringSettings: jest.fn(() => Promise.resolve({})),
+}));
+jest.mock('@tanstack/react-query', () => ({
+  ...jest.requireActual('@tanstack/react-query'),
+  useIsMutating: jest.fn(() => 0),
+}));
 
-getProctoringSettings.mockReturnValue(jest.fn());
+const axiosMock = new MockAdapter(httpClient);
 
 describe('Exam', () => {
+  afterEach(() => {
+    axiosMock.reset();
+  });
+
+  const proctoredExam = Factory.build('specialExams', {
+    exam: Factory.build('exam', {
+      type: ExamType.PROCTORED,
+      id: 1,
+    }),
+  });
+
+  const submittedTimedExamHiddenAfterDue = Factory.build('specialExams', {
+    exam: Factory.build('exam', {
+      type: ExamType.TIMED,
+      passed_due_date: true,
+      hide_after_due: true,
+      attempt: {
+        attempt_status: ExamStatus.SUBMITTED,
+      },
+    }),
+  });
   const defaultProps = {
     isGated: false,
     isTimeLimited: true,
@@ -26,30 +53,36 @@ describe('Exam', () => {
     children: <div data-testid="exam-content">Exam Content</div>,
   };
 
-  let store;
-
   beforeEach(() => {
     jest.clearAllMocks();
-    store = initializeTestStore({
-      specialExams: Factory.build('specialExams', {
-        isLoading: false,
-      }),
-    });
   });
 
-  it('renders loading spinner when isLoading is true', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        isLoading: true,
-      }),
-    });
+  it('renders loading spinner while the exam is being fetched', () => {
+    const queryClient = createTestQueryClient();
+    const specialExams = Factory.build('specialExams');
+    fetchExamAttemptsData.mockReturnValue(new Promise(() => {}));
+    queryClient.prefetchQuery(
+      examQueryOptions(testServices, specialExams.exam.course_id, specialExams.exam.content_id),
+    );
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} />,
-      { store },
+      { queryClient, specialExams },
     );
 
     expect(queryByTestId('spinner')).toBeInTheDocument();
+  });
+
+  it('renders loading spinner while an attempt action is in flight', () => {
+    useIsMutating.mockReturnValue(1);
+
+    const { queryByTestId } = render(
+      <Exam {...defaultProps} />,
+      { specialExams: Factory.build('specialExams') },
+    );
+
+    expect(queryByTestId('spinner')).toBeInTheDocument();
+    useIsMutating.mockReturnValue(0);
   });
 
   it('renders exam content when not loading', () => {
@@ -57,7 +90,7 @@ describe('Exam', () => {
     // which is what wraps our content
     const { queryByTestId } = render(
       <Exam {...defaultProps} />,
-      { store },
+      { specialExams: Factory.build('specialExams') },
     );
 
     // Check for exam instructions which indicates content is being rendered
@@ -65,17 +98,15 @@ describe('Exam', () => {
   });
 
   it('shows timer when there is an active attempt with STARTED status', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {
-          attempt_status: ExamStatus.STARTED,
-        },
-      }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {
+        attempt_status: ExamStatus.STARTED,
+      },
     });
 
     const { container } = render(
       <Exam {...defaultProps} />,
-      { store },
+      { specialExams },
     );
 
     // Check for exam-timer which is rendered by ExamTimerBlock
@@ -83,15 +114,10 @@ describe('Exam', () => {
   });
 
   it('shows API error when isTimeLimited is true and apiErrorMsg exists', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        apiErrorMsg: 'Test error message',
-      }),
-    });
-
+    const specialExams = Factory.build('specialExams');
     const { queryByTestId } = render(
       <Exam {...defaultProps} />,
-      { store },
+      { specialExams, clientState: { apiErrorMsg: 'Test error message' } },
     );
 
     // ExamAPIError is rendered
@@ -99,15 +125,10 @@ describe('Exam', () => {
   });
 
   it('does not show API error when isTimeLimited is false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        apiErrorMsg: 'Test error message',
-      }),
-    });
-
+    const specialExams = Factory.build('specialExams');
     const { container } = render(
       <Exam {...defaultProps} isTimeLimited={false} />,
-      { store },
+      { specialExams, clientState: { apiErrorMsg: 'Test error message' } },
     );
 
     // ExamAPIError is not rendered
@@ -115,18 +136,9 @@ describe('Exam', () => {
   });
 
   it('shows access denied message when hasProctoredExamAccess is false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          id: 1,
-        }),
-      }),
-    });
-
     const { queryByTestId } = render(
       <Exam {...defaultProps} canAccessProctoredExams={false} />,
-      { store },
+      { specialExams: proctoredExam },
     );
 
     expect(queryByTestId('no-access')).toBeInTheDocument();
@@ -135,22 +147,20 @@ describe('Exam', () => {
   // Test for line 39: if (examType === ExamType.TIMED && passedDueDate && !hideAfterDue)
   // Testing all conditions true
   it('does not show masquerade alert for TIMED exam with passed due date and hideAfterDue=false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          passed_due_date: true,
-          hide_after_due: false,
-          attempt: {
-            attempt_status: ExamStatus.SUBMITTED,
-          },
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.TIMED,
+        passed_due_date: true,
+        hide_after_due: false,
+        attempt: {
+          attempt_status: ExamStatus.SUBMITTED,
+        },
       }),
     });
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff />,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('masquerade-alert')).not.toBeInTheDocument();
@@ -158,22 +168,20 @@ describe('Exam', () => {
 
   // Testing first condition false: examType !== ExamType.TIMED
   it('shows masquerade alert for non-TIMED exam with passed due date and hideAfterDue=false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED, // Not TIMED
-          passed_due_date: true,
-          hide_after_due: false,
-          attempt: {
-            attempt_status: ExamStatus.SUBMITTED,
-          },
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED, // Not TIMED
+        passed_due_date: true,
+        hide_after_due: false,
+        attempt: {
+          attempt_status: ExamStatus.SUBMITTED,
+        },
       }),
     });
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff />,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('masquerade-alert')).toBeInTheDocument();
@@ -181,22 +189,20 @@ describe('Exam', () => {
 
   // Testing second condition false: !passedDueDate
   it('shows masquerade alert for TIMED exam without passed due date and hideAfterDue=false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          passed_due_date: false, // Due date not passed
-          hide_after_due: false,
-          attempt: {
-            attempt_status: ExamStatus.SUBMITTED,
-          },
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.TIMED,
+        passed_due_date: false, // Due date not passed
+        hide_after_due: false,
+        attempt: {
+          attempt_status: ExamStatus.SUBMITTED,
+        },
       }),
     });
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff />,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('masquerade-alert')).toBeInTheDocument();
@@ -204,15 +210,13 @@ describe('Exam', () => {
 
   // Edge case: exam is null
   it('handles null exam object gracefully', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: null,
-      }),
+    const specialExams = Factory.build('specialExams', {
+      exam: null,
     });
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff />,
-      { store },
+      { specialExams },
     );
 
     // When exam is null, the component still shows masquerade alert for staff
@@ -221,20 +225,18 @@ describe('Exam', () => {
 
   // Edge case: exam properties are undefined
   it('handles undefined exam properties gracefully', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: {
-          // No type, passed_due_date, or hide_after_due properties
-          attempt: {
-            attempt_status: ExamStatus.SUBMITTED,
-          },
+    const specialExams = Factory.build('specialExams', {
+      exam: {
+        // No type, passed_due_date, or hide_after_due properties
+        attempt: {
+          attempt_status: ExamStatus.SUBMITTED,
         },
-      }),
+      },
     });
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff />,
-      { store },
+      { specialExams },
     );
 
     // When exam properties are undefined, the component still shows masquerade alert for staff
@@ -243,20 +245,18 @@ describe('Exam', () => {
 
   // Edge case: attempt is null
   it('handles null attempt object gracefully', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          passed_due_date: true,
-          hide_after_due: true,
-          attempt: null,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.TIMED,
+        passed_due_date: true,
+        hide_after_due: true,
+        attempt: null,
       }),
     });
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff />,
-      { store },
+      { specialExams },
     );
 
     // Should show masquerade alert when attempt is null (attemptStatus will be undefined)
@@ -265,22 +265,9 @@ describe('Exam', () => {
 
   // Additional test for line 39 with different conditions
   it('shows masquerade alert for TIMED exam with passed due date and hideAfterDue=true', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          passed_due_date: true,
-          hide_after_due: true,
-          attempt: {
-            attempt_status: ExamStatus.SUBMITTED,
-          },
-        }),
-      }),
-    });
-
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff />,
-      { store },
+      { specialExams: submittedTimedExamHiddenAfterDue },
     );
 
     expect(queryByTestId('masquerade-alert')).toBeInTheDocument();
@@ -288,22 +275,9 @@ describe('Exam', () => {
 
   // Test for the outer condition in shouldShowMasqueradeAlert
   it('does not show masquerade alert when originalUserIsStaff is false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          passed_due_date: true,
-          hide_after_due: true,
-          attempt: {
-            attempt_status: ExamStatus.SUBMITTED,
-          },
-        }),
-      }),
-    });
-
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff={false} />,
-      { store },
+      { specialExams: submittedTimedExamHiddenAfterDue },
     );
 
     expect(queryByTestId('masquerade-alert')).not.toBeInTheDocument();
@@ -311,22 +285,9 @@ describe('Exam', () => {
 
   // Test for the outer condition in shouldShowMasqueradeAlert
   it('does not show masquerade alert when isTimeLimited is false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          passed_due_date: true,
-          hide_after_due: true,
-          attempt: {
-            attempt_status: ExamStatus.SUBMITTED,
-          },
-        }),
-      }),
-    });
-
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff isTimeLimited={false} />,
-      { store },
+      { specialExams: submittedTimedExamHiddenAfterDue },
     );
 
     expect(queryByTestId('masquerade-alert')).not.toBeInTheDocument();
@@ -334,22 +295,20 @@ describe('Exam', () => {
 
   // Test for the condition: return attemptStatus !== ExamStatus.STARTED;
   it('does not show masquerade alert when attemptStatus is STARTED', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED, // Not TIMED to avoid the first branch
-          passed_due_date: false,
-          hide_after_due: false,
-          attempt: {
-            attempt_status: ExamStatus.STARTED,
-          },
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED, // Not TIMED to avoid the first branch
+        passed_due_date: false,
+        hide_after_due: false,
+        attempt: {
+          attempt_status: ExamStatus.STARTED,
+        },
       }),
     });
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff />,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('masquerade-alert')).not.toBeInTheDocument();
@@ -357,136 +316,120 @@ describe('Exam', () => {
 
   // Test for the condition: return attemptStatus !== ExamStatus.STARTED;
   it('shows masquerade alert when attemptStatus is not STARTED', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED, // Not TIMED to avoid the first branch
-          passed_due_date: false,
-          hide_after_due: false,
-          attempt: {
-            attempt_status: ExamStatus.SUBMITTED,
-          },
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED, // Not TIMED to avoid the first branch
+        passed_due_date: false,
+        hide_after_due: false,
+        attempt: {
+          attempt_status: ExamStatus.SUBMITTED,
+        },
       }),
     });
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} originalUserIsStaff />,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('masquerade-alert')).toBeInTheDocument();
   });
 
   // Test for line 63: if (proctoredExamTypes.includes(examType))
-  it('calls getProctoringSettings for PROCTORED exam type with examId', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          id: 1,
-        }),
+  it('calls fetchProctoringSettings for PROCTORED exam type with examId', async () => {
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: null,
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        id: 1,
       }),
     });
 
     render(
       <Exam {...defaultProps} />,
-      { store },
+      { specialExams },
     );
 
-    expect(getProctoringSettings).toHaveBeenCalled();
+    await waitFor(() => expect(fetchProctoringSettings).toHaveBeenCalled());
   });
 
   // Test for line 63 with ONBOARDING exam type
-  it('calls getProctoringSettings for ONBOARDING exam type with examId', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.ONBOARDING,
-          id: 1,
-        }),
+  it('calls fetchProctoringSettings for ONBOARDING exam type with examId', async () => {
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: null,
+      exam: Factory.build('exam', {
+        type: ExamType.ONBOARDING,
+        id: 1,
       }),
     });
 
     render(
       <Exam {...defaultProps} />,
-      { store },
+      { specialExams },
     );
 
-    expect(getProctoringSettings).toHaveBeenCalled();
+    await waitFor(() => expect(fetchProctoringSettings).toHaveBeenCalled());
   });
 
   // Test for line 63 with PRACTICE exam type
-  it('calls getProctoringSettings for PRACTICE exam type with examId', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PRACTICE,
-          id: 1,
-        }),
+  it('calls fetchProctoringSettings for PRACTICE exam type with examId', async () => {
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: null,
+      exam: Factory.build('exam', {
+        type: ExamType.PRACTICE,
+        id: 1,
       }),
     });
 
     render(
       <Exam {...defaultProps} />,
-      { store },
+      { specialExams },
     );
 
-    expect(getProctoringSettings).toHaveBeenCalled();
+    await waitFor(() => expect(fetchProctoringSettings).toHaveBeenCalled());
   });
 
-  // Test for line 63 with TIMED exam type (should not call getProctoringSettings)
-  it('does not call getProctoringSettings for TIMED exam type', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          id: 1,
-        }),
+  // Test for line 63 with TIMED exam type (should not call fetchProctoringSettings)
+  it('does not call fetchProctoringSettings for TIMED exam type', () => {
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: null,
+      exam: Factory.build('exam', {
+        type: ExamType.TIMED,
+        id: 1,
       }),
     });
 
     render(
       <Exam {...defaultProps} />,
-      { store },
+      { specialExams },
     );
 
-    expect(getProctoringSettings).not.toHaveBeenCalled();
+    expect(fetchProctoringSettings).not.toHaveBeenCalled();
   });
 
   // Test for line 63 with proctored exam type but no examId
-  it('does not call getProctoringSettings for PROCTORED exam type without examId', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          id: null,
-        }),
+  it('does not call fetchProctoringSettings for PROCTORED exam type without examId', () => {
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: null,
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        id: null,
       }),
     });
 
     render(
       <Exam {...defaultProps} />,
-      { store },
+      { specialExams },
     );
 
-    expect(getProctoringSettings).not.toHaveBeenCalled();
+    expect(fetchProctoringSettings).not.toHaveBeenCalled();
   });
 
   // Test for canAccessProctoredExams with proctored exam type
   it('sets hasProctoredExamAccess to false when canAccessProctoredExams is false for PROCTORED exam', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          id: 1,
-        }),
-      }),
-    });
-
     const { queryByTestId } = render(
       <Exam {...defaultProps} canAccessProctoredExams={false} />,
-      { store },
+      { specialExams: proctoredExam },
     );
 
     expect(queryByTestId('no-access')).toBeInTheDocument();
@@ -494,18 +437,16 @@ describe('Exam', () => {
 
   // Test for canAccessProctoredExams with non-proctored exam type
   it('does not restrict access for TIMED exam when canAccessProctoredExams is false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          id: 1,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.TIMED,
+        id: 1,
       }),
     });
 
     const { queryByTestId } = render(
       <Exam {...defaultProps} canAccessProctoredExams={false} />,
-      { store },
+      { specialExams },
     );
 
     // Should not show access denied message

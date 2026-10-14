@@ -2,17 +2,16 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { fireEvent } from '@testing-library/dom';
 import EntranceProctoredExamInstructions from './EntranceProctoredExamInstructions';
-import { createProctoredExamAttempt } from '../../data';
 import {
   initializeMockApp,
-  initializeTestStore,
   render,
   screen,
 } from '../../setupTest';
 
-// Mock the data module
+const mockCreateProctoredExamAttempt = jest.fn();
 jest.mock('../../data', () => ({
-  createProctoredExamAttempt: jest.fn(),
+  ...jest.requireActual('../../data'),
+  useCreateProctoredExamAttempt: () => ({ mutate: mockCreateProctoredExamAttempt }),
 }));
 
 // Mock the SkipProctoredExamButton component with a simple function
@@ -33,14 +32,20 @@ jest.mock('./SkipProctoredExamButton', () => ({
 }));
 
 describe('EntranceProctoredExamInstructions', () => {
-  let store;
+  const examWithOptOut = {
+    exam: {
+      attempt: {
+        attempt_ready_to_resume: false,
+        total_time: '30 minutes',
+      },
+    },
+    allowProctoringOptOut: true,
+  };
   const skipProctoredExamMock = jest.fn();
 
   beforeEach(() => {
     initializeMockApp();
     jest.clearAllMocks();
-    store = initializeTestStore();
-    store.dispatch = jest.fn();
   });
 
   /**
@@ -49,21 +54,9 @@ describe('EntranceProctoredExamInstructions', () => {
    */
   it('renders correctly when attempt_ready_to_resume is false', () => {
     // Set up the store state
-    store.getState = () => ({
-      specialExams: {
-        exam: {
-          attempt: {
-            attempt_ready_to_resume: false,
-            total_time: '30 minutes',
-          },
-        },
-        allowProctoringOptOut: true,
-      },
-    });
-
     render(
       <EntranceProctoredExamInstructions skipProctoredExam={skipProctoredExamMock} />,
-      { store },
+      { specialExams: examWithOptOut },
     );
 
     // Verify the title is rendered correctly
@@ -85,21 +78,19 @@ describe('EntranceProctoredExamInstructions', () => {
    */
   it('renders correctly when attempt_ready_to_resume is true', () => {
     // Set up the store state
-    store.getState = () => ({
-      specialExams: {
-        exam: {
-          attempt: {
-            attempt_ready_to_resume: true,
-            total_time: '30 minutes',
-          },
+    const specialExams = {
+      exam: {
+        attempt: {
+          attempt_ready_to_resume: true,
+          total_time: '30 minutes',
         },
-        allowProctoringOptOut: true,
       },
-    });
+      allowProctoringOptOut: true,
+    };
 
     render(
       <EntranceProctoredExamInstructions skipProctoredExam={skipProctoredExamMock} />,
-      { store },
+      { specialExams },
     );
 
     // Verify the title is rendered correctly
@@ -125,21 +116,19 @@ describe('EntranceProctoredExamInstructions', () => {
    */
   it('does not render skip button when allowProctoringOptOut is false', () => {
     // Set up the store state
-    store.getState = () => ({
-      specialExams: {
-        exam: {
-          attempt: {
-            attempt_ready_to_resume: false,
-            total_time: '30 minutes',
-          },
+    const specialExams = {
+      exam: {
+        attempt: {
+          attempt_ready_to_resume: false,
+          total_time: '30 minutes',
         },
-        allowProctoringOptOut: false,
       },
-    });
+      allowProctoringOptOut: false,
+    };
 
     render(
       <EntranceProctoredExamInstructions skipProctoredExam={skipProctoredExamMock} />,
-      { store },
+      { specialExams },
     );
 
     // Verify the title is rendered correctly
@@ -159,36 +148,17 @@ describe('EntranceProctoredExamInstructions', () => {
    * Test case for clicking the "Continue to my proctored exam" button
    * This tests the onClick handler for the button
    */
-  it('dispatches createProctoredExamAttempt when continue button is clicked', () => {
-    // Set up the mock function
-    createProctoredExamAttempt.mockReturnValue({ type: 'CREATE_PROCTORED_EXAM_ATTEMPT' });
-
+  it('creates the proctored attempt when continue button is clicked', () => {
     // Set up the store state
-    store.getState = () => ({
-      specialExams: {
-        exam: {
-          attempt: {
-            attempt_ready_to_resume: false,
-            total_time: '30 minutes',
-          },
-        },
-        allowProctoringOptOut: true,
-      },
-    });
-
     render(
       <EntranceProctoredExamInstructions skipProctoredExam={skipProctoredExamMock} />,
-      { store },
+      { specialExams: examWithOptOut },
     );
 
     // Click the continue button
     fireEvent.click(screen.getByTestId('start-exam-button'));
 
-    // Verify the createProctoredExamAttempt function was called
-    expect(createProctoredExamAttempt).toHaveBeenCalled();
-
-    // Verify the dispatch was called with the correct action
-    expect(store.dispatch).toHaveBeenCalledWith({ type: 'CREATE_PROCTORED_EXAM_ATTEMPT' });
+    expect(mockCreateProctoredExamAttempt).toHaveBeenCalledTimes(1);
   });
 
   /**
@@ -197,21 +167,9 @@ describe('EntranceProctoredExamInstructions', () => {
    */
   it('calls skipProctoredExam when skip button is clicked', () => {
     // Set up the store state
-    store.getState = () => ({
-      specialExams: {
-        exam: {
-          attempt: {
-            attempt_ready_to_resume: false,
-            total_time: '30 minutes',
-          },
-        },
-        allowProctoringOptOut: true,
-      },
-    });
-
     render(
       <EntranceProctoredExamInstructions skipProctoredExam={skipProctoredExamMock} />,
-      { store },
+      { specialExams: examWithOptOut },
     );
 
     // Click the skip button
@@ -227,21 +185,19 @@ describe('EntranceProctoredExamInstructions', () => {
    */
   it('handles undefined total_time correctly', () => {
     // Set up the store state
-    store.getState = () => ({
-      specialExams: {
-        exam: {
-          attempt: {
-            attempt_ready_to_resume: true,
-            // total_time is undefined
-          },
+    const specialExams = {
+      exam: {
+        attempt: {
+          attempt_ready_to_resume: true,
+          // total_time is undefined
         },
-        allowProctoringOptOut: true,
       },
-    });
+      allowProctoringOptOut: true,
+    };
 
     render(
       <EntranceProctoredExamInstructions skipProctoredExam={skipProctoredExamMock} />,
-      { store },
+      { specialExams },
     );
 
     // Verify the text about total time is rendered with the default value

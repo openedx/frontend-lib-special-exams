@@ -1,26 +1,26 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { getConfig } from '@edx/frontend-platform';
-import { FormattedMessage } from '@edx/frontend-platform/i18n';
+import { FormattedMessage } from 'react-intl';
 import { Button } from '@openedx/paragon';
 import { ExamType } from '../../constants';
-import { submitExam } from '../../data';
+import { useSubmitExam, useActiveAttempt, useExam } from '../../data';
+import { useSpecialExams } from '../../core/SpecialExamsProvider';
 
 const SubmitProctoredExamInstructions = () => {
-  const { exam, activeAttempt } = useSelector(state => state.specialExams);
+  const exam = useExam();
+  const activeAttempt = useActiveAttempt();
 
-  const dispatch = useDispatch();
+  const submitExam = useSubmitExam();
 
   const { type: examType, attempt } = exam || {};
   const { exam_display_name: examName } = activeAttempt;
   const examHasLtiProvider = !attempt.use_legacy_attempt_api;
-  const submitLtiAttemptUrl = `${getConfig().EXAMS_BASE_URL}/lti/end_assessment/${attempt.attempt_id}`;
+  const submitLtiAttemptUrl = `${useSpecialExams().config.examsBaseUrl}/lti/end_assessment/${attempt.attempt_id}`;
 
   const handleSubmitClick = () => {
     if (examHasLtiProvider) {
       window.location.assign(submitLtiAttemptUrl);
     } else {
-      dispatch(submitExam());
+      submitExam.mutate();
     }
   };
 

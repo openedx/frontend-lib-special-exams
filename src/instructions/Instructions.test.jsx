@@ -3,14 +3,11 @@ import { Factory } from 'rosie';
 import React from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import Instructions from './index';
-import {
-  continueExam, getExamAttemptsData, startProctoredExam, startTimedExam, submitExam,
-} from '../data';
 import { pollExamAttempt, softwareDownloadAttempt } from '../data/api';
 import Emitter from '../data/emitter';
 import { TIMER_REACHED_NULL } from '../timer/events';
 import {
-  render, screen, act, initializeMockApp, initializeTestStore,
+  render, screen, act, initializeMockApp,
 } from '../setupTest';
 import {
   ExamStatus, ExamType, INCOMPLETE_STATUSES, IS_ONBOARDING_ERROR,
@@ -24,47 +21,52 @@ jest.mock('../constants', () => {
   };
 });
 
+const mockContinueExam = jest.fn();
+const mockSubmitExam = jest.fn();
+const mockSkipProctoringExam = jest.fn();
+const mockStartTimedExam = jest.fn();
 jest.mock('../data', () => ({
-  continueExam: jest.fn(),
-  getExamAttemptsData: jest.fn(),
-  getExamReviewPolicy: jest.fn(),
-  startProctoredExam: jest.fn(),
-  startTimedExam: jest.fn(),
-  submitExam: jest.fn(),
+  ...jest.requireActual('../data'),
+  useContinueExam: () => ({ mutate: mockContinueExam }),
+  useCreateProctoredExamAttempt: () => ({ mutate: jest.fn() }),
+  useResetExam: () => ({ mutate: jest.fn() }),
+  useSkipProctoringExam: () => ({ mutate: mockSkipProctoringExam }),
+  useStartProctoredExam: () => ({ mutate: jest.fn() }),
+  useStartTimedExam: () => ({ mutate: mockStartTimedExam }),
+  useSubmitExam: () => ({ mutate: mockSubmitExam }),
 }));
 jest.mock('../data/api', () => ({
+  ...jest.requireActual('../data/api'),
+  fetchExamReviewPolicy: jest.fn(() => Promise.resolve({ review_policy: '' })),
   pollExamAttempt: jest.fn(),
   softwareDownloadAttempt: jest.fn(),
 }));
-continueExam.mockReturnValue(jest.fn());
-submitExam.mockReturnValue(jest.fn());
-getExamAttemptsData.mockReturnValue(jest.fn());
-startProctoredExam.mockReturnValue(jest.fn());
-startTimedExam.mockReturnValue(jest.fn());
 pollExamAttempt.mockReturnValue(Promise.resolve({}));
 
 describe('SequenceExamWrapper', () => {
-  let store;
+  const submittedExam = Factory.build('specialExams', {
+    exam: Factory.build('exam', {
+      attempt: Factory.build('attempt', {
+        attempt_status: ExamStatus.SUBMITTED,
+      }),
+    }),
+  });
 
   beforeEach(() => {
     initializeMockApp();
-    store = initializeTestStore();
-    store.subscribe = jest.fn();
-    store.dispatch = jest.fn();
+    jest.clearAllMocks();
   });
 
   it('renders SkipProctoredExamInstruction when skipProctoring is true for proctored exam', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        allowProctoringOptOut: true,
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          attempt: {},
-          prerequisite_status: {
-            are_prerequisites_satisfied: false,
-            failed_prerequisites: [{ test: 'failed' }],
-          },
-        }),
+    const specialExams = Factory.build('specialExams', {
+      allowProctoringOptOut: true,
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        attempt: {},
+        prerequisite_status: {
+          are_prerequisites_satisfied: false,
+          failed_prerequisites: [{ test: 'failed' }],
+        },
       }),
     });
 
@@ -73,7 +75,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     fireEvent.click(getByTestId('start-exam-without-proctoring-button'));
     expect(
@@ -84,19 +86,21 @@ describe('SequenceExamWrapper', () => {
     // Cancel skip
     fireEvent.click(getByTestId('skip-cancel-exam-button'));
     expect(getByTestId('start-exam-without-proctoring-button')).toBeInTheDocument();
+    // Skip, then confirm
+    fireEvent.click(getByTestId('start-exam-without-proctoring-button'));
+    fireEvent.click(getByTestId('skip-confirm-exam-button'));
+    expect(mockSkipProctoringExam).toHaveBeenCalledTimes(1);
   });
 
   // Removed: renders OnboardingErrorProctoredExamInstructions for proctored exam onboarding error
   // This path is not directly testable as written, and the actual rendered output may not match the onboarding.
 
   it('renders DownloadSoftwareProctoredExamInstructions with skipProctoredExam prop', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.CREATED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.CREATED,
         }),
       }),
     });
@@ -105,20 +109,18 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByText('Set up and start your proctored exam.')).toBeInTheDocument();
     expect(getByText('Start System Check')).toBeInTheDocument();
   });
 
   it('renders DownloadSoftwareProctoredExamInstructions when attempt status is DOWNLOAD_SOFTWARE_CLICKED', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.DOWNLOAD_SOFTWARE_CLICKED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.DOWNLOAD_SOFTWARE_CLICKED,
         }),
       }),
     });
@@ -127,7 +129,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByText('Set up and start your proctored exam.')).toBeInTheDocument();
   });
@@ -136,13 +138,11 @@ describe('SequenceExamWrapper', () => {
     // Mock IS_ONBOARDING_ERROR to return true for this test
     IS_ONBOARDING_ERROR.mockImplementation(() => true);
 
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: 'ANY_ONBOARDING_ERROR_STATUS',
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: 'ANY_ONBOARDING_ERROR_STATUS',
         }),
       }),
     });
@@ -151,7 +151,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(
       getByText(/onboarding/i),
@@ -161,15 +161,13 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('handles typo in prerequisitesPassed logic gracefully', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          prerequisite_status: {
-            are_prerequisites_satisifed: false, // typo in key
-            failed_prerequisites: [{ test: 'failed' }],
-          },
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        prerequisite_status: {
+          are_prerequisites_satisifed: false, // typo in key
+          failed_prerequisites: [{ test: 'failed' }],
+        },
       }),
     });
 
@@ -177,31 +175,31 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByTestId('failed-prerequisites')).toBeInTheDocument();
   });
 
   it('Start exam instructions can be successfully rendered', () => {
-    store.getState = () => ({ specialExams: Factory.build('specialExams') });
+    const specialExams = Factory.build('specialExams');
 
     const { getByTestId } = render(
       <Instructions>
         <div data-testid="sequence-content">Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByTestId('start-exam-button')).toHaveTextContent('I am ready to start this timed exam.');
+    fireEvent.click(getByTestId('start-exam-button'));
+    expect(mockStartTimedExam).toHaveBeenCalledTimes(1);
   });
 
   it('Instructions are not shown when exam is started', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.STARTED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.STARTED,
         }),
       }),
     });
@@ -210,7 +208,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div data-testid="sequence-content">Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByTestId('sequence-content')).toHaveTextContent('Sequence');
   });
@@ -221,15 +219,13 @@ describe('SequenceExamWrapper', () => {
     ['', 'learner_notification@example.com'],
     ['integration@email.com', 'learner_notification@example.com'],
   ])('Shows onboarding exam entrance instructions when receives onboarding exam with integration email: "%s", learner email: "%s"', (integrationEmail, learnerEmail) => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          learner_notification_from_email: learnerEmail,
-          integration_specific_email: integrationEmail,
-        }),
-        exam: Factory.build('exam', {
-          type: ExamType.ONBOARDING,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        learner_notification_from_email: learnerEmail,
+        integration_specific_email: integrationEmail,
+      }),
+      exam: Factory.build('exam', {
+        type: ExamType.ONBOARDING,
       }),
     });
 
@@ -237,7 +233,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Proctoring onboarding exam');
@@ -258,11 +254,9 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows practice exam entrance instructions when receives practice exam', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          type: ExamType.PRACTICE,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PRACTICE,
       }),
     });
 
@@ -270,37 +264,33 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(getByTestId('exam-instructions-title')).toHaveTextContent('Try a proctored exam');
   });
 
   it('Shows failed prerequisites page if user has failed prerequisites for the exam', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        timeIsOver: true,
-        allowProctoringOptOut: true,
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          attempt: {},
-          type: ExamType.PROCTORED,
-          prerequisite_status: {
-            are_prerequisites_satisfied: false,
-            failed_prerequisites: [
-              {
-                test: 'failed',
-              },
-            ],
-          },
-        }),
+    const specialExams = Factory.build('specialExams', {
+      allowProctoringOptOut: true,
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        attempt: {},
+        type: ExamType.PROCTORED,
+        prerequisite_status: {
+          are_prerequisites_satisfied: false,
+          failed_prerequisites: [
+            {
+              test: 'failed',
+            },
+          ],
+        },
       }),
     });
-
     const { getByTestId } = render(
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams, clientState: { timeIsOver: true } },
     );
 
     expect(getByTestId('failed-prerequisites')).toBeInTheDocument();
@@ -313,29 +303,25 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows pending prerequisites page if user has failed prerequisites for the exam', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        timeIsOver: true,
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          prerequisite_status: {
-            are_prerequisites_satisfied: false,
-            pending_prerequisites: [
-              {
-                test: 'failed',
-              },
-            ],
-          },
-        }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        prerequisite_status: {
+          are_prerequisites_satisfied: false,
+          pending_prerequisites: [
+            {
+              test: 'failed',
+            },
+          ],
+        },
       }),
     });
-
     const { getByTestId } = render(
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams, clientState: { timeIsOver: true } },
     );
 
     const skipProctoredExamButton = screen.queryByText('Take this exam without proctoring.');
@@ -344,46 +330,38 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Instructions for error status', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        timeIsOver: true,
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.ERROR,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.ERROR,
         }),
       }),
     });
-
     render(
       <Instructions>
         <div data-testid="sequence-content">Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams, clientState: { timeIsOver: true } },
     );
     expect(screen.getByText('Error with proctored exam')).toBeInTheDocument();
   });
 
   it('Instructions for ready to resume state', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        timeIsOver: true,
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.ERROR,
-            attempt_ready_to_resume: true,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.ERROR,
+          attempt_ready_to_resume: true,
         }),
       }),
     });
-
     render(
       <Instructions>
         <div data-testid="sequence-content">Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams, clientState: { timeIsOver: true } },
     );
     expect(screen.getByText('Your exam is ready to be resumed.')).toBeInTheDocument();
     expect(screen.getByTestId('start-exam-button')).toHaveTextContent('Continue to my proctored exam.');
@@ -394,12 +372,10 @@ describe('SequenceExamWrapper', () => {
       time_remaining_seconds: secondsLeft,
       attempt_status: ExamStatus.READY_TO_SUBMIT,
     });
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: attempt,
-        exam: Factory.build('exam', {
-          attempt,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: attempt,
+      exam: Factory.build('exam', {
+        attempt,
       }),
     });
 
@@ -407,17 +383,17 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('exam-instructions-title')).toHaveTextContent('Are you sure that you want to submit your timed exam?');
     fireEvent.click(queryByTestId('end-exam-button'));
-    expect(submitExam).toHaveBeenCalled();
+    expect(mockSubmitExam).toHaveBeenCalled();
     const continueButton = queryByTestId('continue-exam-button');
     if (secondsLeft > 0) {
       expect(continueButton).toBeInTheDocument();
       fireEvent.click(continueButton);
-      expect(continueExam).toHaveBeenCalledTimes(1);
+      expect(mockContinueExam).toHaveBeenCalledTimes(1);
       act(() => {
         Emitter.emit(TIMER_REACHED_NULL);
       });
@@ -428,58 +404,35 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Instructions for submitted status', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
-        }),
-      }),
-    });
-
     const { getByTestId } = render(
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams: submittedExam },
     );
     expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('You have submitted your timed exam.');
   });
 
   it('Instructions when exam time is over', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        timeIsOver: true,
-        exam: Factory.build('exam', {
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
-        }),
-      }),
-    });
-
     const { getByTestId } = render(
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams: submittedExam, clientState: { timeIsOver: true } },
     );
     expect(getByTestId('exam.submittedExamInstructions.title')).toHaveTextContent('The time allotted for this exam has expired.');
   });
 
   it.each(['integration@example.com', ''])('Shows correct rejected onboarding exam instructions when attempt is rejected and integration email is "%s"', (integrationEmail) => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          integration_specific_email: integrationEmail,
-        }),
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.ONBOARDING,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.REJECTED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        integration_specific_email: integrationEmail,
+      }),
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.ONBOARDING,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.REJECTED,
         }),
       }),
     });
@@ -488,7 +441,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('rejected-onboarding-title')).toBeInTheDocument();
@@ -502,14 +455,12 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows correct rejected practice exam instructions when attempt is rejected', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PRACTICE,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.REJECTED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PRACTICE,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.REJECTED,
         }),
       }),
     });
@@ -518,22 +469,20 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(queryByTestId('proctored-exam-instructions-title')).toBeInTheDocument();
   });
 
   it('Shows submit onboarding exam instructions if exam is onboarding and attempt status is ready_to_submit', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.ONBOARDING,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.READY_TO_SUBMIT,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.ONBOARDING,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.READY_TO_SUBMIT,
         }),
       }),
     });
@@ -542,22 +491,20 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(getByTestId('submit-onboarding-exam')).toBeInTheDocument();
   });
 
   it('Shows error onboarding exam instructions if exam is onboarding and attempt status is error', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.ONBOARDING,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.ERROR,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.ONBOARDING,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.ERROR,
         }),
       }),
     });
@@ -566,7 +513,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('Error: There was a problem with your onboarding session')).toBeInTheDocument();
@@ -574,19 +521,17 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows submitted onboarding exam instructions if exam is onboarding and attempt status is submitted', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          integration_specific_email: 'test@example.com',
-          learner_notification_from_email: 'test_notification@example.com',
-        }),
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.ONBOARDING,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        integration_specific_email: 'test@example.com',
+        learner_notification_from_email: 'test_notification@example.com',
+      }),
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.ONBOARDING,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.SUBMITTED,
         }),
       }),
     });
@@ -595,7 +540,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     const retryExamButton = screen.getByTestId('retry-exam-button');
@@ -610,18 +555,16 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows verified onboarding exam instructions if exam is onboarding and attempt status is verified', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          integration_specific_email: 'test@example.com',
-        }),
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.ONBOARDING,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.VERIFIED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        integration_specific_email: 'test@example.com',
+      }),
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.ONBOARDING,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.VERIFIED,
         }),
       }),
     });
@@ -630,7 +573,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('Your onboarding profile was reviewed successfully')).toBeInTheDocument();
@@ -638,18 +581,16 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows verified practice exam instructions if exam is practice and attempt status is verified', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        proctoringSettings: Factory.build('proctoringSettings', {
-          integration_specific_email: 'test@example.com',
-        }),
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PRACTICE,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.VERIFIED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      proctoringSettings: Factory.build('proctoringSettings', {
+        integration_specific_email: 'test@example.com',
+      }),
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PRACTICE,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.VERIFIED,
         }),
       }),
     });
@@ -658,7 +599,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('Your proctoring session was reviewed successfully. A final grade will be available soon.')).toBeInTheDocument();
@@ -666,15 +607,13 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows error practice exam instructions if exam is onboarding and attempt status is error', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PRACTICE,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.ERROR,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PRACTICE,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.ERROR,
         }),
       }),
     });
@@ -683,7 +622,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('There was a problem with your practice proctoring session')).toBeInTheDocument();
@@ -691,16 +630,14 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows submitted practice exam instructions if exam is onboarding and attempt status is submitted on legacy proctored exams', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PRACTICE,
-          attempt: Factory.build('attempt', {
-            use_legacy_attempt_api: true,
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PRACTICE,
+        attempt: Factory.build('attempt', {
+          use_legacy_attempt_api: true,
+          attempt_status: ExamStatus.SUBMITTED,
         }),
       }),
     });
@@ -709,7 +646,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('You have submitted this practice proctored exam')).toBeInTheDocument();
@@ -717,14 +654,12 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Does not show expired page if exam is passed due date and is practice', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PRACTICE,
-          passed_due_date: true,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PRACTICE,
+        passed_due_date: true,
       }),
     });
 
@@ -732,22 +667,20 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('Continue to my practice exam.')).toBeInTheDocument();
   });
 
   it.each([ExamType.TIMED, ExamType.PROCTORED, ExamType.ONBOARDING])('Shows expired page when exam is passed due date and is %s', (examType) => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: examType,
-          passed_due_date: true,
-          hide_after_due: true,
-        }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: examType,
+        passed_due_date: true,
+        hide_after_due: true,
       }),
     });
 
@@ -755,7 +688,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('The due date for this exam has passed')).toBeInTheDocument();
@@ -765,18 +698,16 @@ describe('SequenceExamWrapper', () => {
     it.each(INCOMPLETE_STATUSES)(
       `Shows expired page when exam is ${examType} and has passed due date and attempt is in %s status`,
       (item) => {
-        store.getState = () => ({
-          specialExams: Factory.build('specialExams', {
-            activeAttempt: {},
-            exam: Factory.build('exam', {
-              is_proctored: true,
-              type: examType,
-              attempt: Factory.build('attempt', {
-                attempt_status: item,
-              }),
-              passed_due_date: true,
-              hide_after_due: true,
+        const specialExams = Factory.build('specialExams', {
+          activeAttempt: {},
+          exam: Factory.build('exam', {
+            is_proctored: true,
+            type: examType,
+            attempt: Factory.build('attempt', {
+              attempt_status: item,
             }),
+            passed_due_date: true,
+            hide_after_due: true,
           }),
         });
 
@@ -784,7 +715,7 @@ describe('SequenceExamWrapper', () => {
           <Instructions>
             <div>Sequence</div>
           </Instructions>,
-          { store },
+          { specialExams },
         );
 
         expect(screen.getByText('The due date for this exam has passed')).toBeInTheDocument();
@@ -793,17 +724,15 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows exam content for timed exam if attempt status is submitted, due date has passed and hide after due is set to false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
-          passed_due_date: true,
-          hide_after_due: false,
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        type: ExamType.TIMED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.SUBMITTED,
         }),
+        passed_due_date: true,
+        hide_after_due: false,
       }),
     });
 
@@ -811,24 +740,22 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div data-testid="exam-content">children</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByTestId('exam-content')).toHaveTextContent('children');
   });
 
   it('Shows submitted page for non-timed exam even if due date has passed and hide after due is false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED, // Not TIMED
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
-          passed_due_date: true,
-          hide_after_due: false,
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED, // Not TIMED
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.SUBMITTED,
         }),
+        passed_due_date: true,
+        hide_after_due: false,
       }),
     });
 
@@ -836,7 +763,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div data-testid="exam-content">children</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     // Should show submitted page, not children
@@ -845,17 +772,15 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows submitted page for timed exam if due date has not passed, even if hide after due is false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
-          passed_due_date: false, // Due date not passed
-          hide_after_due: false,
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        type: ExamType.TIMED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.SUBMITTED,
         }),
+        passed_due_date: false, // Due date not passed
+        hide_after_due: false,
       }),
     });
 
@@ -863,7 +788,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div data-testid="exam-content">children</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     // Should show submitted page, not children
@@ -872,17 +797,15 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows submitted page for timed exam if due date has passed but hide after due is true', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
-          passed_due_date: true,
-          hide_after_due: true, // Hide after due is true
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        type: ExamType.TIMED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.SUBMITTED,
         }),
+        passed_due_date: true,
+        hide_after_due: true, // Hide after due is true
       }),
     });
 
@@ -890,7 +813,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div data-testid="exam-content">children</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     // Should show submitted page, not children
@@ -899,17 +822,15 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows submitted exam page for proctored exams if attempt status is submitted, due date has passed and hide after due is set to false', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SUBMITTED,
-          }),
-          passed_due_date: true,
-          hide_after_due: false,
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.SUBMITTED,
         }),
+        passed_due_date: true,
+        hide_after_due: false,
       }),
     });
 
@@ -917,22 +838,20 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>children</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
   });
 
   it('Shows submitted page when proctored exam is in second_review_required status', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.SECOND_REVIEW_REQUIRED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.SECOND_REVIEW_REQUIRED,
         }),
       }),
     });
@@ -941,27 +860,25 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('You have submitted this proctored exam for review')).toBeInTheDocument();
   });
 
   it('Shows correct download instructions for LTI provider if attempt status is created, with support email and phone', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'LTI Provider',
-          provider_tech_support_email: 'ltiprovidersupport@example.com',
-          provider_tech_support_phone: '+123456789',
-        }),
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.CREATED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'LTI Provider',
+        provider_tech_support_email: 'ltiprovidersupport@example.com',
+        provider_tech_support_phone: '+123456789',
+      }),
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.CREATED,
         }),
       }),
     });
@@ -970,7 +887,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText(
@@ -983,21 +900,19 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows correct download instructions for LTI provider if attempt status is created with support URL', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'LTI Provider',
-          provider_tech_support_email: 'ltiprovidersupport@example.com',
-          provider_tech_support_phone: '+123456789',
-          provider_tech_support_url: 'www.example.com',
-        }),
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.CREATED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'LTI Provider',
+        provider_tech_support_email: 'ltiprovidersupport@example.com',
+        provider_tech_support_phone: '+123456789',
+        provider_tech_support_url: 'www.example.com',
+      }),
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.CREATED,
         }),
       }),
     });
@@ -1006,7 +921,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText(
@@ -1021,18 +936,16 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Hides support contact info on download instructions for LTI provider if not provided', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'LTI Provider',
-        }),
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.CREATED,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'LTI Provider',
+      }),
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.CREATED,
         }),
       }),
     });
@@ -1041,7 +954,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.queryByText('If you have issues relating to proctoring, you can contact LTI Provider')).toBeNull();
@@ -1057,24 +970,21 @@ describe('SequenceExamWrapper', () => {
     window.location = {
       assign: mockAssign,
     };
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'LTI Provider',
-          provider_tech_support_email: 'ltiprovidersupport@example.com',
-          provider_tech_support_phone: '+123456789',
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'LTI Provider',
+        provider_tech_support_email: 'ltiprovidersupport@example.com',
+        provider_tech_support_phone: '+123456789',
+      }),
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_id: 4321,
+          attempt_status: ExamStatus.CREATED,
+          use_legacy_attempt_api: false,
         }),
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_id: 4321,
-            attempt_status: ExamStatus.CREATED,
-            use_legacy_attempt_api: false,
-          }),
-        }),
-        getExamAttemptsData,
       }),
     });
 
@@ -1082,16 +992,16 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     fireEvent.click(screen.getByText('Start System Check'));
     await waitFor(() => { expect(mockAssign).toHaveBeenCalledWith('http://localhost:18740/lti/start_proctoring/4321'); });
-    expect(softwareDownloadAttempt).toHaveBeenCalledWith(4321, false);
+    expect(softwareDownloadAttempt).toHaveBeenCalledWith(expect.anything(), 4321, false);
 
     // also validate start button works
     pollExamAttempt.mockReturnValue(Promise.resolve({ status: ExamStatus.READY_TO_START }));
     fireEvent.click(screen.getByText('Start Exam'));
-    await waitFor(() => { expect(getExamAttemptsData).toHaveBeenCalled(); });
+    await waitFor(() => { expect(pollExamAttempt).toHaveBeenCalledTimes(2); });
 
     // restore window.location
     window.location = location;
@@ -1103,25 +1013,23 @@ describe('SequenceExamWrapper', () => {
       'instruction 2',
       'instruction 3',
     ];
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'Provider Name',
-          provider_tech_support_email: 'support@example.com',
-          provider_tech_support_phone: '+123456789',
-          exam_proctoring_backend: {
-            instructions,
-          },
-        }),
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'Provider Name',
+        provider_tech_support_email: 'support@example.com',
+        provider_tech_support_phone: '+123456789',
+        exam_proctoring_backend: {
+          instructions,
+        },
+      }),
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        use_legacy_attempt_api: true,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.CREATED,
           use_legacy_attempt_api: true,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.CREATED,
-            use_legacy_attempt_api: true,
-          }),
         }),
       }),
     });
@@ -1130,7 +1038,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText(
@@ -1144,22 +1052,20 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows correct download instructions for legacy rpnow provider if attempt status is created', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        proctoringSettings: Factory.build('proctoringSettings', {
-          provider_name: 'Provider Name',
-          exam_proctoring_backend: {},
-        }),
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      proctoringSettings: Factory.build('proctoringSettings', {
+        provider_name: 'Provider Name',
+        exam_proctoring_backend: {},
+      }),
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        use_legacy_attempt_api: true,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.CREATED,
+          attempt_code: '1234-5678-9012-3456',
           use_legacy_attempt_api: true,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.CREATED,
-            attempt_code: '1234-5678-9012-3456',
-            use_legacy_attempt_api: true,
-          }),
         }),
       }),
     });
@@ -1168,7 +1074,7 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
     expect(screen.getByDisplayValue('1234-5678-9012-3456')).toBeInTheDocument();
     expect(screen.getByText('For security and exam integrity reasons, '
@@ -1177,14 +1083,12 @@ describe('SequenceExamWrapper', () => {
   });
 
   it('Shows error message if receives unknown attempt status', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          type: ExamType.TIMED,
-          attempt: Factory.build('attempt', {
-            attempt_status: 'something new',
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        type: ExamType.TIMED,
+        attempt: Factory.build('attempt', {
+          attempt_status: 'something new',
         }),
       }),
     });
@@ -1193,22 +1097,20 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>children</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByTestId('unknown-status-error')).toBeInTheDocument();
   });
 
   it('Shows ready to start page when proctored exam is in ready_to_start status', () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.READY_TO_START,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.READY_TO_START,
         }),
       }),
     });
@@ -1217,36 +1119,33 @@ describe('SequenceExamWrapper', () => {
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     expect(screen.getByText('You must adhere to the following rules while you complete this exam.')).toBeInTheDocument();
   });
 
   it('Shows loading spinner while waiting to start exam', async () => {
-    store.getState = () => ({
-      specialExams: Factory.build('specialExams', {
-        activeAttempt: {},
-        exam: Factory.build('exam', {
-          is_proctored: true,
-          type: ExamType.PROCTORED,
-          attempt: Factory.build('attempt', {
-            attempt_status: ExamStatus.READY_TO_START,
-          }),
+    const specialExams = Factory.build('specialExams', {
+      activeAttempt: {},
+      exam: Factory.build('exam', {
+        is_proctored: true,
+        type: ExamType.PROCTORED,
+        attempt: Factory.build('attempt', {
+          attempt_status: ExamStatus.READY_TO_START,
         }),
-        startProctoredExam: jest.fn(),
       }),
+      startProctoredExam: jest.fn(),
     });
 
     render(
       <Instructions>
         <div>Sequence</div>
       </Instructions>,
-      { store },
+      { specialExams },
     );
 
     fireEvent.click(screen.getByTestId('start-exam-button'));
-    waitFor(() => expect(getExamAttemptsData).toHaveBeenCalled());
     expect(screen.getByTestId('exam-loading-spinner')).toBeInTheDocument();
   });
 });

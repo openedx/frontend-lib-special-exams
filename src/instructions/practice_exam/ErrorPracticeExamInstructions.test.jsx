@@ -2,27 +2,24 @@ import React from 'react';
 import { Factory } from 'rosie';
 import { ErrorPracticeExamInstructions } from './index';
 import {
-  render, screen, initializeTestStore, fireEvent,
+  render, screen, fireEvent,
 } from '../../setupTest';
 import { ExamType } from '../../constants';
 
-// Mock return value for resetExam
-const mockResetExamReturn = { type: 'RESET_EXAM' };
-const mockDispatch = jest.fn();
-
-// Mock the react-redux useDispatch hook
-jest.mock('react-redux', () => ({
-  ...jest.requireActual('react-redux'),
-  useDispatch: () => mockDispatch,
-}));
-
-// Mock the resetExam function from data module
+const mockResetExam = jest.fn();
 jest.mock('../../data', () => ({
   ...jest.requireActual('../../data'),
-  resetExam: () => mockResetExamReturn,
+  useResetExam: () => ({ mutate: mockResetExam }),
 }));
 
 describe('ErrorPracticeExamInstructions', () => {
+  const practiceExam = {
+    exam: Factory.build('exam', {
+      is_proctored: true,
+      type: ExamType.PRACTICE,
+      attempt: Factory.build('attempt'),
+    }),
+  };
   // Reset mocks after each test
   afterEach(() => {
     jest.resetAllMocks();
@@ -35,20 +32,10 @@ describe('ErrorPracticeExamInstructions', () => {
   describe('component rendering', () => {
     beforeEach(() => {
       // Initialize store with a practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       // Render the component
       render(
         <ErrorPracticeExamInstructions />,
+        { specialExams: practiceExam },
       );
     });
 
@@ -84,33 +71,19 @@ describe('ErrorPracticeExamInstructions', () => {
   describe('button click functionality', () => {
     beforeEach(() => {
       // Initialize store with a practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       // Render the component
       render(
         <ErrorPracticeExamInstructions />,
+        { specialExams: practiceExam },
       );
     });
 
-    it('dispatches resetExam when clicking the retry button', () => {
-      // Verify dispatch hasn't been called yet
-      expect(mockDispatch).not.toHaveBeenCalled();
+    it('resets the attempt when clicking the retry button', () => {
+      expect(mockResetExam).not.toHaveBeenCalled();
 
-      // Click the button
       fireEvent.click(screen.getByTestId('retry-exam-button'));
 
-      // Verify dispatch was called with the correct action
-      expect(mockDispatch).toHaveBeenCalledTimes(1);
-      expect(mockDispatch).toHaveBeenCalledWith(mockResetExamReturn);
+      expect(mockResetExam).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -121,20 +94,18 @@ describe('ErrorPracticeExamInstructions', () => {
   describe('with different exam types', () => {
     it('renders correctly with a non-proctored exam', () => {
       // Initialize store with a non-proctored practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: false,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: false,
+          type: ExamType.PRACTICE,
+          attempt: Factory.build('attempt'),
+        }),
       };
-      initializeTestStore(preloadedState);
 
       // Render the component
       render(
         <ErrorPracticeExamInstructions />,
+        { specialExams },
       );
 
       // Verify the component renders correctly
@@ -144,21 +115,19 @@ describe('ErrorPracticeExamInstructions', () => {
 
     it('renders correctly with a timed exam', () => {
       // Initialize store with a timed practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: false,
-            is_timed: true,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
+      const specialExams = {
+        exam: Factory.build('exam', {
+          is_proctored: false,
+          is_timed: true,
+          type: ExamType.PRACTICE,
+          attempt: Factory.build('attempt'),
+        }),
       };
-      initializeTestStore(preloadedState);
 
       // Render the component
       render(
         <ErrorPracticeExamInstructions />,
+        { specialExams },
       );
 
       // Verify the component renders correctly
@@ -174,20 +143,10 @@ describe('ErrorPracticeExamInstructions', () => {
   describe('component structure and accessibility', () => {
     beforeEach(() => {
       // Initialize store with a practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       // Render the component
       render(
         <ErrorPracticeExamInstructions />,
+        { specialExams: practiceExam },
       );
     });
 
@@ -220,20 +179,10 @@ describe('ErrorPracticeExamInstructions', () => {
   describe('useDispatch hook', () => {
     it('calls useDispatch during component initialization', () => {
       // Initialize store with a practice exam
-      const preloadedState = {
-        specialExams: {
-          exam: Factory.build('exam', {
-            is_proctored: true,
-            type: ExamType.PRACTICE,
-            attempt: Factory.build('attempt'),
-          }),
-        },
-      };
-      initializeTestStore(preloadedState);
-
       // Render the component
       render(
         <ErrorPracticeExamInstructions />,
+        { specialExams: practiceExam },
       );
 
       // Verify that the useDispatch hook was called

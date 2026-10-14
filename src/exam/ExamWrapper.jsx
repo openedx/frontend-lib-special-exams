@@ -1,19 +1,19 @@
-import { useDispatch, useSelector } from 'react-redux';
-import React, { useContext, useEffect } from 'react';
-import { AppContext } from '@edx/frontend-platform/react';
 import PropTypes from 'prop-types';
 import Exam from './Exam';
 import {
-  getExamAttemptsData,
-  getAllowProctoringOptOut,
-  checkExamEntry,
+  useActiveAttemptQuery,
+  useCheckExamEntry,
+  useEndExamWithFailure,
+  useExamQuery,
+  useReportQueryError,
 } from '../data';
+import { useSpecialExams } from '../core/SpecialExamsProvider';
 
 /**
  * Exam wrapper is responsible for triggering initial exam data fetching and rendering Exam.
  */
 const ExamWrapper = ({ children, ...props }) => {
-  const { authenticatedUser } = useContext(AppContext);
+  const { isAuthenticated } = useSpecialExams();
   const {
     sequence,
     courseId,
@@ -22,30 +22,20 @@ const ExamWrapper = ({ children, ...props }) => {
     canAccessProctoredExams,
   } = props;
 
-  const { isLoading } = useSelector(state => state.specialExams);
-
-  const dispatch = useDispatch();
-
-  const loadInitialData = async () => {
-    await dispatch(getExamAttemptsData(courseId, sequence.id));
-    await dispatch(getAllowProctoringOptOut(sequence.allowProctoringOptOut));
-    await dispatch(checkExamEntry());
-  };
+  // An exam sequence fetches its exam (with the course's running attempt); any other sequence fetches
+  // only the running attempt, for the timer.
+  const examQuery = useExamQuery(courseId, sequence.id, { enabled: isAuthenticated && !!sequence.isTimeLimited, refetchOnMount: 'always' });
+  const attemptQuery = useActiveAttemptQuery(courseId, { enabled: isAuthenticated && !sequence.isTimeLimited, refetchOnMount: 'always' });
+  useReportQueryError(examQuery);
+  useReportQueryError(attemptQuery);
+  useCheckExamEntry(examQuery, useEndExamWithFailure());
 
   const isGated = sequence && sequence.gatedContent !== undefined && sequence.gatedContent.gated;
-
-  useEffect(() => {
-    // fetch exam data on exam sequences or if no exam data has been fetched yet
-    if (sequence.isTimeLimited || isLoading) {
-      loadInitialData();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // if the user is browsing public content (not logged in) they cannot be in an exam
   // if the user is staff they may view exam content without an exam attempt
   // any requests for exam state will 403 so just short circuit this component here
-  if (!authenticatedUser || isStaff) {
+  if (!isAuthenticated || isStaff) {
     return children;
   }
 
