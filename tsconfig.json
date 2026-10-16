@@ -1,7 +1,6 @@
 {
   "extends": "@edx/typescript-config",
   "compilerOptions": {
-    "module": "CommonJS",
     "outDir": "dist"
   },
   "include": ["src/**/*", "*.js", ".eslintrc.js", "i18n/**/*"],
