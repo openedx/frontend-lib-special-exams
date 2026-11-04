@@ -11,7 +11,7 @@ metadata:
       title: "frontend-lib-special-exams GitHub Repository"
       icon: "Web"
 spec:
-  owner: group:2u-cosmonauts
+  owner: group:openedx-unmaintained
   type: 'library'
   lifecycle: 'production'
   subcomponentOf: 'frontend-app-learning'
