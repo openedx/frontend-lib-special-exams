@@ -1,11 +1,9 @@
-import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import {
   continueAttempt, createExamAttempt, declineAttempt, endExamWithFailure, resetAttempt, stopAttempt, submitAttempt,
 } from './api';
-import {
-  specialExamsQueryKeys, useActiveAttempt, useExam, useExamStateKey,
-} from './queries';
+import { useActiveAttempt, useExam, useExamStateKey } from './queries';
 import { workerPromiseForEventNames } from './messages/handlers';
 import actionToMessageTypesMap from './messages/constants';
 import { notifyStartExam } from './messages/proctorio';
@@ -44,13 +42,13 @@ const useFailAction = () => {
 
 interface AttemptActionOptions<Variables> {
   run: (variables: Variables) => Promise<AttemptResponse | undefined>;
-  refetchKey?: () => QueryKey;
   after?: () => void;
 }
 
+// Every action refetches the exam state of the page it runs on, which is what that page renders.
 const useAttemptAction = <Variables = void>(
   action: string,
-  { run, refetchKey, after }: AttemptActionOptions<Variables>,
+  { run, after }: AttemptActionOptions<Variables>,
 ) => {
   const queryClient = useQueryClient();
   const examStateKey = useExamStateKey();
@@ -64,7 +62,7 @@ const useAttemptAction = <Variables = void>(
         return;
       }
       if (error || response?.exam_attempt_id) {
-        await queryClient.invalidateQueries({ queryKey: refetchKey ? refetchKey() : examStateKey });
+        await queryClient.invalidateQueries({ queryKey: examStateKey });
       }
       after?.();
     },
@@ -275,9 +273,11 @@ export const useSubmitExam = () => {
 export const useExpireExam = () => {
   const services = useSpecialExams();
   const activeAttempt = useActiveAttempt();
-  const { sequenceId, isTimeLimited, setTimeIsOver } = useSequenceExam();
+  const { setTimeIsOver } = useSequenceExam();
   const fail = useFailAction();
   const notifyWorkerOfSubmit = useNotifyWorkerOfSubmit();
+  // The timer also runs on other courses' pages. Refetching the attempt's course instead of the page's
+  // own state would leave the page holding the expired attempt as running, and it would submit it again.
   return useAttemptAction('expireExam', {
     run: async () => {
       const attemptId = activeAttempt?.attempt_id;
@@ -287,10 +287,6 @@ export const useExpireExam = () => {
       }
       return submitAttempt(services, attemptId, useLegacyAttemptAPI);
     },
-    // this sure looks like a bug
-    refetchKey: () => (isTimeLimited
-      ? specialExamsQueryKeys.exam(activeAttempt!.course_id, sequenceId)
-      : specialExamsQueryKeys.activeAttempt(activeAttempt!.course_id)),
     after: () => {
       setTimeIsOver(true);
       notifyWorkerOfSubmit();
