@@ -78,8 +78,8 @@ describe('Attempt action mutations', () => {
     );
     return renderHook(() => {
       // The owner `ExamWrapper` mounts: the sequence's exam, or the course's attempt outside an exam.
-      useExamQuery(courseId, contentId, { enabled: !!context.isTimeLimited });
-      useActiveAttemptQuery(courseId, { enabled: !context.isTimeLimited });
+      useExamQuery(context.courseId, context.sequenceId, { enabled: !!context.isTimeLimited });
+      useActiveAttemptQuery(context.courseId, { enabled: !context.isTimeLimited });
       return useAction();
     }, { wrapper });
   }
@@ -571,6 +571,30 @@ describe('Attempt action mutations', () => {
 
       const latest = queryClient.getQueryData<ExamState>(specialExamsQueryKeys.activeAttempt(courseId));
       expect(latest?.activeAttempt?.attempt_status).toBe(ExamStatus.SUBMITTED);
+      expect(clientState().timeIsOver).toBe(true);
+    });
+
+    // The running attempt is shown on every course's pages, so the timer can expire on a page of a
+    // course other than the exam's. That page's state must be refreshed, or it keeps the expired
+    // attempt as running and the timer submits it again and again.
+    it('Should refresh the page\'s own state when the exam belongs to another course', async () => {
+      services = { ...testServices, config: { ...testConfig, examsBaseUrl: null } };
+      const otherCourseId = 'course-v1:edX+Other+2026';
+      const otherCourseAttemptUrl = new URL(`${testConfig.lmsBaseUrl}${BASE_API_URL}/course_id/${otherCourseId}`);
+      otherCourseAttemptUrl.searchParams.append('is_learning_mfe', 'true');
+      axiosMock.onGet(otherCourseAttemptUrl.href).replyOnce(200, { exam: {}, active_attempt: attempt });
+      axiosMock.onGet(otherCourseAttemptUrl.href).reply(200, { exam: {}, active_attempt: {} });
+      axiosMock.onPut(updateAttemptStatusLegacyUrl).reply(200, { exam_attempt_id: attempt.attempt_id });
+      await queryClient.fetchQuery(activeAttemptQueryOptions(services, otherCourseId));
+
+      const { result } = renderAction(useExpireExam, { courseId: otherCourseId, isTimeLimited: false });
+      await act(async () => {
+        await result.current.mutateAsync();
+      });
+
+      expect(axiosMock.history.put).toHaveLength(1);
+      const pageState = queryClient.getQueryData<ExamState>(specialExamsQueryKeys.activeAttempt(otherCourseId));
+      expect(pageState?.activeAttempt).toBeNull();
       expect(clientState().timeIsOver).toBe(true);
     });
 
