@@ -32,6 +32,9 @@
     "dist/"
   ],
   "sideEffects": false,
+  "atlasTranslations": {
+    "path": "translations/frontend-lib-special-exams/src/i18n/messages"
+  },
   "scripts": {
     "build": "make build",
     "prepublishOnly": "npm run build",
