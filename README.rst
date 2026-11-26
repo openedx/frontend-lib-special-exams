@@ -80,6 +80,8 @@ Internationalization
 
 Messages are defined with `react-intl <https://formatjs.io/docs/react-intl/>`_ and extracted with ``make extract_translations``; the host provides the ``IntlProvider`` and the translations.
 
+The translations live in `openedx-translations <https://github.com/openedx/openedx-translations>`_. The ``atlasTranslations`` field in ``package.json`` says where: a frontend-base app that uses this library lists it in its own ``atlasTranslations.dependencies``, and ``openedx translations:pull`` then pulls them. A legacy MFE names the path in its own ``atlas pull`` instead.
+
 *******
 Testing
 *******
